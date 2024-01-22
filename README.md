@@ -2,11 +2,11 @@
 Experiments in Analyzing AOE2 Recorded Games
 
 ### Utilities
-(AOE Pulse - very cool Opening strategy analytics work that is similar to what I'm doing)[https://www.aoepulse.com/home]
-(The Original Repository for AOE Opening Analysis)[https://github.com/dj0wns/AoE_Rec_Opening_Analysis/tree/main]
-(Relic/MS Documentation) [https://wiki.librematch.org/librematch/data_sources/start]
-(Download Recs Manually @ aoe2recs.com)[https://aoe2recs.com/]
-(AOE 2 rules for content) [https://www.xbox.com/en-GB/developers/rules]
+[AOE Pulse - very cool Opening strategy analytics work that is similar to what I'm doing](https://www.aoepulse.com/home)
+[The Original Repository for AOE Opening Analysis](https://github.com/dj0wns/AoE_Rec_Opening_Analysis/tree/main)
+[Relic/MS Documentation](https://wiki.librematch.org/librematch/data_sources/start)
+[Download Recs Manually @ aoe2recs.com](https://aoe2recs.com/)
+[AOE 2 rules for content](https://www.xbox.com/en-GB/developers/rules)
 
 
 ### Idea
