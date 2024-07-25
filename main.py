@@ -89,7 +89,7 @@ class AgeGame:
         self.opening = pd.Series()
         for player in self.players:
             player_opening_strategies = player.extract_player_choices_and_strategy()
-            player_opening_strategies.add_prefix(f"Player{player.number}.")
+            player_opening_strategies = player_opening_strategies.add_prefix(f"Player{player.number}.")
             self.opening = pd.concat([self.opening, player_opening_strategies])
 
         return
@@ -98,7 +98,7 @@ class AgeGame:
 class GamePlayer:
     def __init__(self, number: int, name: str, civilisation: str, starting_position: list, actions: pd.DataFrame, inputs: pd.DataFrame) -> None:
 
-        self.number = number,
+        self.number = number
         self.name = name
         self.civilisation = civilisation
         self.starting_position = starting_position
@@ -152,7 +152,11 @@ class GamePlayer:
         # TODO - map the research times and then apply them, find a good way to house this data (tiny data with civ?)
         # TODO work out how to handle shorter time with civilisation parameter
 
-        return relevent_research
+        if relevent_research.empty:
+            # Should return empty series instead? for type safety? hmm TODO
+            return None
+
+        return relevent_research.iloc[len(relevent_research) - 1]  # using len here handles multiple like a cancel and re-research
 
     def identify_building_and_timing(self, building, civilisations: dict = None) -> pd.DataFrame:
         """Helper to find all the creations of an economic building type. TODO refactor for each player.
@@ -174,7 +178,11 @@ class GamePlayer:
         time_to_build_dictionary = {"Mill": 100, "Farm": 15}
         time_to_build = time_to_build_dictionary[building]
 
-        relevent_building = self.economic_buildings_created.loc[self.economic_buildings_created["param"] == building, ["timestamp", "player"]]
+        relevent_building = self.economic_buildings_created.loc[
+            self.economic_buildings_created["param"] == building,
+            ["timestamp", "player"]
+            ]
+
         relevent_building["timestamp"] = relevent_building["timestamp"] + pd.Timedelta(seconds=time_to_build)
 
         return relevent_building
@@ -251,7 +259,6 @@ class GamePlayer:
     def identify_feudal_military_choices(self,
                                          feudal_time: pd.Timedelta,
                                          castle_time: pd.Timedelta,
-                                         military_buildings_spawned: pd.DataFrame,
                                          units_queued: pd.DataFrame
                                          ) -> pd.Series:
         """Draws out the base military decisions in feudal age, e.g. buildings created, number of units, etc. TODO finish detail
@@ -268,11 +275,11 @@ class GamePlayer:
         :rtype: pd.Series
         """
         # get ranges and stables made in feudal
-        feudal_military_buildings = military_buildings_spawned.loc[
-            ((military_buildings_spawned["param"] == "Archery Range") |
-             (military_buildings_spawned["param"] == "Stable")) &
-            (military_buildings_spawned["timestamp"] > feudal_time) &
-            (military_buildings_spawned["timestamp"] < castle_time),
+        feudal_military_buildings = self.military_buildings_created.loc[
+            ((self.military_buildings_created["param"] == "Archery Range") |
+             (self.military_buildings_created["param"] == "Stable")) &
+            (self.military_buildings_created["timestamp"] > feudal_time) &
+            (self.military_buildings_created["timestamp"] < castle_time),
             :
             ]
 
@@ -335,7 +342,6 @@ class GamePlayer:
         feudal_approach = self.identify_feudal_military_choices(
             feudal_time=feudal_time,
             castle_time=castle_time,
-            military_buildings_spawned=military_buildings_spawned,
             units_queued=units_queued
         )
 
@@ -378,7 +384,9 @@ class GamePlayer:
         # Map approximately to known strategies
         return pd.concat([pd.Series({"OpeningStrategy": strategy}), dark_age_approach, feudal_approach])
 
-    def extract_feudal_and_dark_age_economics(self, ) -> pd.Series:
+    def extract_feudal_and_dark_age_economics(self,
+                                              castle_time: pd.Timedelta,
+                                              ) -> pd.Series:
         # TODO
         # feudal age wood upgrade (early, late, castle)
         # feudal age farm upgrade (early, late, castle)
@@ -395,7 +403,13 @@ class GamePlayer:
         # number of walls in dark age
         # number of walls in feudal age
         # number of houses in dark age + feudal (assume part of walls)
-        return
+
+        # Return castle age time! the most important
+        stats_to_return = {
+            "CastleTime": castle_time,
+        }
+
+        return pd.Series(stats_to_return)
 
     def extract_player_choices_and_strategy(self) -> pd.Series:
         # TODO mine civilisations
@@ -414,8 +428,7 @@ class GamePlayer:
 
         # economic times to mine out
         self.all_mill_times = self.identify_building_and_timing("Mill")
-        min_mill_idx = self.all_mill_times.groupby(["player"])["timestamp"].transform(min) == all_mill_times["timestamp"]
-        first_mill_time = self.all_mill_times[min_mill_idx]
+        first_mill_time = self.all_mill_times["timestamp"].min()
 
         self.dark_age_stats = self.extract_feudal_time_information(
             feudal_time=self.feudal_time,
@@ -425,20 +438,20 @@ class GamePlayer:
         self.opening = pd.concat([self.opening, self.dark_age_stats])  # include self as is it empty series
 
         # Identify Feudal Age Strategy
-        player_one_opening_strategy = self.extract_opening_strategy(
+        self.opening_strategy = self.extract_opening_strategy(
             feudal_time=self.feudal_time,
             castle_time=self.castle_time,
-            military_buildings_spawned=self.military_buildings_created.loc[self.military_buildings_created["player"] == 1, :],
+            military_buildings_spawned=self.military_buildings_created,
             mill_created_time=first_mill_time,
             units_queued=self.queue_units,
             maa_upgrade=self.maa_time,
         )
 
-        self.opening = pd.concat([self.opening, player_one_opening_strategy])
+        self.feudal_economic_choices_and_castle_time = self.extract_feudal_and_dark_age_economics(castle_time=self.castle_time)
+
+        self.opening = pd.concat([self.opening, self.opening_strategy, self.feudal_economic_choices_and_castle_time])
 
         return self.opening
-
-
 
 
 if __name__ == "__main__":
