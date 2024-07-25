@@ -31,8 +31,6 @@ class AgeGame:
             self.match = parse_match(g)
             self.match_json = serialize(self.match)
 
-        self.players = self.match_json["players"]  # List of dictionaries, including civilisations; location;
-
         # Raw data from the game
         self.teams: list = self.match_json["teams"]  # Just a list lists with teams and player IDs per team 
         self.rated_game: bool = self.match_json["rated"]  # bool
@@ -45,8 +43,68 @@ class AgeGame:
         self.inputs = self.match_json["inputs"]
 
         # Transform raw data into usable chunks
-        self.inputs_df = pd.json_normalize(self.inputs)
-        self.actions_df = pd.json_normalize(self.actions)
+        self.all_inputs_df = pd.json_normalize(self.inputs)
+        self.all_actions_df = pd.json_normalize(self.actions)
+
+        # Store list of players as GamePlayer objects; this stores indivdual data and data mining methods
+        self.players_raw_info = self.match_json["players"]  # List of dictionaries, including civilisations; location;
+        print(self.players_raw_info[0].keys())
+        self.players = [GamePlayer(
+            number=player["number"],
+            name=player["name"],
+            civilisation=player["civilization"],
+            starting_position=player["position"],
+            actions=self.all_actions_df.loc[self.all_actions_df["player"] == player["number"], :],
+            inputs=self.all_inputs_df.loc[self.all_inputs_df["player"] == player["number"], :]
+            ) for player in self.players_raw_info]
+
+        return
+
+    def explore_games(self) -> None:
+        # Current knowledge - check out the objects added to the game
+
+        print("use this as a breakpoint")
+
+        return
+
+    def extract_map_features(self) -> pd.Series:
+        # TODO
+        # distance between players
+        # hills between players?
+        # number of trees directly between players / in corridor
+        # Idea for lumber camps - % of front covered by trees - maybe divide into quarters?
+        return
+
+    def advanced_parser(self) -> None:
+        # TODO mine location of players and their distance from players
+        # TODO mine civilisations and player rating from players
+        # TODO get the winner from players
+        # TODO mine if boar or elephant
+        # TODO mine if scout lost
+        # TODO identify what it looks like if a player un-queus a unit
+        # TODO create an object for each player that houses this information
+
+        # Extract the key statistics / data points
+        # research times to mine out
+        self.opening = pd.Series()
+        for player in self.players:
+            player_opening_strategies = player.extract_player_choices_and_strategy()
+            player_opening_strategies.add_prefix(f"Player{player.number}.")
+            self.opening = pd.concat([self.opening, player_opening_strategies])
+
+        return
+
+
+class GamePlayer:
+    def __init__(self, number: int, name: str, civilisation: str, starting_position: list, actions: pd.DataFrame, inputs: pd.DataFrame) -> None:
+
+        self.number = number,
+        self.name = name
+        self.civilisation = civilisation
+        self.starting_position = starting_position
+
+        self.inputs_df = inputs
+        self.actions_df = actions
 
         # Data formatting
         self.inputs_df["timestamp"] = pd.to_timedelta(self.inputs_df["timestamp"])
@@ -70,16 +128,8 @@ class AgeGame:
         # Information mined # TODO think of best way to store this - probably want one row of a table for the whole game, but maybe multiple?
         # One for each stage in the game? and flatten out what they do for each of these stages? interesting
         self.opening = pd.Series()
-        return
 
-    def explore_games(self) -> None:
-        # Current knowledge - check out the objects added to the game
-
-        print("use this as a breakpoint")
-
-        return
-
-    def identify_technology_research_and_time(self, technology, civilisations: dict = None) -> pd.DataFrame:
+    def identify_technology_research_and_time(self, technology, civilisations: dict = None) -> pd.Timedelta:
         """A helper function that can identify when players research certain things and the timing of that
 
         :param technology: technology that can be research TODO enumerate this
@@ -97,9 +147,7 @@ class AgeGame:
 
         # TODO check why there is two clicks - maybe one for queue and one for actually clicking up?
         # Handle two clicks
-        relevent_research = self.research_techs.loc[self.research_techs["param"] == technology, ["timestamp", "player"]]
-        max_idx = relevent_research.groupby(["player"])["timestamp"].transform(max) == relevent_research["timestamp"]
-        relevent_research = relevent_research[max_idx]
+        relevent_research = self.research_techs.loc[self.research_techs["param"] == technology, "timestamp"]  # handle unqueue
 
         # TODO - map the research times and then apply them, find a good way to house this data (tiny data with civ?)
         # TODO work out how to handle shorter time with civilisation parameter
@@ -121,14 +169,14 @@ class AgeGame:
         if building not in ["Mill", "Farm", "House", "Lumber Camp", "Mining Camp", "Blacksmith"]:
             logger.error(f"Technology given to find tech function incorrect. Tech was: {building}")
             raise ValueError(f"Couldn't find technology: {building}")
-    
+
         # TODO - map the building times, find a good way to house this data (tiny data with civ?)
         time_to_build_dictionary = {"Mill": 100, "Farm": 15}
         time_to_build = time_to_build_dictionary[building]
 
         relevent_building = self.economic_buildings_created.loc[self.economic_buildings_created["param"] == building, ["timestamp", "player"]]
         relevent_building["timestamp"] = relevent_building["timestamp"] + pd.Timedelta(seconds=time_to_build)
-        
+
         return relevent_building
 
     def extract_feudal_time_information(self, feudal_time: pd.Timedelta, loom_time: pd.Timedelta, civilisation: str = None) -> pd.Series:
@@ -201,11 +249,11 @@ class AgeGame:
         return pd.Series(dark_age_choices_to_return)
 
     def identify_feudal_military_choices(self,
-            feudal_time: pd.Timedelta,
-            castle_time: pd.Timedelta,
-            military_buildings_spawned: pd.DataFrame,
-            units_queued: pd.DataFrame
-    ) -> pd.Series:
+                                         feudal_time: pd.Timedelta,
+                                         castle_time: pd.Timedelta,
+                                         military_buildings_spawned: pd.DataFrame,
+                                         units_queued: pd.DataFrame
+                                         ) -> pd.Series:
         """Draws out the base military decisions in feudal age, e.g. buildings created, number of units, etc. TODO finish detail
 
         :param feudal_time: _description_
@@ -349,82 +397,48 @@ class AgeGame:
         # number of houses in dark age + feudal (assume part of walls)
         return
 
-    def extract_map_features(self) -> pd.Series:
-        # TODO
-        # distance between players
-        # hills between players?
-        # number of trees directly between players / in corridor
-        # Idea for lumber camps - % of front covered by trees - maybe divide into quarters?
-        return
-
-    def advanced_parser(self) -> None:
-        # TODO mine location of players and their distance from players
-        # TODO mine civilisations and player rating from players
-        # TODO get the winner from players
+    def extract_player_choices_and_strategy(self) -> pd.Series:
+        # TODO mine civilisations
         # TODO mine if boar or elephant
         # TODO mine if scout lost
         # TODO identify what it looks like if a player un-queus a unit
-        # TODO create an object for each player that houses this information
 
         # Extract the key statistics / data points
         # research times to mine out
-        feudal_times = self.identify_technology_research_and_time("Feudal Age")  # Get feudal times of the players
-        castle_times = self.identify_technology_research_and_time("Castle Age")
-        loom_times = self.identify_technology_research_and_time("Loom")  # Get loom time
+        self.feudal_time = self.identify_technology_research_and_time("Feudal Age")  # Get feudal times of the players
+        self.castle_time = self.identify_technology_research_and_time("Castle Age")
+        self.loom_times = self.identify_technology_research_and_time("Loom")  # Get loom time
 
         # Military timings to mine out
-        maa_time = self.identify_technology_research_and_time("Man-At-Arms") # TODO check name
-        player_one_maa = None  # TODO when made player object remove this
-        if not maa_time.loc[maa_time["player"] == 1, "timestamp"].empty:
-            player_one_maa = not maa_time.loc[maa_time["player"] == 1, "timestamp"].iloc[0]
-
-        player_two_maa = None  # TODO when made player object remove this
-        if not maa_time.loc[maa_time["player"] == 2, "timestamp"].empty:
-            player_two_maa = not maa_time.loc[maa_time["player"] == 2, "timestamp"].iloc[0]
+        self.maa_time = self.identify_technology_research_and_time("Man-At-Arms")  # TODO check name
 
         # economic times to mine out
-        all_mill_times = self.identify_building_and_timing("Mill")
-        min_mill_idx = all_mill_times.groupby(["player"])["timestamp"].transform(min) == all_mill_times["timestamp"]
-        first_mill_times = all_mill_times[min_mill_idx]
+        self.all_mill_times = self.identify_building_and_timing("Mill")
+        min_mill_idx = self.all_mill_times.groupby(["player"])["timestamp"].transform(min) == all_mill_times["timestamp"]
+        first_mill_time = self.all_mill_times[min_mill_idx]
 
-        # TODO create a factory for each players choices or an object
-        player_one_dark_age_stats = self.extract_feudal_time_information(
-            feudal_time=feudal_times.loc[feudal_times["player"] == 1, "timestamp"].iloc[0],
-            loom_time=loom_times.loc[loom_times["player"] == 1, "timestamp"].iloc[0])
+        self.dark_age_stats = self.extract_feudal_time_information(
+            feudal_time=self.feudal_time,
+            loom_time=self.loom_times
+        )
 
-        player_two_dark_age_stats = self.extract_feudal_time_information(
-            feudal_time=feudal_times.loc[feudal_times["player"] == 2, "timestamp"].iloc[0],
-            loom_time=loom_times.loc[loom_times["player"] == 2, "timestamp"].iloc[0])
-
-        player_one_dark_age_stats = player_one_dark_age_stats.add_prefix("PlayerOne.")  # Naming convention; TODO sub for winner and loser
-        player_two_dark_age_stats = player_two_dark_age_stats.add_prefix("PlayerTwo.")
-
-        self.opening = pd.concat([self.opening, player_one_dark_age_stats, player_two_dark_age_stats])  # include self as is it empty series
+        self.opening = pd.concat([self.opening, self.dark_age_stats])  # include self as is it empty series
 
         # Identify Feudal Age Strategy
         player_one_opening_strategy = self.extract_opening_strategy(
-            feudal_time=feudal_times.loc[feudal_times["player"] == 1, "timestamp"].iloc[0],
-            castle_time=castle_times.loc[castle_times["player"] == 1, "timestamp"].iloc[0],
+            feudal_time=self.feudal_time,
+            castle_time=self.castle_time,
             military_buildings_spawned=self.military_buildings_created.loc[self.military_buildings_created["player"] == 1, :],
-            mill_created_time=first_mill_times.loc[first_mill_times["player"] == 1, "timestamp"].iloc[0],
-            units_queued=self.queue_units.loc[self.queue_units["player"] == 1, :],
-            maa_upgrade=player_one_maa,
+            mill_created_time=first_mill_time,
+            units_queued=self.queue_units,
+            maa_upgrade=self.maa_time,
         )
-        player_one_opening_strategy = player_one_opening_strategy.add_prefix("PlayerOne.")
 
-        player_two_opening_strategy = self.extract_opening_strategy(
-            feudal_time=feudal_times.loc[feudal_times["player"] == 2, "timestamp"].iloc[0],
-            castle_time=castle_times.loc[castle_times["player"] == 2, "timestamp"].iloc[0],
-            military_buildings_spawned=self.military_buildings_created.loc[self.military_buildings_created["player"] == 2, :],
-            mill_created_time=first_mill_times.loc[first_mill_times["player"] == 2, "timestamp"].iloc[0],
-            units_queued=self.queue_units.loc[self.queue_units["player"] == 2, :],
-            maa_upgrade=player_one_maa,
-        )
-        player_two_opening_strategy = player_two_opening_strategy.add_prefix("PlayerTwo.")
+        self.opening = pd.concat([self.opening, player_one_opening_strategy])
 
-        self.opening = pd.concat([self.opening, player_one_opening_strategy, player_two_opening_strategy])
+        return self.opening
 
-        return
+
 
 
 if __name__ == "__main__":
