@@ -7,6 +7,7 @@ from pathlib import Path
 from datetime import datetime
 from mgz import header, fast
 from mgz.model import parse_match, serialize
+# from utils import GamePlayer, AgeGame  # buildings model
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -15,103 +16,31 @@ logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=loggi
 # TODO step one - identify the things within an AOE game that I can find, publish this as a package; 
 # e.g. how close the map is; front or back woodlines, civs, winner, units created, timings etc.
 
+# TODO put objects to utils script and import them
+
 # TODO idea for structure - design a player that keeps track of their actions and their location and stuff
 # store this within game; use to mine features for analysis
 # construct a timeline? timeseries data?
 
-
-class AgeGame:
-    """A small wrapper for understanding an AOE game. Should just be a container for the mgz game which I can start to unpack
-    """
-    def __init__(self, path: Path) -> None:
-        self.path_to_game: Path = path
-
-        with open(self.path_to_game, "rb") as g:
-            self.match = parse_match(g)
-            self.match_json = serialize(self.match)
-
-        # Raw data from the game
-        self.teams: list = self.match_json["teams"]  # Just a list lists with teams and player IDs per team 
-        self.rated_game: bool = self.match_json["rated"]  # bool
-        self.game_speed: str = self.match_json["speed"]  # String
-        self.game_data_set: str = self.match_json["dataset"]  # Just DE, not necessary
-        self.starting_age: str = self.match_json["starting_age"]  # String, Dark/Fuedal/Castle
-        self.game_duration: str = self.match_json["duration"]  # time HH:MM:SS.XXXXXX
-        self.timestamp: str = self.match_json["timestamp"]  # Datetime, ISO format
-        self.actions = self.match_json["actions"]  # JSON format! this is it
-        self.inputs = self.match_json["inputs"]
-
-        # Transform raw data into usable chunks
-        self.all_inputs_df = pd.json_normalize(self.inputs)
-        self.all_actions_df = pd.json_normalize(self.actions)
-
-        # Store list of players as GamePlayer objects; this stores indivdual data and data mining methods
-        self.players_raw_info = self.match_json["players"]  # List of dictionaries, including civilisations; location;
-        print(self.players_raw_info[0].keys())
-        self.players = [GamePlayer(
-            number=player["number"],
-            name=player["name"],
-            civilisation=player["civilization"],
-            starting_position=player["position"],
-            actions=self.all_actions_df.loc[self.all_actions_df["player"] == player["number"], :],
-            inputs=self.all_inputs_df.loc[self.all_inputs_df["player"] == player["number"], :]
-            ) for player in self.players_raw_info]
-
-        return
-
-    def explore_games(self) -> None:
-        # Current knowledge - check out the objects added to the game
-
-        print("use this as a breakpoint")
-
-        return
-
-    def extract_map_features(self) -> pd.Series:
-        # TODO
-        # hills between players?
-        # number of trees directly between players / in corridor
-        # Idea for lumber camps - % of front covered by trees - maybe divide into quarters?
-        return
-
-    def calculate_distance_between_players(self, location_one: tuple, location_two: tuple) -> pd.Series:  # TODO or list
-        return math.dist(location_one, location_two)
-
-    def advanced_parser(self) -> None:
-        # TODO mine civilisations and player rating from players
-        # TODO get the winner from players
-        # TODO mine if boar or elephant
-        # TODO mine if scout lost
-        # TODO identify what it looks like if a player un-queus a unit
-
-        # Extract the key statistics / data points
-        # research times to mine out
-        self.opening = pd.Series()
-        self.game_results = pd.Series()
-        for player in self.players:
-            player_opening_strategies = player.extract_player_choices_and_strategy()
-            player_opening_strategies = player_opening_strategies.add_prefix(f"Player{player.number}.")
-            self.opening = pd.concat([self.opening, player_opening_strategies])
-
-            location_and_civilisation = pd.concat([player.return_civilisation(), player.return_location()])
-            location_and_civilisation = location_and_civilisation.add_prefix(f"Player{player.number}.")
-
-            self.game_results = pd.concat([self.game_results, location_and_civilisation, self.opening])
-
-        self.game_results["DistanceBetweenPlayers"] = self.calculate_distance_between_players(
-            location_one=self.game_results["Player1.StartingLocation"],
-            location_two=self.game_results["Player2.StartingLocation"]
-        )
-
-        return
-
-
 class GamePlayer:
-    def __init__(self, number: int, name: str, civilisation: str, starting_position: list, actions: pd.DataFrame, inputs: pd.DataFrame) -> None:
+    def __init__(
+            self,
+            number: int,
+            name: str,
+            civilisation: str,
+            starting_position: list,
+            actions: pd.DataFrame,
+            inputs: pd.DataFrame,
+            winner: bool,
+            elo: int,
+            ) -> None:
 
         self.number = number
         self.name = name
         self.civilisation = civilisation  # Comes as dict with x and y - store as tuple for arithmetic
         self.starting_position = (starting_position["x"], starting_position["y"])
+        self.player_won = winner
+        self.elo = elo
 
         self.inputs_df = inputs
         self.actions_df = actions
@@ -464,12 +393,114 @@ class GamePlayer:
             maa_upgrade=self.maa_time,
         )
 
-        self.feudal_economic_choices_and_castle_time = self.extract_feudal_and_dark_age_economics(castle_time=self.castle_time)
+        self.feudal_economic_choices_and_castle_time = self.extract_feudal_and_dark_age_economics(
+            castle_time=self.castle_time,
+            feudal_time=self.feudal_time
+        )
 
         self.opening = pd.concat([self.opening, self.opening_strategy, self.feudal_economic_choices_and_castle_time])
 
         return self.opening
 
+
+class AgeGame:
+    """A small wrapper for understanding an AOE game. Should just be a container for the mgz game which I can start to unpack
+    """
+    def __init__(self, path: Path) -> None:
+        self.path_to_game: Path = path
+
+        with open(self.path_to_game, "rb") as g:
+            self.match = parse_match(g)
+            self.match_json = serialize(self.match)
+
+        # Raw data from the game
+        self.teams: list = self.match_json["teams"]  # Just a list lists with teams and player IDs per team 
+        self.rated_game: bool = self.match_json["rated"]  # bool
+        self.game_speed: str = self.match_json["speed"]  # String
+        self.game_data_set: str = self.match_json["dataset"]  # Just DE, not necessary
+        self.starting_age: str = self.match_json["starting_age"]  # String, Dark/Fuedal/Castle
+        self.game_duration: str = self.match_json["duration"]  # time HH:MM:SS.XXXXXX
+        self.timestamp: str = self.match_json["timestamp"]  # Datetime, ISO format
+        self.actions = self.match_json["actions"]  # JSON format! this is it
+        self.inputs = self.match_json["inputs"]
+
+        # Transform raw data into usable chunks
+        self.all_inputs_df = pd.json_normalize(self.inputs)
+        self.all_actions_df = pd.json_normalize(self.actions)
+
+        # Store list of players as GamePlayer objects; this stores indivdual data and data mining methods
+        self.players_raw_info = self.match_json["players"]  # List of dictionaries, including civilisations; location;
+        self.players = [GamePlayer(
+            number=player["number"],
+            name=player["name"],
+            civilisation=player["civilization"],
+            starting_position=player["position"],
+            elo=player["rate_snapshot"],
+            winner=player["winner"],
+            actions=self.all_actions_df.loc[self.all_actions_df["player"] == player["number"], :],
+            inputs=self.all_inputs_df.loc[self.all_inputs_df["player"] == player["number"], :]
+            ) for player in self.players_raw_info]
+
+        return
+
+    def explore_games(self) -> None:
+        # Current knowledge - check out the objects added to the game
+
+        print("use this as a breakpoint")
+
+        return
+
+    def extract_map_features(self) -> pd.Series:
+        # TODO
+        # hills between players?
+        # number of trees directly between players / in corridor
+        # Idea for lumber camps - % of front covered by trees - maybe divide into quarters?
+        return
+
+    def calculate_distance_between_players(self, location_one: tuple, location_two: tuple) -> pd.Series:  # TODO or list
+        return math.dist(location_one, location_two)
+
+    def calculate_difference_in_elo(self, player_one: GamePlayer, player_two: GamePlayer):
+        if player_one.player_won:
+            return player_one.elo - player_two.elo
+        return player_two.elo - player_one.elo
+
+    def advanced_parser(self) -> None:
+        # TODO mine civilisations and player rating from players
+        # TODO get the winner from players
+        # TODO mine if boar or elephant
+        # TODO mine if scout lost
+        # TODO identify what it looks like if a player un-queus a unit
+
+        # Extract the key statistics / data points
+        # research times to mine out
+        self.opening = pd.Series()
+        self.game_results = pd.Series()
+
+        # Identify the opening strategy and choices of each player
+        for player in self.players:
+            player_opening_strategies = player.extract_player_choices_and_strategy()
+            player_opening_strategies = player_opening_strategies.add_prefix(f"Player{player.number}.")
+            self.opening = pd.concat([self.opening, player_opening_strategies])
+
+            location_and_civilisation = pd.concat([player.return_civilisation(), player.return_location()])
+            location_and_civilisation = location_and_civilisation.add_prefix(f"Player{player.number}.")
+
+            self.game_results = pd.concat([self.game_results, location_and_civilisation, self.opening])
+
+        # Distance between players
+        self.game_results["DistanceBetweenPlayers"] = self.calculate_distance_between_players(
+            location_one=self.game_results["Player1.StartingLocation"],
+            location_two=self.game_results["Player2.StartingLocation"]
+        )
+
+        # Elo difference between players - negative is winner is lower elo
+        self.game_results["DifferenceInELO"] = self.calculate_difference_in_elo(
+            player_one=self.players[0],
+            player_two=self.players[1]
+        )
+
+        return
 
 if __name__ == "__main__":
 
@@ -478,5 +509,4 @@ if __name__ == "__main__":
     test_match = AgeGame(path=test_file)
     test_match.advanced_parser()
     print("\n")
-    print(test_match.opening)
-
+    print(test_match.game_results)
