@@ -22,7 +22,6 @@ logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=loggi
 
 class AgeGame:
     """A small wrapper for understanding an AOE game. Should just be a container for the mgz game which I can start to unpack
-    TODO later, plan the functionality for a wrapper for this
     """
     def __init__(self, path: Path) -> None:
         self.path_to_game: Path = path
@@ -69,28 +68,39 @@ class AgeGame:
 
     def extract_map_features(self) -> pd.Series:
         # TODO
-        # distance between players
         # hills between players?
         # number of trees directly between players / in corridor
         # Idea for lumber camps - % of front covered by trees - maybe divide into quarters?
         return
 
+    def calculate_distance_between_players(self, location_one: tuple, location_two: tuple) -> pd.Series:  # TODO or list
+        return math.dist(location_one, location_two)
+
     def advanced_parser(self) -> None:
-        # TODO mine location of players and their distance from players
         # TODO mine civilisations and player rating from players
         # TODO get the winner from players
         # TODO mine if boar or elephant
         # TODO mine if scout lost
         # TODO identify what it looks like if a player un-queus a unit
-        # TODO create an object for each player that houses this information
 
         # Extract the key statistics / data points
         # research times to mine out
         self.opening = pd.Series()
+        self.game_results = pd.Series()
         for player in self.players:
             player_opening_strategies = player.extract_player_choices_and_strategy()
             player_opening_strategies = player_opening_strategies.add_prefix(f"Player{player.number}.")
             self.opening = pd.concat([self.opening, player_opening_strategies])
+
+            location_and_civilisation = pd.concat([player.return_civilisation(), player.return_location()])
+            location_and_civilisation = location_and_civilisation.add_prefix(f"Player{player.number}.")
+
+            self.game_results = pd.concat([self.game_results, location_and_civilisation, self.opening])
+
+        self.game_results["DistanceBetweenPlayers"] = self.calculate_distance_between_players(
+            location_one=self.game_results["Player1.StartingLocation"],
+            location_two=self.game_results["Player2.StartingLocation"]
+        )
 
         return
 
@@ -100,8 +110,8 @@ class GamePlayer:
 
         self.number = number
         self.name = name
-        self.civilisation = civilisation
-        self.starting_position = starting_position
+        self.civilisation = civilisation  # Comes as dict with x and y - store as tuple for arithmetic
+        self.starting_position = (starting_position["x"], starting_position["y"])
 
         self.inputs_df = inputs
         self.actions_df = actions
@@ -125,9 +135,15 @@ class GamePlayer:
             self.economic_buildings_created.loc[:, "param"].isin(military_buildings)
             ]  # TODO factor in build times!
 
-        # Information mined # TODO think of best way to store this - probably want one row of a table for the whole game, but maybe multiple?
-        # One for each stage in the game? and flatten out what they do for each of these stages? interesting
         self.opening = pd.Series()
+
+    def return_location(self) -> pd.Series:
+        """Wrapper to return a pandas friendly starting position object"""
+        return pd.Series({"StartingLocation": self.starting_position})
+
+    def return_civilisation(self) -> pd.Series:
+        """Wrapper to return civilisation"""
+        return pd.Series({"Civilisation": self.civilisation})
 
     def identify_technology_research_and_time(self, technology, civilisations: dict = None) -> pd.Timedelta:
         """A helper function that can identify when players research certain things and the timing of that
@@ -154,12 +170,13 @@ class GamePlayer:
 
         if relevent_research.empty:
             # Should return empty series instead? for type safety? hmm TODO
+            # TODO log if cannot find
             return None
 
         return relevent_research.iloc[len(relevent_research) - 1]  # using len here handles multiple like a cancel and re-research
 
     def identify_building_and_timing(self, building, civilisations: dict = None) -> pd.DataFrame:
-        """Helper to find all the creations of an economic building type. TODO refactor for each player.
+        """Helper to find all the creations of an economic building type. TODO Build times.
 
         :param building: _description_ TODO
         :type building: _type_
@@ -200,12 +217,11 @@ class GamePlayer:
         :rtype: pd.Series
         """
 
-        # TODO - check if loom was in feudal or not
         loom_in_dark_age = loom_time < feudal_time
 
-        villager_creation_time = 25  # TODO handle other civs that have special shit like chinese, Mayans, Hindustanis
+        villager_creation_time = 25  # TODO handle other civs that have special things like chinese, Mayans, Hindustanis
 
-        villager_analysis = feudal_time / villager_creation_time  # TODO working with times
+        villager_analysis = feudal_time / villager_creation_time
         number_villagers = villager_analysis.seconds
         dark_age_idle_time = (villager_analysis._ms * villager_creation_time) / 1000  # convert ms to s, this is % of villager time
 
@@ -245,7 +261,7 @@ class GamePlayer:
         else:
             militia_opening_strategy = None
 
-        # TODO identify the time the militia rock up to the opponents base
+        # TODO identify the time the militia rock up to the opponents base - click within certain distance
         # Return key featues
         dark_age_choices_to_return = {
             "FirstBarracksTime": first_barracks_time,
@@ -261,7 +277,7 @@ class GamePlayer:
                                          castle_time: pd.Timedelta,
                                          units_queued: pd.DataFrame
                                          ) -> pd.Series:
-        """Draws out the base military decisions in feudal age, e.g. buildings created, number of units, etc. TODO finish detail
+        """Draws out the base military decisions in feudal age, e.g. buildings created, number of units, etc.
 
         :param feudal_time: _description_
         :type feudal_time: pd.Timedelta
@@ -309,7 +325,7 @@ class GamePlayer:
 
         # Extract time to 3 of first units
         # TODO - need to build out a method for working out when an object could produce a unit
-        # TODO Extract idle time of first military building
+        # TODO Extract idle time of first military building - best method is with object that handles queue length times
 
         # TODO extract second military building
         # TODO Extract second military unit
@@ -385,6 +401,7 @@ class GamePlayer:
         return pd.concat([pd.Series({"OpeningStrategy": strategy}), dark_age_approach, feudal_approach])
 
     def extract_feudal_and_dark_age_economics(self,
+                                              feudal_time: pd.Timedelta,
                                               castle_time: pd.Timedelta,
                                               ) -> pd.Series:
         # TODO
