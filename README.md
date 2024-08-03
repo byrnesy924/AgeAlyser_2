@@ -68,6 +68,20 @@ https://www.aoe2insights.com/match/301103008/#savegames
 e.g. this is a Hera and Yo game
 https://aoe.ms/replay/?gameId=301103008&profileId=197964
 
+### Modeling Structure
+**AgeGame** 
+- Models the map itself and the natural objects within
+- key are hills, resources, especially trees
+- attempts to extract relevant features from this, e.g. resources on front/hills, distance to other player
+
+**GamePlayer**
+- Models the decisions/strategies/tactics made by individuals
+- How strategies and choices are mined
+
+**AgeGame**
+- Central object, contains key data for the game, also houses behaviour
+
+
 
 ### Version of Parser to use - AOE Insights's own fork of MGZ
 ```
