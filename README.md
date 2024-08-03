@@ -54,7 +54,7 @@ Features:
     - FC archers
     - FC knights
     - FC UU
-- boom
+    - boom
     - timing of 1st TC
     - timing of second TC
     - TC idle time
