@@ -1,0 +1,55 @@
+,0
+Player1.Civilisation,Dravidians
+Player1.StartingLocation,"(97.0, 72.0)"
+Player1.FeudalTime,0 days 00:06:16.883000
+Player1.Villagers,15
+Player1.DarkAgeIdleTime,1.875
+Player1.DarkAgeLoom,False
+Player1.OpeningStrategy,Scouts into archers
+Player1.FirstBarracksTime,0 days 00:07:45.647000
+Player1.MilitiaStrategyIdentified,
+Player1.NumberOfMilitiaUnits,0
+Player1.PreMillBarracks,False
+Player1.OpeningMilitaryBuildingTime,0 days 00:08:31.966000
+Player1.OpeningMilitaryBuilding,Stable
+Player1.Archer,1
+Player1.Scout Cavalry,3
+Player1.Spearman,2
+Player1.Skirmisher,0
+Player1.CastleTime,0 days 00:16:04.730000
+Player2.Civilisation,Vietnamese
+Player2.StartingLocation,"(20.0, 49.0)"
+Player1.FeudalTime,0 days 00:06:16.883000
+Player1.Villagers,15
+Player1.DarkAgeIdleTime,1.875
+Player1.DarkAgeLoom,False
+Player1.OpeningStrategy,Scouts into archers
+Player1.FirstBarracksTime,0 days 00:07:45.647000
+Player1.MilitiaStrategyIdentified,
+Player1.NumberOfMilitiaUnits,0
+Player1.PreMillBarracks,False
+Player1.OpeningMilitaryBuildingTime,0 days 00:08:31.966000
+Player1.OpeningMilitaryBuilding,Stable
+Player1.Archer,1
+Player1.Scout Cavalry,3
+Player1.Spearman,2
+Player1.Skirmisher,0
+Player1.CastleTime,0 days 00:16:04.730000
+Player2.FeudalTime,0 days 00:06:25.424000
+Player2.Villagers,15
+Player2.DarkAgeIdleTime,10.4
+Player2.DarkAgeLoom,False
+Player2.OpeningStrategy,Straight Skirms or Trash Rush
+Player2.FirstBarracksTime,0 days 00:07:52.355000
+Player2.MilitiaStrategyIdentified,
+Player2.NumberOfMilitiaUnits,0
+Player2.PreMillBarracks,False
+Player2.OpeningMilitaryBuildingTime,0 days 00:11:46.758000
+Player2.OpeningMilitaryBuilding,Archery Range
+Player2.Skirmisher,5
+Player2.Spearman,5
+Player2.Archer,0
+Player2.Scout Cavalry,0
+Player2.CastleTime,0 days 00:17:58.272000
+DistanceBetweenPlayers,80.36168241145776
+DifferenceInELO,46
