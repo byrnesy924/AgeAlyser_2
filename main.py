@@ -4,6 +4,7 @@ import json
 import os
 import math
 from scipy.ndimage import label, generate_binary_structure
+from shapely import Point, Polygon
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -253,7 +254,7 @@ class GamePlayer:
                 number_of_each_unit[unit] = 0
 
         # Non spear units - to identify strategy
-        non_spear_military_units = feudal_military_units.loc[feudal_military_units["param"] != "Spearman", :]
+        # non_spear_military_units = feudal_military_units.loc[feudal_military_units["param"] != "Spearman", :]  # TODO
 
         # Extract time to 3 of first units
         # TODO - need to build out a method for working out when an object could produce a unit
@@ -409,15 +410,13 @@ class GamePlayer:
 class AgeMap:
     """Data structure representing the AOE2 map. Goal of identifying and extracting map features for analysis
     """
-    def __init__(self, map: dict, gaia: dict, player_starting_locations: list = None) -> None:
-        # TODO reconstruct map
-        # --> goal is to have a data structure which contains:
-        #   - for every tile, the elevation, and whether it is a tree, gold, stone
-        # The starting locations of players
-        # TODO identify relic locations and whether this matters (like number of closer relics?)
+    def __init__(self, map: dict, gaia: dict, player_starting_locations: list) -> None:
+        """Reconstruct the key features of the map - terrain, relics, resources (trees, gold, stone, berries).
+        Store this information in a dataframe"""
+        # TODO do something with deer/ostrich/zebra
 
         # Map object
-        self.map : dict = map  # Store map object
+        self.map: dict = map  # Store map object
         self.map_size_int: int = map["dimension"]  # The size of the map (note map is always square)
         self.map_name: str = self.map["name"]
         self.elevation_map: pd.DataFrame = pd.DataFrame(self.map["tiles"])  # Elevation of each tile
@@ -431,24 +430,72 @@ class AgeMap:
 
         self.player_locations = player_starting_locations
 
-        resources_to_identify = ["Fruit Bush", "Gold Mine", "Stone Mine"]
-        # TODO - handle trees which all are the format "Tree (TreeType)"
-        # TODO check if "Plant (PlantType)" is the same as trees
-        self.all_gold_labels = self.identify_islands_of_resources(self.tiles, resource="Gold Mine")
-        self.tiles.join(self.all_gold_labels, on="instance_id", how="outer")
-        print("Test")
+        self.tiles["name"] = self.tiles["name"].str.replace(r"\s\(.*\)", "", regex=True)  # Remove anything in brackets - treat them as the same
+
+        # Identify islands (groups) of resources for minin information from later
+        # TODO handle that Fruit Bush == Berries in this case
+        resources_to_identify = ["Fruit Bush", "Gold Mine", "Stone Mine", "Tree"]
+        self.resource_labels = [self.identify_islands_of_resources(self.tiles, resource=res) for res in resources_to_identify]
+
+        # Take all the resource labels and merge onto main tiles dataframe
+        for res in self.resource_labels:
+            self.tiles = self.tiles.merge(res.drop(columns=["x", "y"]), on="instance_id", how="left")
+
+        # Flag resources that are in between the players
+        # Identify the corners of the corridor between players
+        self.corridor_between_players = self.identify_pathway_between_players()  # List of tuples
+
+        resources_to_check_between_players = ["Fruit Bush", "Gold Mine", "Stone Mine", "Tree"]  # Check these resources
+        resources_between = pd.DataFrame(columns=["instance_id"])
+        for res in resources_to_check_between_players:
+            # Check each resource location is within the polygon
+            df_to_merge = self.identify_resources_or_feature_between_players(
+                map_feature_locations=self.tiles.loc[self.tiles[res] > 0, :],
+                polygon_to_check_within=self.corridor_between_players
+            )
+            if not df_to_merge.empty:
+                resources_between = resources_between.merge(df_to_merge, on="instance_id", how="left")  # TODO check that there is a true col
+        # Merge DF of all resources that are between
+        self.tiles = self.tiles.merge(resources_between, on="instance_id", how="left")
+        
+        # TODO now actually analyse this model of the map
+
+    def identify_pathway_between_players(self) -> list:
+        """Idenitfy a corridor between players. 
+        Use this to find key features in main battlefields, like trees, resources, large hills etc."""
+        # TODO think about making this like a cone @ each players base, and identify a different polygon for their sides
+        # Identify the vector between players
+        # dx = x2 - x1, dy = y2 - y1
+        dx, dy = (self.player_locations[0][0] - self.player_locations[1][0],
+                  self.player_locations[0][1] - self.player_locations[1][1])
+
+        # Normalise the vector
+        magnitude = (dx**2 + dy**2)**1/2  # Cartesian length
+        dx, dy = dx/magnitude, dy/magnitude
+
+        # Identify the tangential direction to this vector
+        # for a vector (dx, dy), the tangents from the same starting points are (-dy, dx) and (dy, -dx)
+        # Identify the 4 corners of the plane by taking the starting locations and going 25 tiles in either of the normal directions
+        # example: c1 = (x_1, y_1) + (dy, -dx)
+        c1 = (self.player_locations[0][0] + dy*25, self.player_locations[0][1] - dx*25)
+        c2 = (self.player_locations[0][0] - dy*25, self.player_locations[0][1] + dx*25)
+        c3 = (self.player_locations[1][0] + dy*25, self.player_locations[1][1] - dx*25)
+        c4 = (self.player_locations[1][0] - dy*25, self.player_locations[1][1] + dx*25)
+
+        return [c1, c2, c3, c4]
 
     def identify_key_hills_between_players(self):
         # TODO
         pass
 
-    def identify_front_berries(self):
-        # TODO
-        pass
+    def identify_resources_or_feature_between_players(self, map_feature_locations: pd.DataFrame, polygon_to_check_within: list) -> pd.Series:
+        """Identify the # of a map feature between players. Models scenarios such as large forests that units must move around, 
+        or can identify forward golds"""
+        # TODO generalise this to just polygons, so that the sides can be checked for resources
+        poly = Polygon(polygon_to_check_within)
+        map_feature_locations["BetweenPlayers"] = map_feature_locations.apply(lambda x: Point(x["x"], x["y"],).within(poly), axis=1)
 
-    def identify_amount_of_trees_between_players(self):
-        # TODO
-        pass
+        return map_feature_locations.loc[map_feature_locations["BetweenPlayers"], "instance_id"]
 
     def identify_player_front_gold(self):
         # TODO or how forward a gold is with some sort of modelling
@@ -487,8 +534,6 @@ class AgeMap:
         return df
 
 
-
-
 class AgeGame:
     """A small wrapper for understanding an AOE game. Should just be a container for the mgz game which I can start to unpack
     """
@@ -511,8 +556,12 @@ class AgeGame:
         self.inputs = self.match_json["inputs"]
 
         # Get features of the map in the AgeMap object
-        self.game_map = AgeMap(map=self.match_json["map"], gaia=self.match_json["gaia"]) # TODO explore how to identify front/back golds; tree locations
-
+        self.game_map = AgeMap(
+            map=self.match_json["map"],
+            gaia=self.match_json["gaia"],
+            player_starting_locations=[tuple(self.match_json["players"][0]["position"].values()),
+                                       tuple(self.match_json["players"][1]["position"].values())]
+        )
 
         # Transform raw data into usable chunks
         self.all_inputs_df = pd.json_normalize(self.inputs)
