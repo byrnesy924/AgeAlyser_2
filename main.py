@@ -2,10 +2,12 @@ import pandas as pd
 import json
 import os
 import math
+from scipy.ndimage import label
 import logging
 from pathlib import Path
 from datetime import datetime
-from mgz import header, fast
+from mgz import header, fast, body
+from mgz.summary import Summary
 from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 
@@ -403,6 +405,70 @@ class GamePlayer:
         return self.opening
 
 
+class AgeMap:
+    """Data structure representing the AOE2 map. Goal of identifying and extracting map features for analysis
+    """
+    def __init__(self, map: dict, gaia: dict, player_starting_locations: list = None) -> None:
+        # TODO reconstruct map
+        # --> goal is to have a data structure which contains:
+        #   - for every tile, the elevation, and whether it is a tree, gold, stone
+        # The starting locations of players
+        # TODO identify relic locations and whether this matters (like number of closer relics?)
+
+        # Map object
+        self.map = map  # Store map object
+        self.map_name = self.map["name"]
+        self.elevation_map = pd.DataFrame(self.map["tiles"])  # Elevation of each tile
+        self.elevation_map = self.elevation_map.join(self.elevation_map["position"].apply(pd.Series), validate="one_to_one")  # Explode out dict positions
+
+        # Dsitribution of starting objects
+        self.tiles_raw = gaia
+        self.tiles = pd.DataFrame(gaia)
+        self.tiles = self.tiles.join(self.tiles["position"].apply(pd.Series), validate="one_to_one")  # Explode out dict into cols for x and y
+        # TODO clean up dataframes
+
+        self.player_locations = player_starting_locations
+
+        resources_to_identify = ["Fruit Bush", "Gold Mine", "Stone Mine"]
+        # TODO - handle trees which all are the format "Tree (TreeType)"
+        # TODO check if "Plant (PlantType)" is the same as trees
+        self.all_gold_labels = self.identify_islands_of_resources(self.tiles, resource="Gold Mine")
+
+    def identify_key_hills_between_players(self):
+        # TODO
+        pass
+
+    def identify_front_berries(self):
+        # TODO
+        pass
+
+    def identify_amount_of_trees_between_players(self):
+        # TODO
+        pass
+
+    def identify_player_front_gold(self):
+        # TODO or how forward a gold is with some sort of modelling
+        # TODO gold is on a hill, main gold
+        # TODO identify clusters of gold
+        pass
+
+    def identify_player_wood_setup(self):
+        # TODO
+        pass
+
+    def identify_islands_of_resources(self, dataframe_of_map: pd.DataFrame, resource: str):
+        """Search for islands of objects in a 2D image. The 2D image is the map, with each island being of the same resource (e.g., gold)"""
+        # See some resources: https://stackoverflow.com/questions/46737409/finding-connected-components-in-a-pixel-array
+        # https://docs.scipy.org/doc/scipy-0.16.0/reference/generated/scipy.ndimage.measurements.label.html
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.label.html#scipy.ndimage.label
+
+        df = dataframe_of_map
+
+        return label(array_of_resources)
+
+
+
+
 class AgeGame:
     """A small wrapper for understanding an AOE game. Should just be a container for the mgz game which I can start to unpack
     """
@@ -423,6 +489,10 @@ class AgeGame:
         self.timestamp: str = self.match_json["timestamp"]  # Datetime, ISO format
         self.actions = self.match_json["actions"]  # JSON format! this is it
         self.inputs = self.match_json["inputs"]
+
+        # Get features of the map in the AgeMap object
+        self.game_map = AgeMap(map=self.match_json["map"], gaia=self.match_json["gaia"]) # TODO explore how to identify front/back golds; tree locations
+
 
         # Transform raw data into usable chunks
         self.all_inputs_df = pd.json_normalize(self.inputs)
@@ -502,6 +572,7 @@ class AgeGame:
 
         return
 
+
 if __name__ == "__main__":
 
     test_file = Path("Test_Games/SD-AgeIIDE_Replay_324565276.aoe2record")
@@ -510,3 +581,4 @@ if __name__ == "__main__":
     test_match.advanced_parser()
     print("\n")
     print(test_match.game_results)
+    test_match.game_results.to_csv("Test_Games/Test_results.csv")
