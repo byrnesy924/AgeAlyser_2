@@ -1,8 +1,9 @@
+import numpy as np
 import pandas as pd
 import json
 import os
 import math
-from scipy.ndimage import label
+from scipy.ndimage import label, generate_binary_structure
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -416,13 +417,14 @@ class AgeMap:
         # TODO identify relic locations and whether this matters (like number of closer relics?)
 
         # Map object
-        self.map = map  # Store map object
-        self.map_name = self.map["name"]
-        self.elevation_map = pd.DataFrame(self.map["tiles"])  # Elevation of each tile
+        self.map : dict = map  # Store map object
+        self.map_size_int: int = map["dimension"]  # The size of the map (note map is always square)
+        self.map_name: str = self.map["name"]
+        self.elevation_map: pd.DataFrame = pd.DataFrame(self.map["tiles"])  # Elevation of each tile
         self.elevation_map = self.elevation_map.join(self.elevation_map["position"].apply(pd.Series), validate="one_to_one")  # Explode out dict positions
 
         # Dsitribution of starting objects
-        self.tiles_raw = gaia
+        self.tiles_raw: dict = gaia
         self.tiles = pd.DataFrame(gaia)
         self.tiles = self.tiles.join(self.tiles["position"].apply(pd.Series), validate="one_to_one")  # Explode out dict into cols for x and y
         # TODO clean up dataframes
@@ -433,6 +435,8 @@ class AgeMap:
         # TODO - handle trees which all are the format "Tree (TreeType)"
         # TODO check if "Plant (PlantType)" is the same as trees
         self.all_gold_labels = self.identify_islands_of_resources(self.tiles, resource="Gold Mine")
+        self.tiles.join(self.all_gold_labels, on="instance_id", how="outer")
+        print("Test")
 
     def identify_key_hills_between_players(self):
         # TODO
@@ -456,15 +460,31 @@ class AgeMap:
         # TODO
         pass
 
-    def identify_islands_of_resources(self, dataframe_of_map: pd.DataFrame, resource: str):
-        """Search for islands of objects in a 2D image. The 2D image is the map, with each island being of the same resource (e.g., gold)"""
+    def identify_islands_of_resources(self, dataframe_of_map: pd.DataFrame, resource: str) -> pd.DataFrame:
+        """Search for islands of resrouces in the 2D image of the map. Label the dataframe of resources with groups found"""
         # See some resources: https://stackoverflow.com/questions/46737409/finding-connected-components-in-a-pixel-array
         # https://docs.scipy.org/doc/scipy-0.16.0/reference/generated/scipy.ndimage.measurements.label.html
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.label.html#scipy.ndimage.label
 
-        df = dataframe_of_map
+        df = dataframe_of_map[["y", "x", "instance_id", "name"]]  # Reduce columns
+        # The AOE Game engine starts these objects in the centre of the tile. Remove the decimal if it exists.
+        df.loc[:, ["x", "y"]] = np.floor(df[["x", "y"]]).astype(np.int32)  # remove decimal of floats
+        df = df.loc[df["name"] == resource, ["x", "y", "instance_id"]]
 
-        return label(array_of_resources)
+        map_of_resources = np.zeros((self.map_size_int, self.map_size_int))
+        for index, row in df.iterrows():
+            # Not the fastest or most pythonic but quickest to write the code
+            map_of_resources[int(row["x"]), int(row["y"])] = 1
+
+        s = generate_binary_structure(2, 2)  # Creates a 3x3 matrix of 1's. Pass as structure to label to allow diagnoal check
+        labeled_array, num_features = label(map_of_resources, structure=s)
+
+        for label_index in range(1, num_features + 1):
+            coords = np.where(labeled_array == label_index)
+            for x, y in zip(coords[0], coords[1]):
+                df.loc[(df["x"] == int(x)) & (df["y"] == int(y)), resource] = label_index
+
+        return df
 
 
 
