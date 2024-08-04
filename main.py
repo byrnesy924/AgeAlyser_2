@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-import json
-import os
+# import json
+# import os
 import math
 from scipy.ndimage import label, generate_binary_structure
 from shapely import Point, Polygon
@@ -420,17 +420,20 @@ class AgeMap:
         self.map_size_int: int = map["dimension"]  # The size of the map (note map is always square)
         self.map_name: str = self.map["name"]
         self.elevation_map: pd.DataFrame = pd.DataFrame(self.map["tiles"])  # Elevation of each tile
-        self.elevation_map = self.elevation_map.join(self.elevation_map["position"].apply(pd.Series), validate="one_to_one")  # Explode out dict positions
+        # Explode out dict into cols for x + y
+        self.elevation_map = self.elevation_map.join(self.elevation_map["position"].apply(pd.Series), validate="one_to_one")
 
         # Dsitribution of starting objects
         self.tiles_raw: dict = gaia
         self.tiles = pd.DataFrame(gaia)
-        self.tiles = self.tiles.join(self.tiles["position"].apply(pd.Series), validate="one_to_one")  # Explode out dict into cols for x and y
+        self.tiles = self.tiles.join(self.tiles["position"].apply(pd.Series), validate="one_to_one")  # Explode out dict into cols for x + y
         # TODO clean up dataframes
 
         self.player_locations = player_starting_locations
 
-        self.tiles["name"] = self.tiles["name"].str.replace(r"\s\(.*\)", "", regex=True)  # Remove anything in brackets - treat them as the same
+        self.tiles["name"] = self.tiles["name"].str.replace(r"\s\(.*\)", "", regex=True)  # Remove anything in brackets - treat together
+
+        # TODO wrap this is some extraction and analysis functions for more readable code
 
         # Identify islands (groups) of resources for minin information from later
         # TODO handle that Fruit Bush == Berries in this case
@@ -446,19 +449,27 @@ class AgeMap:
         self.corridor_between_players = self.identify_pathway_between_players()  # List of tuples
 
         resources_to_check_between_players = ["Fruit Bush", "Gold Mine", "Stone Mine", "Tree"]  # Check these resources
-        resources_between = pd.DataFrame(columns=["instance_id"])
-        for res in resources_to_check_between_players:
-            # Check each resource location is within the polygon
-            df_to_merge = self.identify_resources_or_feature_between_players(
+
+        # Apply for each resource - check if it is in polygon
+        list_dfs_of_resources_between_players = [
+            self.identify_resources_or_feature_between_players(
                 map_feature_locations=self.tiles.loc[self.tiles[res] > 0, :],
                 polygon_to_check_within=self.corridor_between_players
-            )
-            if not df_to_merge.empty:
-                resources_between = resources_between.merge(df_to_merge, on="instance_id", how="left")  # TODO check that there is a true col
+            ) for res in resources_to_check_between_players
+            ]
+
+        df_resources_between_players = pd.concat(list_dfs_of_resources_between_players)
+
         # Merge DF of all resources that are between
-        self.tiles = self.tiles.merge(resources_between, on="instance_id", how="left")
-        
+        self.tiles = self.tiles.merge(df_resources_between_players, on="instance_id", how="left")
+        print("check merge")
+
         # TODO now actually analyse this model of the map
+        print("Break - test accurately got flag")
+
+    def assign_resource_island_to_player(self)-> pd.DataFrame:
+        # Identify the main resources around a player and assign to that player for further analysis
+        pass
 
     def identify_pathway_between_players(self) -> list:
         """Idenitfy a corridor between players. 
@@ -470,7 +481,7 @@ class AgeMap:
                   self.player_locations[0][1] - self.player_locations[1][1])
 
         # Normalise the vector
-        magnitude = (dx**2 + dy**2)**1/2  # Cartesian length
+        magnitude = math.sqrt(dx**2 + dy**2)  # Cartesian length
         dx, dy = dx/magnitude, dy/magnitude
 
         # Identify the tangential direction to this vector
@@ -488,22 +499,26 @@ class AgeMap:
         # TODO
         pass
 
-    def identify_resources_or_feature_between_players(self, map_feature_locations: pd.DataFrame, polygon_to_check_within: list) -> pd.Series:
+    def identify_resources_or_feature_between_players(self, 
+                                                      map_feature_locations: pd.DataFrame, 
+                                                      polygon_to_check_within: list
+                                                      ) -> pd.Series:
         """Identify the # of a map feature between players. Models scenarios such as large forests that units must move around, 
         or can identify forward golds"""
         # TODO generalise this to just polygons, so that the sides can be checked for resources
         poly = Polygon(polygon_to_check_within)
         map_feature_locations["BetweenPlayers"] = map_feature_locations.apply(lambda x: Point(x["x"], x["y"],).within(poly), axis=1)
-
-        return map_feature_locations.loc[map_feature_locations["BetweenPlayers"], "instance_id"]
+        return map_feature_locations.loc[:, ["instance_id", "BetweenPlayers"]]
 
     def identify_player_front_gold(self):
+        """ Analysis Function"""
         # TODO or how forward a gold is with some sort of modelling
         # TODO gold is on a hill, main gold
         # TODO identify clusters of gold
         pass
 
     def identify_player_wood_setup(self):
+        """Analysis Function"""
         # TODO
         pass
 
@@ -562,6 +577,7 @@ class AgeGame:
             player_starting_locations=[tuple(self.match_json["players"][0]["position"].values()),
                                        tuple(self.match_json["players"][1]["position"].values())]
         )
+        self.game_map.tiles.to_csv("Map.csv")
 
         # Transform raw data into usable chunks
         self.all_inputs_df = pd.json_normalize(self.inputs)
@@ -605,10 +621,9 @@ class AgeGame:
         return player_two.elo - player_one.elo
 
     def advanced_parser(self) -> None:
-        # TODO mine civilisations and player rating from players
         # TODO get the winner from players
         # TODO mine if boar or elephant
-        # TODO mine if scout lost
+        # TODO mine if scout lost --> probably cant
         # TODO identify what it looks like if a player un-queus a unit
 
         # Extract the key statistics / data points
