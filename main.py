@@ -413,7 +413,6 @@ class AgeMap:
     def __init__(self, map: dict, gaia: dict, player_starting_locations: list) -> None:
         """Reconstruct the key features of the map - terrain, relics, resources (trees, gold, stone, berries).
         Store this information in a dataframe"""
-        # TODO do something with deer/ostrich/zebra
 
         # Map object
         self.map: dict = map  # Store map object
@@ -433,18 +432,28 @@ class AgeMap:
 
         self.tiles["name"] = self.tiles["name"].str.replace(r"\s\(.*\)", "", regex=True)  # Remove anything in brackets - treat together
 
-        # TODO wrap this is some extraction and analysis functions for more readable code
-
         # Identify islands (groups) of resources for minin information from later
-        # TODO handle that Fruit Bush == Berries in this case        
+        # TODO handle that Fruit Bush == Berries in this case
         resources_to_check_between_players = ["Fruit Bush", "Gold Mine", "Stone Mine", "Tree"]  # Check these resources
 
+        # Wrapper function that gets the following for the object and stores it in the object:
+        # - Identifies islands of resources
+        # - Identifies the polygon corridor between players
+        # - Falgs the resources between the players
         self.process_resource_locations(resources_to_identify=resources_to_check_between_players)
         
         # TODO now actually analyse this model of the map
-        print("Break - test accurately got flag")
+        # TODO do something with deer/ostrich/zebra
 
     def process_resource_locations(self, resources_to_identify: list) -> None:
+        """Helper function that wraps the primary set up of the resources on the Map for later analysis. The following tasks are completed:
+            - Identifies islands of resources
+            - Identifies the polygon corridor between players
+            - Falgs the resources between the players
+        Note this updates the self.tiles variable directly, as well as saving other pieces to the object
+
+        :param resources_to_identify: List of strings, each of the strings being the name of a tile to process
+        """
         # Identify islands (groups) of resources for minin information from later
         self.resource_labels = [self.identify_islands_of_resources(self.tiles, resource=res) for res in resources_to_identify]
 
@@ -469,10 +478,61 @@ class AgeMap:
         # Merge DF of all resources that are between
         self.tiles = self.tiles.merge(df_resources_between_players, on="instance_id", how="left")
 
+        # Max distance for resources to be considered close to players, as 0.4*distance between players
+        distance_between_players = np.linalg.norm(
+            (self.player_locations[0][0] - self.player_locations[1][0],
+             self.player_locations[0][1] - self.player_locations[1][1]
+             )
+        )
+        max_distance_to_players = 0.4*distance_between_players
+        self.assign_resource_island_to_player(
+            map_feature_locations=self.tiles,
+            maximum_distance_to_player=max_distance_to_players,
+            player_locations=self.player_locations            
+        )
+
         return
 
-    def assign_resource_island_to_player(self) -> pd.DataFrame:
+    def assign_resource_island_to_player(self,
+                                         map_feature_locations: pd.DataFrame,
+                                         maximum_distance_to_player: float,
+                                         player_locations: list) -> pd.DataFrame:
+        """Simply checks the distance from each resource to the players. Takes min distance as the appropriate player.
+        Max distance is to prevent far away resources from being assigned. Should be approx 50% of the distance between players
+
+        :param map_feature_locations: DataFrame with the tiles of interest to assign to each player
+        :param maximum_distance_to_player: upper limit to assign a resource to person
+        :param player_locations: tuple of ((x_1, y_1), (x_2,y_2))
+        :return: Collumns of object ID, closest player, and distance to both players
+        :rtype: pd.DataFrame
+        """
+        # TODO make sure player 1 and 2 locations are correct order - would be stupid for end user if these end up switched
         # Identify the main resources around a player and assign to that player for further analysis
+        # Distance to player 1 = norm of vecotr: x_resource - x_player, y_resource - y_player
+        map_feature_locations["DistancePlayer1"] = map_feature_locations.apply(
+            lambda row: np.linalg.norm(
+                (row["x"] - player_locations[0][0],
+                 row["y"] - player_locations[0][1]
+                 )),
+            axis=1
+        )
+        # Same for location to second player
+        map_feature_locations["DistancePlayer2"] = map_feature_locations.apply(
+            lambda row: np.linalg.norm(
+                (row["x"] - player_locations[1][0],
+                 row["y"] - player_locations[1][1]
+                 )),
+            axis=1
+        )
+
+        map_feature_locations["ClosestPlayer"] = map_feature_locations.apply(
+            lambda row: row[["DistancePlayer1", "DistancePlayer2"]].idxmin()
+            if row[["DistancePlayer1", "DistancePlayer2"]].min() < maximum_distance_to_player else None,
+            axis=1
+        )
+
+        print("Check operates correctly")
+
         pass
 
     def identify_pathway_between_players(self) -> list:
@@ -503,7 +563,7 @@ class AgeMap:
         # TODO
         pass
 
-    def identify_resources_or_feature_between_players(self, 
+    def identify_resources_or_feature_between_players(self,
                                                       map_feature_locations: pd.DataFrame, 
                                                       polygon_to_check_within: list
                                                       ) -> pd.Series:
