@@ -436,8 +436,16 @@ class AgeMap:
         # TODO wrap this is some extraction and analysis functions for more readable code
 
         # Identify islands (groups) of resources for minin information from later
-        # TODO handle that Fruit Bush == Berries in this case
-        resources_to_identify = ["Fruit Bush", "Gold Mine", "Stone Mine", "Tree"]
+        # TODO handle that Fruit Bush == Berries in this case        
+        resources_to_check_between_players = ["Fruit Bush", "Gold Mine", "Stone Mine", "Tree"]  # Check these resources
+
+        self.process_resource_locations(resources_to_identify=resources_to_check_between_players)
+        
+        # TODO now actually analyse this model of the map
+        print("Break - test accurately got flag")
+
+    def process_resource_locations(self, resources_to_identify: list) -> None:
+        # Identify islands (groups) of resources for minin information from later
         self.resource_labels = [self.identify_islands_of_resources(self.tiles, resource=res) for res in resources_to_identify]
 
         # Take all the resource labels and merge onto main tiles dataframe
@@ -448,26 +456,22 @@ class AgeMap:
         # Identify the corners of the corridor between players
         self.corridor_between_players = self.identify_pathway_between_players()  # List of tuples
 
-        resources_to_check_between_players = ["Fruit Bush", "Gold Mine", "Stone Mine", "Tree"]  # Check these resources
-
         # Apply for each resource - check if it is in polygon
         list_dfs_of_resources_between_players = [
             self.identify_resources_or_feature_between_players(
                 map_feature_locations=self.tiles.loc[self.tiles[res] > 0, :],
                 polygon_to_check_within=self.corridor_between_players
-            ) for res in resources_to_check_between_players
+            ) for res in resources_to_identify
             ]
 
         df_resources_between_players = pd.concat(list_dfs_of_resources_between_players)
 
         # Merge DF of all resources that are between
         self.tiles = self.tiles.merge(df_resources_between_players, on="instance_id", how="left")
-        print("check merge")
 
-        # TODO now actually analyse this model of the map
-        print("Break - test accurately got flag")
+        return
 
-    def assign_resource_island_to_player(self)-> pd.DataFrame:
+    def assign_resource_island_to_player(self) -> pd.DataFrame:
         # Identify the main resources around a player and assign to that player for further analysis
         pass
 
