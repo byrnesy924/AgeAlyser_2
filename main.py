@@ -443,6 +443,11 @@ class AgeMap:
         self.process_resource_locations(resources_to_identify=resources_to_check_between_players)
         
         # TODO now actually analyse this model of the map
+        #   - each players front resources
+        #   - If a front resource has a hill
+        #   - feature mining oppertunitiy, flag as such, -> Y/N/Hill for front berries, front main gold, front secondary gold
+        #                                                -> Y/N for front stone,
+        #                                                -> # Back woodlines; # front woodlines                 
         # TODO do something with deer/ostrich/zebra
 
     def process_resource_locations(self, resources_to_identify: list) -> None:
@@ -485,55 +490,15 @@ class AgeMap:
              )
         )
         max_distance_to_players = 0.4*distance_between_players
-        self.assign_resource_island_to_player(
+        df_distances_to_players = self.assign_resource_island_to_player(
             map_feature_locations=self.tiles,
             maximum_distance_to_player=max_distance_to_players,
             player_locations=self.player_locations            
         )
 
+        self.tiles = self.tiles.merge(df_distances_to_players, on="instance_id", how="left")
+
         return
-
-    def assign_resource_island_to_player(self,
-                                         map_feature_locations: pd.DataFrame,
-                                         maximum_distance_to_player: float,
-                                         player_locations: list) -> pd.DataFrame:
-        """Simply checks the distance from each resource to the players. Takes min distance as the appropriate player.
-        Max distance is to prevent far away resources from being assigned. Should be approx 50% of the distance between players
-
-        :param map_feature_locations: DataFrame with the tiles of interest to assign to each player
-        :param maximum_distance_to_player: upper limit to assign a resource to person
-        :param player_locations: tuple of ((x_1, y_1), (x_2,y_2))
-        :return: Collumns of object ID, closest player, and distance to both players
-        :rtype: pd.DataFrame
-        """
-        # TODO make sure player 1 and 2 locations are correct order - would be stupid for end user if these end up switched
-        # Identify the main resources around a player and assign to that player for further analysis
-        # Distance to player 1 = norm of vecotr: x_resource - x_player, y_resource - y_player
-        map_feature_locations["DistancePlayer1"] = map_feature_locations.apply(
-            lambda row: np.linalg.norm(
-                (row["x"] - player_locations[0][0],
-                 row["y"] - player_locations[0][1]
-                 )),
-            axis=1
-        )
-        # Same for location to second player
-        map_feature_locations["DistancePlayer2"] = map_feature_locations.apply(
-            lambda row: np.linalg.norm(
-                (row["x"] - player_locations[1][0],
-                 row["y"] - player_locations[1][1]
-                 )),
-            axis=1
-        )
-
-        map_feature_locations["ClosestPlayer"] = map_feature_locations.apply(
-            lambda row: row[["DistancePlayer1", "DistancePlayer2"]].idxmin()
-            if row[["DistancePlayer1", "DistancePlayer2"]].min() < maximum_distance_to_player else None,
-            axis=1
-        )
-
-        print("Check operates correctly")
-
-        pass
 
     def identify_pathway_between_players(self) -> list:
         """Idenitfy a corridor between players. 
@@ -611,6 +576,48 @@ class AgeMap:
                 df.loc[(df["x"] == int(x)) & (df["y"] == int(y)), resource] = label_index
 
         return df
+
+    def assign_resource_island_to_player(self,
+                                         map_feature_locations: pd.DataFrame,
+                                         maximum_distance_to_player: float,
+                                         player_locations: list) -> pd.DataFrame:
+        """Simply checks the distance from each resource to the players. Takes min distance as the appropriate player.
+        Max distance is to prevent far away resources from being assigned. Should be approx 50% of the distance between players
+
+        :param map_feature_locations: DataFrame with the tiles of interest to assign to each player
+        :param maximum_distance_to_player: upper limit to assign a resource to person
+        :param player_locations: tuple of ((x_1, y_1), (x_2,y_2))
+        :return: Collumns of object ID, closest player, and distance to both players
+        :rtype: pd.DataFrame
+        """
+        # TODO make sure player 1 and 2 locations are correct order - would be stupid for end user if these end up switched
+        # Identify the main resources around a player and assign to that player for further analysis
+        # Distance to player 1 = norm of vecotr: x_resource - x_player, y_resource - y_player
+        map_feature_locations["DistancePlayer1"] = map_feature_locations.apply(
+            lambda row: np.linalg.norm(
+                (row["x"] - player_locations[0][0],
+                 row["y"] - player_locations[0][1]
+                 )),
+            axis=1
+        )
+        # Same for location to second player
+        map_feature_locations["DistancePlayer2"] = map_feature_locations.apply(
+            lambda row: np.linalg.norm(
+                (row["x"] - player_locations[1][0],
+                 row["y"] - player_locations[1][1]
+                 )),
+            axis=1
+        )
+
+        map_feature_locations["ClosestPlayer"] = map_feature_locations.apply(
+            lambda row: row[["DistancePlayer1", "DistancePlayer2"]].idxmin()
+            if row[["DistancePlayer1", "DistancePlayer2"]].min() < maximum_distance_to_player else None,
+            axis=1
+        )
+
+        map_feature_locations["ClosestPlayer"] = map_feature_locations["ClosestPlayer"].map({"DistancePlayer1": 1, "DistancePlayer2": 2})
+
+        return map_feature_locations[["instance_id", "ClosestPlayer", "DistancePlayer1", "DistancePlayer2"]]
 
 
 class AgeGame:
