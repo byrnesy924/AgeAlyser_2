@@ -418,17 +418,26 @@ class AgeMap:
         self.map: dict = map  # Store map object
         self.map_size_int: int = map["dimension"]  # The size of the map (note map is always square)
         self.map_name: str = self.map["name"]
-        self.elevation_map: pd.DataFrame = pd.DataFrame(self.map["tiles"])  # Elevation of each tile
-        # Explode out dict into cols for x + y
-        self.elevation_map = self.elevation_map.join(self.elevation_map["position"].apply(pd.Series), validate="one_to_one")
 
-        # Dsitribution of starting objects
+        # Distribution of starting objects
         self.tiles_raw: dict = gaia
         self.tiles = pd.DataFrame(gaia)
         self.tiles = self.tiles.join(self.tiles["position"].apply(pd.Series), validate="one_to_one")  # Explode out dict into cols for x + y
-        # TODO clean up dataframes
+
+        self.elevation_map: pd.DataFrame = pd.DataFrame(self.map["tiles"])  # Elevation of each tile
+        # Explode out dict into cols for x + y
+        self.elevation_map = self.elevation_map.join(self.elevation_map["position"].apply(pd.Series), validate="one_to_one")
+        self.elevation_map = self.elevation_map.drop(columns=["position", "terrain"])  # clean up columns
+
+        # Join elevation on - note have to use x and y as ofc no object ID for terrain
+        self.tiles = self.tiles.merge(self.elevation_map, on=["x", "y"], how="left")
 
         self.player_locations = player_starting_locations
+        # Judge a hill for each player res by elevation greater than starting location; TODO think of a more elegant solution
+        self.height_of_player_locations = [
+            self.tiles.loc[(self.tiles["x"] == player[0]) & (self.tiles["y"] == player[1]), "elevation"].mean()
+            for player in self.player_locations
+            ]
 
         self.tiles["name"] = self.tiles["name"].str.replace(r"\s\(.*\)", "", regex=True)  # Remove anything in brackets - treat together
 
@@ -441,14 +450,88 @@ class AgeMap:
         # - Identifies the polygon corridor between players
         # - Falgs the resources between the players
         self.process_resource_locations(resources_to_identify=resources_to_check_between_players)
-        
-        # TODO now actually analyse this model of the map
-        #   - each players front resources
-        #   - If a front resource has a hill
-        #   - feature mining oppertunitiy, flag as such, -> Y/N/Hill for front berries, front main gold, front secondary gold
-        #                                                -> Y/N for front stone,
-        #                                                -> # Back woodlines; # front woodlines                 
+
+        # TODO check that player 1 = first starting location passed
+        self.analyse_map_features_for_player(player=1,
+                                             player_resources=self.tiles.loc[self.tiles["ClosestPlayer"] == 1, :],
+                                             min_height_for_hill=self.height_of_player_locations[0])
         # TODO do something with deer/ostrich/zebra
+
+    def analyse_map_between_players(self) -> None:
+        # TODO - count number of tree lines, # hills like standard deviation of elevation
+        pass
+
+    def analyse_map_features_for_player(self,
+                                        player: int,
+                                        player_resources: pd.DataFrame,
+                                        min_height_for_hill: int) -> pd.Series:
+        """analyse the main features of the players map, mining out key information like the state of their gold
+        :param player: int for player number - to be used in return pd.Series name (i.e. "Player1")
+        :param player_resources: dataframe of tiles with islands of resources
+        :param min_height_for_hill: the height of the player TC. Above this, consider the spot a hill.
+        :return: Series with analysis of maps for the players
+        :rtype: pd.Series
+        """
+        # Rules:
+        # - if its in the corrider, then it is "Front", else "Back". Maybe exposed is a better descriptor, but that is not quite right either
+        # - if the elevation is above the TC and "Front", then it is on a hill.
+        # Apply Y/N/Hill for front main gold, berries, secondary gold #1 and #2
+
+        # For woodline (use fact they are much bigger):
+        # - >= 60% in corridor = front woodline
+        # - 20% - 60% = side woodline
+        # - <= 20% = back woodline
+        # number of front, back and side woodlines
+        # back woodlines
+
+        # Golds - identify main and secondary golds and get their dataframe
+        golds = player_resources.loc[player_resources["name"] == "Gold Mine", :]
+        sizes_of_golds = golds.groupby("Gold Mine").count()  # TODO there is a much better way of doing this - col for each type is not good
+        main_gold_index = sizes_of_golds["instance_id"].max()
+        main_gold = player_resources.loc[player_resources["Gold Mine"] == main_gold_index]
+        list_of_ids_for_secondary_golds = sizes_of_golds["instance_id"].drop(index=main_gold_index).index.to_list()
+        secondary_gold_one = player_resources.loc[player_resources["Gold Mine"] == list_of_ids_for_secondary_golds[0]]
+        secondary_gold_two = player_resources.loc[player_resources["Gold Mine"] == list_of_ids_for_secondary_golds[1]]
+
+        # Apply rules to main gold - Back, Front or Front Hill
+        match(main_gold["BetweenPlayers"].max(), bool(main_gold["elevation"].mean() > min_height_for_hill)):
+            case (True, True):
+                main_gold_analysis = "Front Hill"
+            case (True, False):
+                main_gold_analysis = "Front"
+            case (False, _):
+                main_gold_analysis = "Back"
+            case _:
+                main_gold_analysis = "Unknown"
+        
+        gold_analsis = pd.Series({f"Player{player}.MainGold": main_gold_analysis})
+
+        # Apply logic to both secondary golds
+        for index, gold in enumerate([secondary_gold_one, secondary_gold_two]):
+            # Get name of gold for storing in dict
+            gold_name = "SecondGold" if index == 1 else "ThirdGold"
+            front_or_back = gold["BetweenPlayers"].max()
+            hill = gold["elevation"].mean() > min_height_for_hill
+
+            match (front_or_back, bool(hill)):
+                case (True, True):
+                    analysis_of_current_gold = "Front Hill"
+                case (True, False):
+                    analysis_of_current_gold = "Front"
+                case (False, _):
+                    analysis_of_current_gold = "Back"
+                case _:
+                    analysis_of_current_gold = "Unknown"
+            gold_analsis = pd.concat([gold_analsis, pd.Series({f"Player{player}.{gold_name}": analysis_of_current_gold})])
+
+
+
+        print("check")
+
+        pass
+
+    def identify_front_back_hill_gold(self, df_of_resource, min_height) -> pd.DataFrame:
+        pass
 
     def process_resource_locations(self, resources_to_identify: list) -> None:
         """Helper function that wraps the primary set up of the resources on the Map for later analysis. The following tasks are completed:
@@ -491,13 +574,12 @@ class AgeMap:
         )
         max_distance_to_players = 0.4*distance_between_players
         df_distances_to_players = self.assign_resource_island_to_player(
-            map_feature_locations=self.tiles,
+            map_feature_locations=self.tiles.copy(),
             maximum_distance_to_player=max_distance_to_players,
-            player_locations=self.player_locations            
+            player_locations=self.player_locations
         )
 
         self.tiles = self.tiles.merge(df_distances_to_players, on="instance_id", how="left")
-
         return
 
     def identify_pathway_between_players(self) -> list:
