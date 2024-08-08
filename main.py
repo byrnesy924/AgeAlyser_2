@@ -843,10 +843,10 @@ class AgeGame:
 
 if __name__ == "__main__":
 
-    test_file = Path("Test_Games/SD-AgeIIDE_Replay_324565276.aoe2record")
+    test_file = Path("tests/Test_Games/SD-AgeIIDE_Replay_324565276.aoe2record")
 
     test_match = AgeGame(path=test_file)
     test_match.advanced_parser()
     print("\n")
     print(test_match.game_results)
-    test_match.game_results.to_csv("Test_Games/Test_results.csv")
+    test_match.game_results.to_csv("tests/Test_Games/Test_results.csv")
