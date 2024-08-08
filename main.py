@@ -493,42 +493,73 @@ class AgeMap:
         secondary_gold_one = player_resources.loc[player_resources["Gold Mine"] == list_of_ids_for_secondary_golds[0]]
         secondary_gold_two = player_resources.loc[player_resources["Gold Mine"] == list_of_ids_for_secondary_golds[1]]
 
+        # Identify berries
+        # TODO handle berries vs Fruit Bush etc etc.
+        berries = player_resources.loc[player_resources["name"] == "Fruit Bush", :]
+
+        # identify main stone
+        stones = player_resources.loc[player_resources["name"] == "Stone Mine", :]
+        sizes_of_stones = stones.groupby("Gold Mine").count()  # TODO there is a much better way of doing this - col for each type is not good
+        main_stone_index = sizes_of_stones["instance_id"].max()
+        main_stone = player_resources.loc[player_resources["Stone Mine"] == main_stone_index]
+
+        def analyse_resource(between_players: bool, average_heigh_above_tc: bool) -> str:
+            """ Wrap match case to reduce boiler plate"""
+            match(between_players, average_heigh_above_tc):
+                case (True, True):
+                    analysis = "Front Hill"
+                case (True, False):
+                    analysis = "Front"
+                case (False, _):
+                    analysis = "Back"
+                case _:
+                    analysis = "Unknown"  # TODO log unknown
+            return analysis
+
         # Apply rules to main gold - Back, Front or Front Hill
-        match(main_gold["BetweenPlayers"].max(), bool(main_gold["elevation"].mean() > min_height_for_hill)):
-            case (True, True):
-                main_gold_analysis = "Front Hill"
-            case (True, False):
-                main_gold_analysis = "Front"
-            case (False, _):
-                main_gold_analysis = "Back"
-            case _:
-                main_gold_analysis = "Unknown"
-        
-        gold_analsis = pd.Series({f"Player{player}.MainGold": main_gold_analysis})
+        main_gold_analysis = analyse_resource(
+            main_gold["BetweenPlayers"].max(), 
+            bool(main_gold["elevation"].mean() > min_height_for_hill)
+        )
+
+        resource_analysis = pd.Series({f"Player{player}.MainGold": main_gold_analysis})
 
         # Apply logic to both secondary golds
         for index, gold in enumerate([secondary_gold_one, secondary_gold_two]):
             # Get name of gold for storing in dict
             gold_name = "SecondGold" if index == 1 else "ThirdGold"
+            # Get bools for front/back and hill
             front_or_back = gold["BetweenPlayers"].max()
             hill = gold["elevation"].mean() > min_height_for_hill
 
-            match (front_or_back, bool(hill)):
-                case (True, True):
-                    analysis_of_current_gold = "Front Hill"
-                case (True, False):
-                    analysis_of_current_gold = "Front"
-                case (False, _):
-                    analysis_of_current_gold = "Back"
-                case _:
-                    analysis_of_current_gold = "Unknown"
-            gold_analsis = pd.concat([gold_analsis, pd.Series({f"Player{player}.{gold_name}": analysis_of_current_gold})])
+            analysis_of_current_gold = analyse_resource(
+                between_players=front_or_back,
+                average_heigh_above_tc=hill
+            )
 
+            resource_analysis = pd.concat([resource_analysis, pd.Series({f"Player{player}.{gold_name}": analysis_of_current_gold})])
 
+        # Apply to berries and stone
+        berry_analysis = analyse_resource(
+            between_players=berries["BetweenPlayers"].max(),
+            average_heigh_above_tc=berries["elevation"].mean() > min_height_for_hill
+        )
+        resource_analysis = pd.concat(
+            [resource_analysis, pd.Series({f"Player{player}.Berries": berry_analysis})]
+        )
 
-        print("check")
+        stone_analysis = analyse_resource(
+            between_players=main_stone["BetweenPlayers"].max(),
+            average_heigh_above_tc=main_stone["elevation"].mean() > min_height_for_hill
+        )
 
-        pass
+        resource_analysis = pd.concat(
+            [resource_analysis, pd.Series({f"Player{player}.Stone": stone_analysis})]
+        )
+
+        # TODO - the # of front and back trees
+
+        return
 
     def identify_front_back_hill_gold(self, df_of_resource, min_height) -> pd.DataFrame:
         pass
