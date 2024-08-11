@@ -452,13 +452,21 @@ class AgeMap:
         self.process_resource_locations(resources_to_identify=resources_to_check_between_players)
 
         # TODO check that player 1 = first starting location passed
-        self.analyse_map_features_for_player(player=1,
-                                             player_resources=self.tiles.loc[self.tiles["ClosestPlayer"] == 1, :],
-                                             min_height_for_hill=self.height_of_player_locations[0])
+        p_1_resource_analysis = self.analyse_map_features_for_player(player=1,
+                                                                     player_resources=self.tiles.loc[self.tiles["ClosestPlayer"] == 1, :],
+                                                                     min_height_for_hill=self.height_of_player_locations[0])
+
+        p_2_resources_analysis = self.analyse_map_features_for_player(player=2,
+                                                                      player_resources=self.tiles.loc[self.tiles["ClosestPlayer"] == 2, :],
+                                                                      min_height_for_hill=self.height_of_player_locations[0])
+
+        self.map_analysis = pd.concat([p_1_resource_analysis, p_2_resources_analysis])
         # TODO do something with deer/ostrich/zebra
 
+        return
+
     def analyse_map_between_players(self) -> None:
-        # TODO - count number of tree lines, # hills like standard deviation of elevation
+        # TODO - count number of tree lines, # hills like standard deviation of elevation maybe, etc.
         pass
 
     def analyse_map_features_for_player(self,
@@ -493,32 +501,9 @@ class AgeMap:
         secondary_gold_one = player_resources.loc[player_resources["Gold Mine"] == list_of_ids_for_secondary_golds[0]]
         secondary_gold_two = player_resources.loc[player_resources["Gold Mine"] == list_of_ids_for_secondary_golds[1]]
 
-        # Identify berries
-        # TODO handle berries vs Fruit Bush etc etc.
-        berries = player_resources.loc[player_resources["name"] == "Fruit Bush", :]
-
-        # identify main stone
-        stones = player_resources.loc[player_resources["name"] == "Stone Mine", :]
-        sizes_of_stones = stones.groupby("Gold Mine").count()  # TODO there is a much better way of doing this - col for each type is not good
-        main_stone_index = sizes_of_stones["instance_id"].max()
-        main_stone = player_resources.loc[player_resources["Stone Mine"] == main_stone_index]
-
-        def analyse_resource(between_players: bool, average_heigh_above_tc: bool) -> str:
-            """ Wrap match case to reduce boiler plate"""
-            match(between_players, average_heigh_above_tc):
-                case (True, True):
-                    analysis = "Front Hill"
-                case (True, False):
-                    analysis = "Front"
-                case (False, _):
-                    analysis = "Back"
-                case _:
-                    analysis = "Unknown"  # TODO log unknown
-            return analysis
-
         # Apply rules to main gold - Back, Front or Front Hill
-        main_gold_analysis = analyse_resource(
-            main_gold["BetweenPlayers"].max(), 
+        main_gold_analysis = self.analyse_resource(
+            main_gold["BetweenPlayers"].max(),
             bool(main_gold["elevation"].mean() > min_height_for_hill)
         )
 
@@ -532,15 +517,19 @@ class AgeMap:
             front_or_back = gold["BetweenPlayers"].max()
             hill = gold["elevation"].mean() > min_height_for_hill
 
-            analysis_of_current_gold = analyse_resource(
+            analysis_of_current_gold = self.analyse_resource(
                 between_players=front_or_back,
                 average_heigh_above_tc=hill
             )
 
             resource_analysis = pd.concat([resource_analysis, pd.Series({f"Player{player}.{gold_name}": analysis_of_current_gold})])
 
-        # Apply to berries and stone
-        berry_analysis = analyse_resource(
+        # Identify berries
+        # TODO handle berries vs Fruit Bush etc etc.
+        berries = player_resources.loc[player_resources["name"] == "Fruit Bush", :]
+
+        # Apply to analysis method (Hill/Front/Back) to berries
+        berry_analysis = self.analyse_resource(
             between_players=berries["BetweenPlayers"].max(),
             average_heigh_above_tc=berries["elevation"].mean() > min_height_for_hill
         )
@@ -548,7 +537,14 @@ class AgeMap:
             [resource_analysis, pd.Series({f"Player{player}.Berries": berry_analysis})]
         )
 
-        stone_analysis = analyse_resource(
+        # identify main stone
+        stones = player_resources.loc[player_resources["name"] == "Stone Mine", :]
+        sizes_of_stones = stones.groupby("Stone Mine").count()  # TODO there is a much better way of doing this - col for each type is not good
+        main_stone_index = sizes_of_stones["instance_id"].max()
+        main_stone = player_resources.loc[player_resources["Stone Mine"] == main_stone_index]
+
+        # Apply to analysis method (Hill/Front/Back) to stone
+        stone_analysis = self.analyse_resource(
             between_players=main_stone["BetweenPlayers"].max(),
             average_heigh_above_tc=main_stone["elevation"].mean() > min_height_for_hill
         )
@@ -557,12 +553,62 @@ class AgeMap:
             [resource_analysis, pd.Series({f"Player{player}.Stone": stone_analysis})]
         )
 
-        # TODO - the # of front and back trees
+        # Identify and analyse structure of woodlines
+        woodlines = player_resources.loc[player_resources["name"] == "Tree", :]
 
-        return
+        # Apply woodlines analysis
+        woodlines_analysis = self.analyse_player_woodlines(woodlines=woodlines, player_number=player)
 
-    def identify_front_back_hill_gold(self, df_of_resource, min_height) -> pd.DataFrame:
-        pass
+        resource_analysis = pd.concat(
+            [resource_analysis, woodlines_analysis]
+        )
+
+        # TODO add validation of format of resource analysis
+
+        return resource_analysis
+
+    def analyse_resource(self, between_players: bool, average_heigh_above_tc: bool) -> str:
+        """ Categorise a resource into Front Hill / Front / Back depending on forwardness and hilliness"""
+        match(between_players, average_heigh_above_tc):
+            case (True, True):
+                analysis = "Front Hill"
+            case (True, False):
+                analysis = "Front"
+            case (False, _):
+                analysis = "Back"
+            case _:
+                analysis = "Unknown"  # TODO log unknown
+        return analysis
+
+    def analyse_player_woodlines(self, woodlines: pd.DataFrame, player_number) -> pd.Series:
+        """Categorise front/side/back woodlines and get count by #
+
+        :param woodlines: DataFrame of tiles with woodlines, their player, and associated flags
+        :param player_number:
+        :return: series with summary information
+        """
+        woodlines_dict = {"Front": 0, "Side": 0, "Back": 0}
+        for woodline_index in pd.unique(woodlines["Tree"]):
+            wood = woodlines.loc[woodlines["Tree"] == woodline_index, :]
+            number_trees_forward = len(wood.loc[wood["BetweenPlayers"], :])  # Relies on no duplicates see exception below
+            total_trees = len(wood)
+
+            if wood.groupby(["x", "y"]).ngroups != total_trees:
+                raise Exception(f"Woodline number {woodline_index} has duplicate tiles")  # TODO proper logging
+
+            if total_trees == 1:
+                # Picked up stragglers around TC, disregard these
+                continue
+
+            if number_trees_forward/total_trees >= 0.6:
+                woodlines_dict["Front"] += 1
+            elif number_trees_forward/total_trees >= 0.2:
+                woodlines_dict["Side"] += 1
+            else:
+                woodlines_dict["Back"] += 1
+        woodlines_to_return = pd.Series(woodlines_dict)
+        woodlines_to_return.add_prefix(f"Player{player_number}.")
+        return woodlines_to_return
 
     def process_resource_locations(self, resources_to_identify: list) -> None:
         """Helper function that wraps the primary set up of the resources on the Map for later analysis. The following tasks are completed:
@@ -761,7 +807,7 @@ class AgeGame:
             player_starting_locations=[tuple(self.match_json["players"][0]["position"].values()),
                                        tuple(self.match_json["players"][1]["position"].values())]
         )
-        self.game_map.tiles.to_csv("Map.csv")
+        self.player_map_analysis = self.game_map.map_analysis
 
         # Transform raw data into usable chunks
         self.all_inputs_df = pd.json_normalize(self.inputs)
@@ -842,6 +888,12 @@ class AgeGame:
 
 
 if __name__ == "__main__":
+    # TODO think about the best structure of the module in order to create a good API and workflow 
+    # - what information is must-have, what is optional
+    # - some sort of fast vs full API, or breaking up by sections of analysis
+
+    # TODO change so that functions and methods have LESS SIDE EFFECTS - THEN CAN BE TESTED EFFECTIVELY
+    # TODO errors and logging
 
     test_file = Path("tests/Test_Games/SD-AgeIIDE_Replay_324565276.aoe2record")
 
@@ -849,4 +901,6 @@ if __name__ == "__main__":
     test_match.advanced_parser()
     print("\n")
     print(test_match.game_results)
-    test_match.game_results.to_csv("tests/Test_Games/Test_results.csv")
+    print(test_match.player_map_analysis)
+    test_results = pd.concat([test_match.game_results, test_match.player_map_analysis])
+    test_match.game_results.sort_index().to_csv("tests/Test_Games/Test_results.csv")
