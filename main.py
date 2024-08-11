@@ -830,20 +830,6 @@ class AgeGame:
 
         return
 
-    def explore_games(self) -> None:
-        # Current knowledge - check out the objects added to the game
-
-        print("use this as a breakpoint")
-
-        return
-
-    def extract_map_features(self) -> pd.Series:
-        # TODO
-        # hills between players?
-        # number of trees directly between players / in corridor
-        # Idea for lumber camps - % of front covered by trees - maybe divide into quarters?
-        return
-
     def calculate_distance_between_players(self, location_one: tuple, location_two: tuple) -> pd.Series:  # TODO or list
         return math.dist(location_one, location_two)
 
@@ -893,6 +879,7 @@ if __name__ == "__main__":
     # TODO think about the best structure of the module in order to create a good API and workflow 
     # - what information is must-have, what is optional
     # - some sort of fast vs full API, or breaking up by sections of analysis
+    # - Maybe an option is like Opening - Feudal - Castle - Map analyses
 
     # TODO change so that functions and methods have LESS SIDE EFFECTS - THEN CAN BE TESTED EFFECTIVELY
     # TODO errors and logging
@@ -906,3 +893,7 @@ if __name__ == "__main__":
     print(test_match.player_map_analysis)
     test_results = pd.concat([test_match.game_results, test_match.player_map_analysis])
     test_match.game_results.sort_index().to_csv("tests/Test_Games/Test_results.csv")
+
+    # Next TODO is feudal age and castle age economic choices
+    # And Next TODO is check order of players is correct and maybe validate map analysis
+    # Then maybe castle age economic choices
