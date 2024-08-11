@@ -891,8 +891,8 @@ if __name__ == "__main__":
     print("\n")
     print(test_match.game_results)
     print(test_match.player_map_analysis)
-    test_results = pd.concat([test_match.game_results, test_match.player_map_analysis])
-    test_match.game_results.sort_index().to_csv("tests/Test_Games/Test_results.csv")
+    test_results = pd.concat([test_match.game_results, test_match.player_map_analysis]).sort_index()
+    test_match.game_results.to_csv("tests/Test_Games/Test_results.csv")
 
     # Next TODO is feudal age and castle age economic choices
     # And Next TODO is check order of players is correct and maybe validate map analysis
