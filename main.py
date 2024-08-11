@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
 # import json
-# import os
+import os
 import math
 from scipy.ndimage import label, generate_binary_structure
 from shapely import Point, Polygon
 import logging
 from pathlib import Path
-from datetime import datetime
+# from datetime import datetime
 from mgz import header, fast, body
 from mgz.summary import Summary
 from mgz.model import parse_match, serialize
@@ -458,10 +458,12 @@ class AgeMap:
 
         p_2_resources_analysis = self.analyse_map_features_for_player(player=2,
                                                                       player_resources=self.tiles.loc[self.tiles["ClosestPlayer"] == 2, :],
-                                                                      min_height_for_hill=self.height_of_player_locations[0])
+                                                                      min_height_for_hill=self.height_of_player_locations[1])
 
         self.map_analysis = pd.concat([p_1_resource_analysis, p_2_resources_analysis])
         # TODO do something with deer/ostrich/zebra
+
+        # TODO actually test results against actual
 
         return
 
@@ -481,8 +483,8 @@ class AgeMap:
         :rtype: pd.Series
         """
         # Rules:
-        # - if its in the corrider, then it is "Front", else "Back". Maybe exposed is a better descriptor, but that is not quite right either
-        # - if the elevation is above the TC and "Front", then it is on a hill.
+        # - if its in the corrider, then it is "Front", else "Back". Maybe "exposed" is a better descriptor
+        # - if the elevation is above the TC and "Front", then set to "Front Hill". For now, ignore back hills
         # Apply Y/N/Hill for front main gold, berries, secondary gold #1 and #2
 
         # For woodline (use fact they are much bigger):
@@ -495,7 +497,7 @@ class AgeMap:
         # Golds - identify main and secondary golds and get their dataframe
         golds = player_resources.loc[player_resources["name"] == "Gold Mine", :]
         sizes_of_golds = golds.groupby("Gold Mine").count()  # TODO there is a much better way of doing this - col for each type is not good
-        main_gold_index = sizes_of_golds["instance_id"].max()
+        main_gold_index = sizes_of_golds["instance_id"].idxmax()
         main_gold = player_resources.loc[player_resources["Gold Mine"] == main_gold_index]
         list_of_ids_for_secondary_golds = sizes_of_golds["instance_id"].drop(index=main_gold_index).index.to_list()
         secondary_gold_one = player_resources.loc[player_resources["Gold Mine"] == list_of_ids_for_secondary_golds[0]]
@@ -539,7 +541,7 @@ class AgeMap:
 
         # identify main stone
         stones = player_resources.loc[player_resources["name"] == "Stone Mine", :]
-        sizes_of_stones = stones.groupby("Stone Mine").count()  # TODO there is a much better way of doing this - col for each type is not good
+        sizes_of_stones = stones.groupby("Stone Mine").count()  # TODO there are better ways of doing this - col for each type is not good
         main_stone_index = sizes_of_stones["instance_id"].max()
         main_stone = player_resources.loc[player_resources["Stone Mine"] == main_stone_index]
 
@@ -607,7 +609,7 @@ class AgeMap:
             else:
                 woodlines_dict["Back"] += 1
         woodlines_to_return = pd.Series(woodlines_dict)
-        woodlines_to_return.add_prefix(f"Player{player_number}.")
+        woodlines_to_return = woodlines_to_return.add_prefix(f"Player{player_number}.")
         return woodlines_to_return
 
     def process_resource_locations(self, resources_to_identify: list) -> None:
