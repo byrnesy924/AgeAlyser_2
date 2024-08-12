@@ -67,6 +67,8 @@ class GamePlayer:
         self.military_buildings_created = self.economic_buildings_created[
             self.economic_buildings_created.loc[:, "param"].isin(military_buildings)
             ]  # TODO factor in build times!
+        # TODO factor in number of vils!
+        # TODO cumans Feudal TC; lower priority Sicilians dark age TC 
 
         self.opening = pd.Series()
 
