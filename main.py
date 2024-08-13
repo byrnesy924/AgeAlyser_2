@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 # from datetime import datetime
 from mgz import header, fast, body
+from mgz.enums import ObjectEnum, ResourceEnum, 
 from mgz.summary import Summary
 from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
@@ -25,6 +26,8 @@ logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=loggi
 # TODO idea for structure - design a player that keeps track of their actions and their location and stuff
 # store this within game; use to mine features for analysis
 # construct a timeline? timeseries data?
+
+# TODO handle free techs in economic analysis - Bohemians, Franks, Burmese, Vikings
 
 class GamePlayer:
     def __init__(

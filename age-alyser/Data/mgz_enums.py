@@ -1,4 +1,4 @@
-"""Enumerations."""
+"""Enumerations"""
 
 from construct import Enum, Pass
 
