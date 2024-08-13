@@ -39,6 +39,7 @@ class BuildTimesEnum(Enum):
         "Cumans": {"Town_Centre": 270},  # Note this only applies in Feudal Age - handled in getter
         "Spanish": {"Wonder": 2694.615385}  # Note Spanish 30% handled in get function
     }
+    RATEOVERRIDES = {"Spanish": 1.30, "Romans": 1.05}
 
     @classmethod
     def get(cls, name: str, civilisation: str, age: str = None) -> int:
@@ -47,18 +48,16 @@ class BuildTimesEnum(Enum):
             case ("Town_Centre", "Cumans", "Feudal Age"):
                 # Cuman second feudal TC scenario
                 return cls["OVERRIDES"][civilisation][name]
-            case ("Town_Centre", "Sicilians", "Feudal Age"):
-                return cls["OVERRIDES"][civilisation][name]
-            case ("Castle", "Sicilians", "Feudal Age"):
-                return cls["OVERRIDES"][civilisation][name]
-            case ("Donjon", "Sicilians", "Feudal Age"):
-                return cls["OVERRIDES"][civilisation][name]
+            case (_, "Sicilians", _):
+                if name in ["Town_Centre", "Castle", "Donjon"]:
+                    return cls["OVERRIDES"][civilisation][name]
+                return cls[name]
             case ("Wonder", "Spanish", _):
-                return
+                return cls["OVERRIDES"][civilisation][name]
             case (_, "Spanish", _):
-                return cls[name]/1.20
+                return cls[name]/cls["RATEOVERRIDES"][civilisation]
             case (_, "Romans", _):
-                return cls[name]/1.05
+                return cls[name]/cls["RATEOVERRIDES"][civilisation]
             case (_, _, _):
                 return cls[name]
 
@@ -226,6 +225,8 @@ class TechnologyResearchTimes(Enum):
                 return cls[name]/1.25
             case _, _:
                 return cls[name]
+            
+            
 
 
 
