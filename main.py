@@ -1,16 +1,16 @@
 import numpy as np
 import pandas as pd
 # import json
-import os
+# import os
 import math
 from scipy.ndimage import label, generate_binary_structure
 from shapely import Point, Polygon
 import logging
 from pathlib import Path
 # from datetime import datetime
-from mgz import header, fast, body
-from mgz.enums import ObjectEnum, ResourceEnum, 
-from mgz.summary import Summary
+# from mgz import header, fast, body
+# from mgz.enums import ObjectEnum, ResourceEnum
+# from mgz.summary import Summary
 from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 
@@ -28,6 +28,7 @@ logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=loggi
 # construct a timeline? timeseries data?
 
 # TODO handle free techs in economic analysis - Bohemians, Franks, Burmese, Vikings
+# TODO Malians university faster research
 
 class GamePlayer:
     def __init__(

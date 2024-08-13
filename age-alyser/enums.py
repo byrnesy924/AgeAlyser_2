@@ -212,13 +212,26 @@ class TechnologyResearchTimes(Enum):
 
     @classmethod
     def get(cls, name: str, civilisation: str):
-        match (name, civilisation):
+        # TODO - check university researches faster, malians i think?
+        match (civilisation, name):
             case "Malay", _:
                 if name in ["Feudal_Age", "Castle_Age", "Imperial_Age"]:
                     return cls["OVERRIDES"][name][civilisation]
                 return cls[name]
-            case "Goths", "Goths":
+            case "Goths", "Loom":
                 return cls["OVERRIDES"][name][civilisation]
+            case "Bulgarians", _:
+                # Note that this is actually a team bonus TODO handle correctly
+                if name in ['Fletching', 'Bodkin_Arrow', 'Bracer', 'Padded_Archer_Armor', 'Leather_Archer_Armor', 'Ring_Archer_Armour',
+                            'Forging', 'Iron_Casting', 'Blast_Furnace', 'Scale_Barding_Armor', 'Chain_Barding_Armor', 'Plate_Barding_Armor',
+                            'Scale_Mail_Armor', 'Chain_Mail_Armor', 'Plate_Mail_Armor']:  # This is all the blacksmith
+                    return cls[name]/1.80
+                return cls[name]
+            case "Vietnamese", _:
+                if name in ["Wheelbarrow", "Hand_Cart", "Double_Bit_Axe", "Bow_Saw", "Two_Man_Saw", "Horse_Collar", "Heavy_Plow",
+                            "Crop_Rotation", "Gold_Mining", "Gold_Shaft_Mining", "Stone_Mining", "Stone_Shaft_Mining"]:
+                    return cls[name]/2
+                return cls[name]
             case "Portuguese", _:
                 if name in ["Feudal_Age", "Castle_Age", "Imperial_Age"]:
                     return cls[name]
@@ -226,8 +239,164 @@ class TechnologyResearchTimes(Enum):
             case _, _:
                 return cls[name]
             
-            
 
+class UnitCreationTime(Enum):
+    Arbalest = 27
+    Archer = 35
+    Armored_Elephant = 36
+    Battering_Ram = 36
+    Berserk = 16
+    Bombard_Cannon = 56
+    Battle_Elephant = 24
+    Camel = 22
+    Cannon_Galleon = 46
+    Capped_Ram = 36
+    Cataphract = 20
+    Cavalier = 30
+    Cavalry_Archer = 34
+    Champion = 21
+    Chu_Ko_Nu = 19
+    Conquistador = 24
+    Crossbowman = 27
+    Deer = 0
+    Demolition_Ship = 31
+    Eagle_Warrior = 0
+    Eagle_Warrior = 35
+    Elephant_Archer = 32
+    Elite_Battle_Elephant = 24
+    Elite_Berserk = 16
+    Elite_Cannon_Galleon = 46
+    Elite_Cataphract = 20
+    Elite_Chu_Ko_Nu = 13
+    Elite_Conquistador = 24
+    Elite_Eagle_Warrior = 20
+    Elite_Elephant_Archer = 32
+    Elite_Huskarl = 16
+    Elite_Jaguar_Warrior = 17
+    Elite_Janissary = 17
+    Elite_Longboat = 25
+    Elite_Longbowman = 19
+    Elite_Mameluke = 23
+    Elite_Mangudai = 26
+    Elite_Plumed_Archer = 16
+    Elite_Samurai = 9
+    Elite_Skirmisher = 22
+    Elite_Tarkan = 14
+    Elite_Teutonic_Knight = 12
+    Elite_Throwing_Axeman = 17
+    Elite_Turtle_Ship = 50
+    Elite_War_Elephant = 31
+    Elite_War_Wagon = 25
+    Elite_Woad_Raider = 10
+    Fast_Fire_Ship = 36
+    Fire_Ship = 36
+    Fishing_Ship = 40
+    Galleon = 36
+    Galley = 60
+    Halberdier = 22
+    Hand_Cannoneer = 34
+    Heavy_Camel = 22
+    Heavy_Cavalry_Archer = 27
+    Heavy_Demolition_Ship = 31
+    Heavy_Scorpion = 30
+    Horse = 0
+    Huskarl = 16
+    Hussar = 30
+    Jaguar = 0
+    Jaguar_Warrior = 17
+    Janissary = 17
+    King = 30
+    Knight = 30
+    Light_Cavalry = 30
+    Long_Swordsman = 21
+    Longboat = 25
+    Longbowman = 19
+    Mameluke = 23
+    Man_at_Arms = 21
+    Mangonel = 46
+    Mangudai = 26
+    Militia = 21
+    Missionary = 51
+    Monk = 51
+    Onager = 46
+    Paladin = 30
+    Petard = 25
+    Pikeman = 22
+    Plumed_Archer = 16
+    Samurai = 9
+    Scorpion = 30
+    Scout_Cavalry = 0
+    Scout_Cavalry = 30
+    Sheep = 0
+    Siege_Elephant = 36
+    Siege_Onager = 46
+    Siege_Ram = 36
+    Skirmisher = 22
+    Spearman = 22
+    Tarkan = 14
+    Teutonic_Knight = 12
+    Throwing_Axeman = 17
+    Trade_Cart = 50
+    Trade_Cog = 36
+    Transport_Ship = 45
+    Trebuchet = 50
+    Trebuchet_packed = 50
+    Turkey = 0
+    Turtle_Ship = 50
+    Two_Handed_Swordsman = 21
+    Villager = 25
+    War_Elephant = 31
+    War_Galley = 36
+    War_Wagon = 25
+    Wild_Boar = 0
+    Woad_Raider = 10
+    Wolf = 0
+    OVERRIDES = {}
 
-
-
+    @classmethod
+    def get(cls, name: str, civilisation: str):
+        # TODO - include Berbers Kasbah technology flag in most appropriate way
+        # TODO - include Cumans Steppe husbandry tech
+        # TODO - Franks stables
+        # TODO think about passing the building as a parameter here to reduce the if statements - more readable and faster code
+        # TODO - Romans centurion and knight; need to be included
+        match (name, civilisation):
+            case "Monk", "Lithuanians":
+                return cls[name]/1.20
+            case "Trade_Cart", "Bohemians":
+                return cls[name]/1.80
+            case _, "Magyars":
+                if name in ["Cavalry_Archer", "Heavy_Cavalry_Archer"]:  # Note this is a team bonus
+                    return cls[name]/1.25
+                return cls[name]
+            case _, "Britons":
+                if name in ["Archer", "Crossbow", "Arbalest", "Skirmisher", "Elite_Skirmisher"]:
+                    cls[name]/1.1
+                return cls[name]
+            case _, "Celts":
+                if name in ["Mangonel", "Scorpion", "Ram", "Onager", "Siege_Onager", "Capped_Ram", "Siege_Ram", "Heavy_Scorpion"]:
+                    cls[name]/1.2  # Note this is a team bonus as well
+                return cls[name]
+            case _, "Goths":
+                if name in ["Militia", "Man_At_Arms", "Long_Swordman", "Two_Handed_Swordsman", "Champion",
+                            "Spearman", "Pikeman", "Halberdier"]:
+                    return cls[name]/1.20
+                return cls[name]
+            case _, "Gurjaras":
+                if name in ["Camel", "Heavy_Camel", "Battle_Elephant", "Elite_Battle_Elephant",
+                            "Elephant_Archer", "Elite_Elephant_Archer", "Armored_Elephant", "Siege_Elephant"]:
+                    return cls[name]/1.25
+                return cls[name]
+            case _, "Huns":
+                # Note the stables is also a team bonus
+                if name in ["Scout_Cavalry", "Light_Cavalry", "Hussar", "Knight", "Cavalier", "Paladin"]:
+                    return cls[name]/1.20
+                return cls[name]
+            case _, "Turks":
+                if name in ["Hand_Canoneer", "Janissary", "Elite_Janissary"]:
+                    return cls[name]/1.25
+                return cls[name]
+            case _, "Aztecs":
+                return cls[name]/1.11
+            case _, _:
+                return cls[name]
