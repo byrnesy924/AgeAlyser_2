@@ -1,4 +1,4 @@
-"""Enums for build times, research times, creation times. 
+"""Enums for build times, research times, creation times.
 Data for this including some notes and exceptions can be found in the Data folder
 """
 from enum import Enum
@@ -238,7 +238,7 @@ class TechnologyResearchTimes(Enum):
                 return cls[name]/1.25
             case _, _:
                 return cls[name]
-            
+
 
 class UnitCreationTime(Enum):
     Arbalest = 27
