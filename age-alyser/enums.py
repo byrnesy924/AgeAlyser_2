@@ -42,6 +42,18 @@ class BuildTimesEnum(Enum):
     RATEOVERRIDES = {"Spanish": 1.30, "Romans": 1.05}
 
     @classmethod
+    def has_value(cls, name: str):
+        """Helper function to check if the unit (name) exists in the enum and raise an error with the main program
+        This passes a true false flag to the main program to be handled - I am open to better ways of doing this.
+        """
+        try:
+            cls[name]
+        except KeyError:
+            return False
+        finally:
+            return True
+
+    @classmethod
     def get(cls, name: str, civilisation: str, age: str = None) -> int:
         """Getter function to include civilisation overrides, e.g. Spanish 30% faster builders"""
         match (name, civilisation, age):
@@ -211,6 +223,19 @@ class TechnologyResearchTimes(Enum):
     }
 
     @classmethod
+    def has_value(cls, name: str):
+        """Helper function to check if the unit (name) exists in the enum and raise an error with the main program
+        This passes a true false flag to the main program to be handled - I am open to better ways of doing this.
+        """
+        try:
+            cls[name]
+        except KeyError:
+            return False
+        finally:
+            return True
+        
+
+    @classmethod
     def get(cls, name: str, civilisation: str):
         # TODO - check university researches faster, malians i think?
         match (civilisation, name):
@@ -350,6 +375,19 @@ class UnitCreationTime(Enum):
     Woad_Raider = 10
     Wolf = 0
     OVERRIDES = {}
+
+    @classmethod
+    def has_value(cls, name: str):
+        """Helper function to check if the unit (name) exists in the enum and raise an error with the main program
+        This passes a true false flag to the main program to be handled - I am open to better ways of doing this.
+        """
+        try:
+            cls[name]
+        except KeyError:
+            return False
+        finally:
+            return True
+
 
     @classmethod
     def get(cls, name: str, civilisation: str):
