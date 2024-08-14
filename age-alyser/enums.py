@@ -47,19 +47,19 @@ class BuildTimesEnum(Enum):
         match (name, civilisation, age):
             case ("Town_Centre", "Cumans", "Feudal Age"):
                 # Cuman second feudal TC scenario
-                return cls["OVERRIDES"][civilisation][name]
+                return cls["OVERRIDES"].value[civilisation][name]
             case (_, "Sicilians", _):
                 if name in ["Town_Centre", "Castle", "Donjon"]:
-                    return cls["OVERRIDES"][civilisation][name]
-                return cls[name]
+                    return cls["OVERRIDES"].value[civilisation][name]
+                return cls[name].value
             case ("Wonder", "Spanish", _):
-                return cls["OVERRIDES"][civilisation][name]
+                return cls["OVERRIDES"].value[civilisation][name]
             case (_, "Spanish", _):
-                return cls[name]/cls["RATEOVERRIDES"][civilisation]
+                return cls[name].value/cls["RATEOVERRIDES"].value[civilisation]
             case (_, "Romans", _):
-                return cls[name]/cls["RATEOVERRIDES"][civilisation]
+                return cls[name].value/cls["RATEOVERRIDES"].value[civilisation]
             case (_, _, _):
-                return cls[name]
+                return cls[name].value
 
 
 class TechnologyResearchTimes(Enum):
@@ -216,28 +216,28 @@ class TechnologyResearchTimes(Enum):
         match (civilisation, name):
             case "Malay", _:
                 if name in ["Feudal_Age", "Castle_Age", "Imperial_Age"]:
-                    return cls["OVERRIDES"][name][civilisation]
-                return cls[name]
+                    return cls["OVERRIDES"].value[civilisation][name]
+                return cls[name].value
             case "Goths", "Loom":
-                return cls["OVERRIDES"][name][civilisation]
+                return cls["OVERRIDES"].value[civilisation][name]
             case "Bulgarians", _:
                 # Note that this is actually a team bonus TODO handle correctly
                 if name in ['Fletching', 'Bodkin_Arrow', 'Bracer', 'Padded_Archer_Armor', 'Leather_Archer_Armor', 'Ring_Archer_Armour',
                             'Forging', 'Iron_Casting', 'Blast_Furnace', 'Scale_Barding_Armor', 'Chain_Barding_Armor', 'Plate_Barding_Armor',
                             'Scale_Mail_Armor', 'Chain_Mail_Armor', 'Plate_Mail_Armor']:  # This is all the blacksmith
-                    return cls[name]/1.80
-                return cls[name]
+                    return cls[name].value/1.80
+                return cls[name].value
             case "Vietnamese", _:
                 if name in ["Wheelbarrow", "Hand_Cart", "Double_Bit_Axe", "Bow_Saw", "Two_Man_Saw", "Horse_Collar", "Heavy_Plow",
                             "Crop_Rotation", "Gold_Mining", "Gold_Shaft_Mining", "Stone_Mining", "Stone_Shaft_Mining"]:
-                    return cls[name]/2
-                return cls[name]
+                    return cls[name].value/2
+                return cls[name].value
             case "Portuguese", _:
                 if name in ["Feudal_Age", "Castle_Age", "Imperial_Age"]:
-                    return cls[name]
-                return cls[name]/1.25
+                    return cls[name].value
+                return cls[name].value/1.25
             case _, _:
-                return cls[name]
+                return cls[name].value
 
 
 class UnitCreationTime(Enum):
@@ -260,7 +260,6 @@ class UnitCreationTime(Enum):
     Crossbowman = 27
     Deer = 0
     Demolition_Ship = 31
-    Eagle_Warrior = 0
     Eagle_Warrior = 35
     Elephant_Archer = 32
     Elite_Battle_Elephant = 24
@@ -325,7 +324,6 @@ class UnitCreationTime(Enum):
     Plumed_Archer = 16
     Samurai = 9
     Scorpion = 30
-    Scout_Cavalry = 0
     Scout_Cavalry = 30
     Sheep = 0
     Siege_Elephant = 36
@@ -362,41 +360,52 @@ class UnitCreationTime(Enum):
         # TODO - Romans centurion and knight; need to be included
         match (name, civilisation):
             case "Monk", "Lithuanians":
-                return cls[name]/1.20
+                return cls[name].value/1.20
             case "Trade_Cart", "Bohemians":
-                return cls[name]/1.80
+                return cls[name].value/1.80
             case _, "Magyars":
                 if name in ["Cavalry_Archer", "Heavy_Cavalry_Archer"]:  # Note this is a team bonus
-                    return cls[name]/1.25
-                return cls[name]
+                    return cls[name].value/1.25
+                return cls[name].value
             case _, "Britons":
                 if name in ["Archer", "Crossbow", "Arbalest", "Skirmisher", "Elite_Skirmisher"]:
-                    cls[name]/1.1
-                return cls[name]
+                    cls[name].value/1.1
+                return cls[name].value
             case _, "Celts":
                 if name in ["Mangonel", "Scorpion", "Ram", "Onager", "Siege_Onager", "Capped_Ram", "Siege_Ram", "Heavy_Scorpion"]:
-                    cls[name]/1.2  # Note this is a team bonus as well
-                return cls[name]
+                    cls[name].value/1.2  # Note this is a team bonus as well
+                return cls[name].value
             case _, "Goths":
                 if name in ["Militia", "Man_At_Arms", "Long_Swordman", "Two_Handed_Swordsman", "Champion",
                             "Spearman", "Pikeman", "Halberdier"]:
-                    return cls[name]/1.20
-                return cls[name]
+                    return cls[name].value/1.20
+                return cls[name].value
             case _, "Gurjaras":
                 if name in ["Camel", "Heavy_Camel", "Battle_Elephant", "Elite_Battle_Elephant",
                             "Elephant_Archer", "Elite_Elephant_Archer", "Armored_Elephant", "Siege_Elephant"]:
-                    return cls[name]/1.25
-                return cls[name]
+                    return cls[name].value/1.25
+                return cls[name].value
             case _, "Huns":
                 # Note the stables is also a team bonus
                 if name in ["Scout_Cavalry", "Light_Cavalry", "Hussar", "Knight", "Cavalier", "Paladin"]:
-                    return cls[name]/1.20
-                return cls[name]
+                    return cls[name].value/1.20
+                return cls[name].value
             case _, "Turks":
                 if name in ["Hand_Canoneer", "Janissary", "Elite_Janissary"]:
-                    return cls[name]/1.25
-                return cls[name]
+                    return cls[name].value/1.25
+                return cls[name].value
             case _, "Aztecs":
-                return cls[name]/1.11
+                return cls[name].value/1.11
             case _, _:
-                return cls[name]
+                return cls[name].value
+
+
+class Civilisations(Enum):
+    """ TODO assign and ID to validate strings and create automated testing + exceptions"""
+    pass
+
+
+if __name__ == "__main__":
+    print(TechnologyResearchTimes.get("Loom", "Franks"))
+    print(UnitCreationTime.get("Archer", "Britons"))
+    print(BuildTimesEnum.get("House", "Spanish"))

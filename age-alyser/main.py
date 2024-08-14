@@ -14,7 +14,7 @@ from pathlib import Path
 from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 
-from age_alyser.enums import 
+from enums import BuildTimesEnum, TechnologyResearchTimes, UnitCreationTime
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -370,7 +370,6 @@ class GamePlayer:
         return pd.Series(stats_to_return)
 
     def extract_player_choices_and_strategy(self) -> pd.Series:
-        # TODO mine civilisations
         # TODO mine if boar or elephant
         # TODO mine if scout lost
         # TODO identify what it looks like if a player un-queus a unit
