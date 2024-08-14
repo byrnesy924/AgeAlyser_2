@@ -86,7 +86,7 @@ class GamePlayer:
         """Wrapper to return civilisation"""
         return pd.Series({"Civilisation": self.civilisation})
 
-    def identify_technology_research_and_time(self, technology, civilisations: dict = None) -> pd.Timedelta:
+    def identify_technology_research_and_time(self, technology: str, civilisation: str = None) -> pd.Timedelta:
         """A helper function that can identify when players research certain things and the timing of that
 
         :param technology: technology that can be research TODO enumerate this
@@ -97,24 +97,27 @@ class GamePlayer:
         :return: data frame with the time each player researched and completed the technology
         :rtype: pd.DataFrame
         """
+        enum_technology = technology.replace(" ", "_").replace("-", "_")  # TODO for cleanliness, think about handling this in Enum methods
 
-        if technology not in ["Feudal Age", "Loom", "Double-Bit Axe", "Horse Collar", "Fletching", "Castle Age", "Man-At-Arms"]:
-            logger.error(f"Technology given to find tech function incorrect. Tech was: {technology}")
+        if not TechnologyResearchTimes.has_value(enum_technology):
+            logger.error(f"Technology given to find technology research function incorrect. Tech was: {technology}")
             raise ValueError(f"Couldn't find technology: {technology}")
+
+        time_to_research = TechnologyResearchTimes.get(enum_technology, civilisation=civilisation)
 
         # TODO check why there is two clicks - maybe one for queue and one for actually clicking up?
         # Handle two clicks
         relevent_research = self.research_techs.loc[self.research_techs["param"] == technology, "timestamp"]  # handle unqueue
 
-        # TODO - map the research times and then apply them, find a good way to house this data (tiny data with civ?)
-        # TODO work out how to handle shorter time with civilisation parameter
+        # TODO check civ parameter passed correctly
 
         if relevent_research.empty:
             # Should return empty series instead? for type safety? hmm TODO
             # TODO log if cannot find
             return None
 
-        return relevent_research.iloc[len(relevent_research) - 1]  # using len here handles multiple like a cancel and re-research
+         # using len here handles multiple like a cancel and re-research
+        return relevent_research.iloc[len(relevent_research) - 1] + pd.Timedelta(seconds=time_to_research) 
 
     def identify_building_and_timing(self, building, civilisations: dict = None) -> pd.DataFrame:
         """Helper to find all the creations of an economic building type. TODO Build times.
@@ -376,12 +379,12 @@ class GamePlayer:
 
         # Extract the key statistics / data points
         # research times to mine out
-        self.feudal_time = self.identify_technology_research_and_time("Feudal Age")  # Get feudal times of the players
-        self.castle_time = self.identify_technology_research_and_time("Castle Age")
-        self.loom_times = self.identify_technology_research_and_time("Loom")  # Get loom time
+        self.feudal_time = self.identify_technology_research_and_time("Feudal Age", civilisation=self.civilisation)  # Get feudal times of the players
+        self.castle_time = self.identify_technology_research_and_time("Castle Age", civilisation=self.civilisation)
+        self.loom_times = self.identify_technology_research_and_time("Loom", civilisation=self.civilisation)  # Get loom time
 
         # Military timings to mine out
-        self.maa_time = self.identify_technology_research_and_time("Man-At-Arms")  # TODO check name
+        self.maa_time = self.identify_technology_research_and_time("Man-At-Arms", civilisation=self.civilisation)  # TODO check name
 
         # economic times to mine out
         self.all_mill_times = self.identify_building_and_timing("Mill")

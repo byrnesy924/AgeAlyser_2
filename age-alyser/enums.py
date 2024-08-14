@@ -50,7 +50,7 @@ class BuildTimesEnum(Enum):
             cls[name]
         except KeyError:
             return False
-        finally:
+        else:
             return True
 
     @classmethod
@@ -230,8 +230,9 @@ class TechnologyResearchTimes(Enum):
         try:
             cls[name]
         except KeyError:
+            print("Warning")
             return False
-        finally:
+        else:
             return True
         
 
@@ -385,7 +386,7 @@ class UnitCreationTime(Enum):
             cls[name]
         except KeyError:
             return False
-        finally:
+        else:
             return True
 
 
@@ -447,3 +448,5 @@ if __name__ == "__main__":
     print(TechnologyResearchTimes.get("Loom", "Franks"))
     print(UnitCreationTime.get("Archer", "Britons"))
     print(BuildTimesEnum.get("House", "Spanish"))
+
+    print(TechnologyResearchTimes.has_value("TEST"))  # TODO automate
