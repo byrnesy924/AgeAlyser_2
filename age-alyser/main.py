@@ -116,10 +116,10 @@ class GamePlayer:
             # TODO log if cannot find
             return None
 
-         # using len here handles multiple like a cancel and re-research
+        # using len here handles multiple like a cancel and re-research
         return relevent_research.iloc[len(relevent_research) - 1] + pd.Timedelta(seconds=time_to_research) 
 
-    def identify_building_and_timing(self, building, civilisations: dict = None) -> pd.DataFrame:
+    def identify_building_and_timing(self, building, civilisation: str = None) -> pd.DataFrame:
         """Helper to find all the creations of an economic building type. TODO Build times.
 
         :param building: _description_ TODO
@@ -131,13 +131,13 @@ class GamePlayer:
         :rtype: pd.DataFrame
         """
 
-        if building not in ["Mill", "Farm", "House", "Lumber Camp", "Mining Camp", "Blacksmith"]:
-            logger.error(f"Technology given to find tech function incorrect. Tech was: {building}")
-            raise ValueError(f"Couldn't find technology: {building}")
+        enum_building_name = building.replace(" ", "_").replace("-", "_")  # TODO for cleanliness, think about handling this in Enum methods
 
-        # TODO - map the building times, find a good way to house this data (tiny data with civ?)
-        time_to_build_dictionary = {"Mill": 100, "Farm": 15}
-        time_to_build = time_to_build_dictionary[building]
+        if not BuildTimesEnum.has_value(enum_building_name):
+            logger.error(f"Building given to find building method incorrect. Building was: {building}")
+            raise ValueError(f"Couldn't find building: {building}")
+
+        time_to_build = BuildTimesEnum.get(enum_building_name, civilisation=civilisation)
 
         relevent_building = self.economic_buildings_created.loc[
             self.economic_buildings_created["param"] == building,
