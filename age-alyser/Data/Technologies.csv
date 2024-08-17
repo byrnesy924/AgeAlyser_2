@@ -1,285 +1,300 @@
-Technology,TimeToResearch,Civilisation
-Anarchy,60,Generic
-Arbalest,50,Generic
-Architecture,70,Generic
-Artillery,40,Generic
-Atheism,60,Generic
-Atonement,40,Generic
-Ballistics,60,Generic
-Banking,50,Generic
-Bearded Axe,60,Generic
-Berserkergang,40,Generic
-Blast Furnace,100,Generic
-Block Printing,55,Generic
-Bloodlines,50,Generic
-Bodkin Arrow,35,Generic
-Bombard Tower,60,Generic
-Bow Saw,50,Generic
-Bracer,40,Generic
-Cannon Galleon,50,Generic
-Capped Ram,50,Generic
-Caravan,40,Generic
-Careening,50,Generic
-Cartography,60,Generic
-Castle Age,160,Generic
-Cavalier,100,Generic
-Chain Barding Armor,60,Generic
-Chain Mail Armor,55,Generic
-Champion,100,Generic
-Chemistry,100,Generic
-Coinage,50,Generic
-Conscription,60,Generic
-Crenellations,60,Generic
-Crop Rotation,70,Generic
-Crossbowman,35,Generic
-Double Bit Axe,25,Generic
-Drill,60,Generic
-Dry Dock,60,Generic
-El Dorado,50,Generic
-Elite Berserk,45,Generic
-Elite Cannon Galleon,30,Generic
-Elite Cataphract,50,Generic
-Elite Chu Ko Nu,50,Generic
-Elite Conquistador,60,Generic
-Elite Eagle Warrior,40,Generic
-Elite Huskarl,40,Generic
-Elite Jaguar Warrior,45,Generic
-Elite Janissary,55,Generic
-Elite Longboat,60,Generic
-Elite Longbowman,60,Generic
-Elite Mameluke,50,Generic
-Elite Mangudai,50,Generic
-Elite Plumed Archer,45,Generic
-Elite Samurai,60,Generic
-Elite Skirmisher,50,Generic
-Elite Tarkan,45,Generic
-Elite Teutonic Knight,50,Generic
-Elite Throwing Axeman,45,Generic
-Elite Turtle Ship,65,Generic
-Elite War Elephant,75,Generic
-Elite War Wagon,75,Generic
-Elite Woad Raider,45,Generic
-Faith,60,Generic
-Fast Fire Ship,50,Generic
-Fervor,50,Generic
-Feudal Age,130,Generic
-Fletching,30,Generic
-Forging,50,Generic
-Fortified Wall,50,Generic
-Furor Celtica,50,Generic
-Galleon,65,Generic
-Garland Wars,60,Generic
-Gold Mining,30,Generic
-Gold Shaft Mining,75,Generic
-Guard Tower,30,Generic
-Guilds,50,Generic
-Halberdier,50,Generic
-Hand Cart,55,Generic
-Heated Shot,30,Generic
-Heavy Camel,125,Generic
-Heavy Cavalry Archer,50,Generic
-Heavy Demolition Ship,50,Generic
-Heavy Plow,40,Generic
-Heavy Scorpion,50,Generic
-Herbal Medicine,35,Generic
-Heresy,60,Generic
-Hoardings,75,Generic
-Horse Collar,20,Generic
-Husbandry,50,Generic
-Hussar,50,Generic
-Illumination,65,Generic
-Imperial Age,190,Generic
-Iron Casting,70,Generic
-Kataparuto,60,Generic
-Keep,75,Generic
-Leather Archer Armor,55,Generic
-Ligth Cavalry,45,Generic
-Logistica,50,Generic
-Long Swordman,45,Generic
-Loom,25,Generic
-Mahouts,50,Generic
-Man At Arms,40,Generic
-Masonry,50,Generic
-Murder Holes,60,Generic
-Onager,75,Generic
-Padded Archer Armor,40,Generic
-Paladin,170,Generic
-Parthian Tactics,65,Generic
-Perfusion,40,Generic
-Pikeman,45,Generic
-Plate Barding Armor,75,Generic
-Plate Mail Armor,70,Generic
-Redemption,50,Generic
-Ring Archer Armor,70,Generic
-Rocketry,60,Generic
-Sanctity,60,Generic
-Sappers,10,Generic
-Scale Barding Armor,45,Generic
-Scale Mail Armor,40,Generic
-Shinkichon,60,Generic
-Shipwright,60,Generic
-Siege Engineers,45,Generic
-Siege Onager,150,Generic
-Siege Ram,75,Generic
-Spies,1,Generic
-Squires,40,Generic
-Stone Mining,30,Generic
-Stone Shaft Mining,75,Generic
-Supremacy,60,Generic
-Theocracy,75,Generic
-Thumb Ring,45,Generic
-Town Patrol,40,Generic
-Town Watch,25,Generic
-Tracking,35,Generic
-Treadmill Crane,40,Generic
-Treason,1,Generic
-Two Handed Swordsman,75,Generic
-Two Man Saw,100,Generic
-War Galley,50,Generic
-Wheelbarrow,75,Generic
-Yeomen,60,Generic
-Zealotry,50,Generic
-Anarchy,40,Portuguese
-Arbalest,33.33333333,Portuguese
-Architecture,46.66666667,Portuguese
-Artillery,26.66666667,Portuguese
-Atheism,40,Portuguese
-Atonement,26.66666667,Portuguese
-Ballistics,40,Portuguese
-Banking,33.33333333,Portuguese
-Bearded Axe,40,Portuguese
-Berserkergang,26.66666667,Portuguese
-Blast Furnace,66.66666667,Portuguese
-Block Printing,36.66666667,Portuguese
-Bloodlines,33.33333333,Portuguese
-Bodkin Arrow,23.33333333,Portuguese
-Bombard Tower,40,Portuguese
-Bow Saw,33.33333333,Portuguese
-Bracer,26.66666667,Portuguese
-Cannon Galleon,33.33333333,Portuguese
-Capped Ram,33.33333333,Portuguese
-Caravan,26.66666667,Portuguese
-Careening,33.33333333,Portuguese
-Cartography,40,Portuguese
-Castle Age,160,Portuguese
-Cavalier,66.66666667,Portuguese
-Chain Barding Armor,40,Portuguese
-Chain Mail Armor,36.66666667,Portuguese
-Champion,66.66666667,Portuguese
-Chemistry,66.66666667,Portuguese
-Coinage,33.33333333,Portuguese
-Conscription,40,Portuguese
-Crenellations,40,Portuguese
-Crop Rotation,46.66666667,Portuguese
-Crossbowman,23.33333333,Portuguese
-Double Bit Axe,16.66666667,Portuguese
-Drill,40,Portuguese
-Dry Dock,40,Portuguese
-El Dorado,33.33333333,Portuguese
-Elite Berserk,30,Portuguese
-Elite Cannon Galleon,20,Portuguese
-Elite Cataphract,33.33333333,Portuguese
-Elite Chu Ko Nu,33.33333333,Portuguese
-Elite Conquistador,40,Portuguese
-Elite Eagle Warrior,26.66666667,Portuguese
-Elite Huskarl,26.66666667,Portuguese
-Elite Jaguar Warrior,30,Portuguese
-Elite Janissary,36.66666667,Portuguese
-Elite Longboat,40,Portuguese
-Elite Longbowman,40,Portuguese
-Elite Mameluke,33.33333333,Portuguese
-Elite Mangudai,33.33333333,Portuguese
-Elite Plumed Archer,30,Portuguese
-Elite Samurai,40,Portuguese
-Elite Skirmisher,33.33333333,Portuguese
-Elite Tarkan,30,Portuguese
-Elite Teutonic Knight,33.33333333,Portuguese
-Elite Throwing Axeman,30,Portuguese
-Elite Turtle Ship,43.33333333,Portuguese
-Elite War Elephant,50,Portuguese
-Elite War Wagon,50,Portuguese
-Elite Woad Raider,30,Portuguese
-Faith,40,Portuguese
-Fast Fire Ship,33.33333333,Portuguese
-Fervor,33.33333333,Portuguese
-Feudal Age,130,Portuguese
-Fletching,20,Portuguese
-Forging,33.33333333,Portuguese
-Fortified Wall,33.33333333,Portuguese
-Furor Celtica,33.33333333,Portuguese
-Galleon,43.33333333,Portuguese
-Garland Wars,40,Portuguese
-Gold Mining,20,Portuguese
-Gold Shaft Mining,50,Portuguese
-Guard Tower,20,Portuguese
-Guilds,33.33333333,Portuguese
-Halberdier,33.33333333,Portuguese
-Hand Cart,36.66666667,Portuguese
-Heated Shot,20,Portuguese
-Heavy Camel,83.33333333,Portuguese
-Heavy Cavalry Archer,33.33333333,Portuguese
-Heavy Demolition Ship,33.33333333,Portuguese
-Heavy Plow,26.66666667,Portuguese
-Heavy Scorpion,33.33333333,Portuguese
-Herbal Medicine,23.33333333,Portuguese
-Heresy,40,Portuguese
-Hoardings,50,Portuguese
-Horse Collar,13.33333333,Portuguese
-Husbandry,33.33333333,Portuguese
-Hussar,33.33333333,Portuguese
-Illumination,43.33333333,Portuguese
-Imperial Age,190,Portuguese
-Iron Casting,46.66666667,Portuguese
-Kataparuto,40,Portuguese
-Keep,50,Portuguese
-Leather Archer Armor,36.66666667,Portuguese
-Ligth Cavalry,30,Portuguese
-Logistica,33.33333333,Portuguese
-Long Swordman,30,Portuguese
-Loom,16.66666667,Portuguese
-Mahouts,33.33333333,Portuguese
-Man At Arms,26.66666667,Portuguese
-Masonry,33.33333333,Portuguese
-Murder Holes,40,Portuguese
-Onager,50,Portuguese
-Padded Archer Armor,26.66666667,Portuguese
-Paladin,113.3333333,Portuguese
-Parthian Tactics,43.33333333,Portuguese
-Perfusion,26.66666667,Portuguese
-Pikeman,30,Portuguese
-Plate Barding Armor,50,Portuguese
-Plate Mail Armor,46.66666667,Portuguese
-Redemption,33.33333333,Portuguese
-Ring Archer Armor,46.66666667,Portuguese
-Rocketry,40,Portuguese
-Sanctity,40,Portuguese
-Sappers,6.666666667,Portuguese
-Scale Barding Armor,30,Portuguese
-Scale Mail Armor,26.66666667,Portuguese
-Shinkichon,40,Portuguese
-Shipwright,40,Portuguese
-Siege Engineers,30,Portuguese
-Siege Onager,100,Portuguese
-Siege Ram,50,Portuguese
-Spies,0.666666667,Portuguese
-Squires,26.66666667,Portuguese
-Stone Mining,20,Portuguese
-Stone Shaft Mining,50,Portuguese
-Supremacy,40,Portuguese
-Theocracy,50,Portuguese
-Thumb Ring,30,Portuguese
-Town Patrol,26.66666667,Portuguese
-Town Watch,16.66666667,Portuguese
-Tracking,23.33333333,Portuguese
-Treadmill Crane,26.66666667,Portuguese
-Treason,0.666666667,Portuguese
-Two Handed Swordsman,50,Portuguese
-Two Man Saw,66.66666667,Portuguese
-War Galley,33.33333333,Portuguese
-Wheelbarrow,50,Portuguese
-Yeomen,40,Portuguese
-Zealotry,33.33333333,Portuguese
-Feudal Age,86.66666667,Malay
-Castle Age,106.6666667,Malay
-Imperial Age,191.3333333,Malay
-Loom,0.1,Goths
+Technology,TimeToResearch,Civilisation,,,
+Anarchy,60,Generic,,,
+Arbalest,50,Generic,,,
+Architecture,70,Generic,,,
+Artillery,40,Generic,,,
+Atheism,60,Generic,,,
+Atonement,40,Generic,,,
+Ballistics,60,Generic,,,
+Banking,50,Generic,,,
+Bearded Axe,60,Generic,,,
+Berserkergang,40,Generic,,,
+Blast Furnace,100,Generic,,,
+Block Printing,55,Generic,,,
+Bloodlines,50,Generic,,,
+Bodkin Arrow,35,Generic,,,
+Bombard Tower,60,Generic,,,
+Bow Saw,50,Generic,,,
+Bracer,40,Generic,,,
+Cannon Galleon,50,Generic,,,
+Capped Ram,50,Generic,,,
+Caravan,40,Generic,,,
+Careening,50,Generic,,,
+Cartography,60,Generic,,,
+Castle Age,160,Generic,,,
+Cavalier,100,Generic,,,
+Chain Barding Armor,60,Generic,,,
+Chain Mail Armor,55,Generic,,,
+Champion,100,Generic,,,
+Chemistry,100,Generic,,,
+Coinage,50,Generic,,,
+Conscription,60,Generic,,,
+Crenellations,60,Generic,,,
+Crop Rotation,70,Generic,,,
+Crossbowman,35,Generic,,,
+Double Bit Axe,25,Generic,,,
+Drill,60,Generic,,,
+Dry Dock,60,Generic,,,
+El Dorado,50,Generic,,,
+Elite Berserk,45,Generic,,,
+Elite Cannon Galleon,30,Generic,,,
+Elite Cataphract,50,Generic,,,
+Elite Chu Ko Nu,50,Generic,,,
+Elite Conquistador,60,Generic,,,
+Elite Eagle Warrior,40,Generic,,,
+Elite Huskarl,40,Generic,,,
+Elite Jaguar Warrior,45,Generic,,,
+Elite Janissary,55,Generic,,,
+Elite Longboat,60,Generic,,,
+Elite Longbowman,60,Generic,,,
+Elite Mameluke,50,Generic,,,
+Elite Mangudai,50,Generic,,,
+Elite Plumed Archer,45,Generic,,,
+Elite Samurai,60,Generic,,,
+Elite Skirmisher,50,Generic,,,
+Elite Tarkan,45,Generic,,,
+Elite Teutonic Knight,50,Generic,,,
+Elite Throwing Axeman,45,Generic,,,
+Elite Turtle Ship,65,Generic,,,
+Elite War Elephant,75,Generic,,,
+Elite War Wagon,75,Generic,,,
+Elite Woad Raider,45,Generic,,,
+Faith,60,Generic,,,
+Fast Fire Ship,50,Generic,,,
+Fervor,50,Generic,,,
+Feudal Age,130,Generic,,,
+Fletching,30,Generic,,,
+Forging,50,Generic,,,
+Fortified Wall,50,Generic,,,
+Furor Celtica,50,Generic,,,
+Galleon,65,Generic,,,
+Garland Wars,60,Generic,,,
+Gold Mining,30,Generic,,,
+Gold Shaft Mining,75,Generic,,,
+Guard Tower,30,Generic,,,
+Guilds,50,Generic,,,
+Halberdier,50,Generic,,,
+Hand Cart,55,Generic,,,
+Heated Shot,30,Generic,,,
+Heavy Camel,125,Generic,,,
+Heavy Cavalry Archer,50,Generic,,,
+Heavy Demolition Ship,50,Generic,,,
+Heavy Plow,40,Generic,,,
+Heavy Scorpion,50,Generic,,,
+Herbal Medicine,35,Generic,,,
+Heresy,60,Generic,,,
+Hoardings,75,Generic,,,
+Horse Collar,20,Generic,,,
+Husbandry,50,Generic,,,
+Hussar,50,Generic,,,
+Illumination,65,Generic,,,
+Imperial Age,190,Generic,,,
+Iron Casting,70,Generic,,,
+Kataparuto,60,Generic,,,
+Keep,75,Generic,,,
+Leather Archer Armor,55,Generic,,,
+Ligth Cavalry,45,Generic,,,
+Logistica,50,Generic,,,
+Long Swordman,45,Generic,,,
+Loom,25,Generic,,,
+Mahouts,50,Generic,,,
+Man At Arms,40,Generic,,,
+Masonry,50,Generic,,,
+Murder Holes,60,Generic,,,
+Onager,75,Generic,,,
+Padded Archer Armor,40,Generic,,,
+Paladin,170,Generic,,,
+Parthian Tactics,65,Generic,,,
+Perfusion,40,Generic,,,
+Pikeman,45,Generic,,,
+Plate Barding Armor,75,Generic,,,
+Plate Mail Armor,70,Generic,,,
+Redemption,50,Generic,,,
+Ring Archer Armor,70,Generic,,,
+Rocketry,60,Generic,,,
+Sanctity,60,Generic,,,
+Sappers,10,Generic,,,
+Scale Barding Armor,45,Generic,,,
+Scale Mail Armor,40,Generic,,,
+Shinkichon,60,Generic,,,
+Shipwright,60,Generic,,,
+Siege Engineers,45,Generic,,,
+Siege Onager,150,Generic,,,
+Siege Ram,75,Generic,,,
+Spies,1,Generic,,,
+Squires,40,Generic,,,
+Stone Mining,30,Generic,,,
+Stone Shaft Mining,75,Generic,,,
+Supremacy,60,Generic,,,
+Theocracy,75,Generic,,,
+Thumb Ring,45,Generic,,,
+Town Patrol,40,Generic,,,
+Town Watch,25,Generic,,,
+Tracking,35,Generic,,,
+Treadmill Crane,40,Generic,,,
+Treason,1,Generic,,,
+Two Handed Swordsman,75,Generic,,,
+Two Man Saw,100,Generic,,,
+War Galley,50,Generic,,,
+Wheelbarrow,75,Generic,,,
+Yeomen,60,Generic,,,
+Zealotry,50,Generic,,,
+Anarchy,40,Portuguese,,,
+Arbalest,33.33333333,Portuguese,,,
+Architecture,46.66666667,Portuguese,,,
+Artillery,26.66666667,Portuguese,,,
+Atheism,40,Portuguese,,,
+Atonement,26.66666667,Portuguese,,,
+Ballistics,40,Portuguese,,,
+Banking,33.33333333,Portuguese,,,
+Bearded Axe,40,Portuguese,,,
+Berserkergang,26.66666667,Portuguese,,,
+Blast Furnace,66.66666667,Portuguese,,,
+Block Printing,36.66666667,Portuguese,,,
+Bloodlines,33.33333333,Portuguese,,,
+Bodkin Arrow,23.33333333,Portuguese,,,
+Bombard Tower,40,Portuguese,,,
+Bow Saw,33.33333333,Portuguese,,,
+Bracer,26.66666667,Portuguese,,,
+Cannon Galleon,33.33333333,Portuguese,,,
+Capped Ram,33.33333333,Portuguese,,,
+Caravan,26.66666667,Portuguese,,,
+Careening,33.33333333,Portuguese,,,
+Cartography,40,Portuguese,,,
+Castle Age,160,Portuguese,,,
+Cavalier,66.66666667,Portuguese,,,
+Chain Barding Armor,40,Portuguese,,,
+Chain Mail Armor,36.66666667,Portuguese,,,
+Champion,66.66666667,Portuguese,,,
+Chemistry,66.66666667,Portuguese,,,
+Coinage,33.33333333,Portuguese,,,
+Conscription,40,Portuguese,,,
+Crenellations,40,Portuguese,,,
+Crop Rotation,46.66666667,Portuguese,,,
+Crossbowman,23.33333333,Portuguese,,,
+Double Bit Axe,16.66666667,Portuguese,,,
+Drill,40,Portuguese,,,
+Dry Dock,40,Portuguese,,,
+El Dorado,33.33333333,Portuguese,,,
+Elite Berserk,30,Portuguese,,,
+Elite Cannon Galleon,20,Portuguese,,,
+Elite Cataphract,33.33333333,Portuguese,,,
+Elite Chu Ko Nu,33.33333333,Portuguese,,,
+Elite Conquistador,40,Portuguese,,,
+Elite Eagle Warrior,26.66666667,Portuguese,,,
+Elite Huskarl,26.66666667,Portuguese,,,
+Elite Jaguar Warrior,30,Portuguese,,,
+Elite Janissary,36.66666667,Portuguese,,,
+Elite Longboat,40,Portuguese,,,
+Elite Longbowman,40,Portuguese,,,
+Elite Mameluke,33.33333333,Portuguese,,,
+Elite Mangudai,33.33333333,Portuguese,,,
+Elite Plumed Archer,30,Portuguese,,,
+Elite Samurai,40,Portuguese,,,
+Elite Skirmisher,33.33333333,Portuguese,,,
+Elite Tarkan,30,Portuguese,,,
+Elite Teutonic Knight,33.33333333,Portuguese,,,
+Elite Throwing Axeman,30,Portuguese,,,
+Elite Turtle Ship,43.33333333,Portuguese,,,
+Elite War Elephant,50,Portuguese,,,
+Elite War Wagon,50,Portuguese,,,
+Elite Woad Raider,30,Portuguese,,,
+Faith,40,Portuguese,,,
+Fast Fire Ship,33.33333333,Portuguese,,,
+Fervor,33.33333333,Portuguese,,,
+Feudal Age,130,Portuguese,,,
+Fletching,20,Portuguese,,,
+Forging,33.33333333,Portuguese,,,
+Fortified Wall,33.33333333,Portuguese,,,
+Furor Celtica,33.33333333,Portuguese,,,
+Galleon,43.33333333,Portuguese,,,
+Garland Wars,40,Portuguese,,,
+Gold Mining,20,Portuguese,,,
+Gold Shaft Mining,50,Portuguese,,,
+Guard Tower,20,Portuguese,,,
+Guilds,33.33333333,Portuguese,,,
+Halberdier,33.33333333,Portuguese,,,
+Hand Cart,36.66666667,Portuguese,,,
+Heated Shot,20,Portuguese,,,
+Heavy Camel,83.33333333,Portuguese,,,
+Heavy Cavalry Archer,33.33333333,Portuguese,,,
+Heavy Demolition Ship,33.33333333,Portuguese,,,
+Heavy Plow,26.66666667,Portuguese,,,
+Heavy Scorpion,33.33333333,Portuguese,,,
+Herbal Medicine,23.33333333,Portuguese,,,
+Heresy,40,Portuguese,,,
+Hoardings,50,Portuguese,,,
+Horse Collar,13.33333333,Portuguese,,,
+Husbandry,33.33333333,Portuguese,,,
+Hussar,33.33333333,Portuguese,,,
+Illumination,43.33333333,Portuguese,,,
+Imperial Age,190,Portuguese,,,
+Iron Casting,46.66666667,Portuguese,,,
+Kataparuto,40,Portuguese,,,
+Keep,50,Portuguese,,,
+Leather Archer Armor,36.66666667,Portuguese,,,
+Ligth Cavalry,30,Portuguese,,,
+Logistica,33.33333333,Portuguese,,,
+Long Swordman,30,Portuguese,,,
+Loom,16.66666667,Portuguese,,,
+Mahouts,33.33333333,Portuguese,,,
+Man At Arms,26.66666667,Portuguese,,,
+Masonry,33.33333333,Portuguese,,,
+Murder Holes,40,Portuguese,,,
+Onager,50,Portuguese,,,
+Padded Archer Armor,26.66666667,Portuguese,,,
+Paladin,113.3333333,Portuguese,,,
+Parthian Tactics,43.33333333,Portuguese,,,
+Perfusion,26.66666667,Portuguese,,,
+Pikeman,30,Portuguese,,,
+Plate Barding Armor,50,Portuguese,,,
+Plate Mail Armor,46.66666667,Portuguese,,,
+Redemption,33.33333333,Portuguese,,,
+Ring Archer Armor,46.66666667,Portuguese,,,
+Rocketry,40,Portuguese,,,
+Sanctity,40,Portuguese,,,
+Sappers,6.666666667,Portuguese,,,
+Scale Barding Armor,30,Portuguese,,,
+Scale Mail Armor,26.66666667,Portuguese,,,
+Shinkichon,40,Portuguese,,,
+Shipwright,40,Portuguese,,,
+Siege Engineers,30,Portuguese,,,
+Siege Onager,100,Portuguese,,,
+Siege Ram,50,Portuguese,,,
+Spies,0.666666667,Portuguese,,,
+Squires,26.66666667,Portuguese,,,
+Stone Mining,20,Portuguese,,,
+Stone Shaft Mining,50,Portuguese,,,
+Supremacy,40,Portuguese,,,
+Theocracy,50,Portuguese,,,
+Thumb Ring,30,Portuguese,,,
+Town Patrol,26.66666667,Portuguese,,,
+Town Watch,16.66666667,Portuguese,,,
+Tracking,23.33333333,Portuguese,,,
+Treadmill Crane,26.66666667,Portuguese,,,
+Treason,0.666666667,Portuguese,,,
+Two Handed Swordsman,50,Portuguese,,,
+Two Man Saw,66.66666667,Portuguese,,,
+War Galley,33.33333333,Portuguese,,,
+Wheelbarrow,50,Portuguese,,,
+Yeomen,40,Portuguese,,,
+Zealotry,33.33333333,Portuguese,,,
+Feudal Age,86.66666667,Malay,,,
+Castle Age,106.6666667,Malay,,,
+Imperial Age,191.3333333,Malay,,,
+Loom,0.1,Goths,,,
+Fletching,16.66666667,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,"Fletching','Bodkin Arrow','Bracer','Padded Archer Armor','Leather Archer Armor','Ring Archer Armour','Forging','Iron Casting','Blast Furnace','Scale Barding Armor','Chain Barding Armor','Plate Barding Armor','Scale Mail Armor','Chain Mail Armor','Plate Mail Armor"
+Bodkin Arrow,19.44444444,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Bracer,22.22222222,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Padded Archer Armor,22.22222222,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Leather Archer Armor,30.55555556,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Ring Archer Armour,38.88888889,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Forging,27.77777778,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Iron Casting,38.88888889,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Blast Furnace,55.55555556,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Scale Barding Armor,25,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Chain Barding Armor,33.33333333,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Plate Barding Armor,41.66666667,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Scale Mail Armor,22.22222222,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Chain Mail Armor,30.55555556,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,
+Plate Mail Armor,38.88888889,Bulgarians,Team Bonus - Blacksmiths work 80% faster,,

@@ -45,15 +45,15 @@ class GamePlayer:
             elo: int,
             ) -> None:
 
-        self.number = number
-        self.name = name
-        self.civilisation = civilisation  # Comes as dict with x and y - store as tuple for arithmetic
-        self.starting_position = (starting_position["x"], starting_position["y"])
-        self.player_won = winner
-        self.elo = elo
+        self.number: int = number
+        self.name: str = name
+        self.civilisation: str = civilisation  # Comes as dict with x and y - store as tuple for arithmetic
+        self.starting_position: tuple = (starting_position["x"], starting_position["y"])
+        self.player_won: bool = winner
+        self.elo: int = elo
 
-        self.inputs_df = inputs
-        self.actions_df = actions
+        self.inputs_df: pd.DataFrame = inputs
+        self.actions_df: pd.DataFrame = actions
 
         # Data formatting
         self.inputs_df["timestamp"] = pd.to_timedelta(self.inputs_df["timestamp"])
@@ -107,6 +107,7 @@ class GamePlayer:
 
         # TODO check why there is two clicks - maybe one for queue and one for actually clicking up?
         # Handle two clicks
+        # TODO Side effects!
         relevent_research = self.research_techs.loc[self.research_techs["param"] == technology, "timestamp"]  # handle unqueue
 
         # TODO check civ parameter passed correctly
@@ -347,20 +348,45 @@ class GamePlayer:
     def extract_feudal_and_dark_age_economics(self,
                                               feudal_time: pd.Timedelta,
                                               castle_time: pd.Timedelta,
+                                            #   player_technologies_research: pd.DataFrame,  # TODO side effects see method
+                                              player_eco_buildings: pd.DataFrame,
+                                              player_actions: pd.DataFrame,
                                               ) -> pd.Series:
         # TODO
-        # feudal age wood upgrade (early, late, castle)
-        # feudal age farm upgrade (early, late, castle)
+        # Feudal age wood and farm upgrade; # TODO think about early/late/skip dending on comparison with castle
+        double_bit_axe_time = self.identify_technology_research_and_time("Double-Bit Axe", civilisation=self.civilisation)
+        horse_collar_time = self.identify_technology_research_and_time("Horse Collar", civilisation=self.civilisation)
+        
+        # feudal age number of farms
+        # find all "Reseed" inputs and "Build - Farm actions"
+        # TODO - understand if a built farm is deleted
+        farms_in_feudal = player_eco_buildings.loc[
+            (player_eco_buildings["param"] == "Farm") &
+            (player_eco_buildings["timestamp"] > feudal_time) &
+            (player_eco_buildings["timestamp"] < castle_time),
+            :
+        ]
+        number_farms_made = len(farms_in_feudal)
+        # time of 3, 6, 10, 15, 20 farms
+        farms_results = pd.Series({"TimeThreeFarms": None,
+                                   "TimeSixFarms": None,
+                                   "TimeTenFarms": None,
+                                   "TimeFifteenFarms": None,
+                                   "TimeTentyFarms": None
+                                   })
+        # Iterate through the number of farms, with the series key and the index number
+        for key, farms_number in zip(farms_results.index.to_list(), [2, 5, 9, 14, 19]):
+            if number_farms_made >= farms_number:
+                # Need guard statement incase dataframe is not long enough
+                farms_results.loc[key] = farms_in_feudal.iloc[farms_number, :]["timestmap"]
+        farms_results = pd.concat([{"NumberFeudalFarms": number_farms_made}, farms_results])
+
+
         # dark age number of deer taken
         # dark age number of boars/rhinos taken
         # dark age number of sheep taken
         # dark age time of mill on berries + number of vils on berries
-        # feudal age number of farms
-        # time of three farms
-        # time of 6 farms
-        # time of 10 farms
-        # time of 15 farms
-        # time of 20 farms if in
+        
         # number of walls in dark age
         # number of walls in feudal age
         # number of houses in dark age + feudal (assume part of walls)
@@ -886,7 +912,7 @@ class AgeGame:
 
 
 class ProductionBuilding:
-    """This class models the function of a production building, including creating units, storing upgrades, measuring idle time"""
+    """TODO This class models the function of a production building, including creating units, storing upgrades, measuring idle time"""
     def __init__(self, 
                  building_type: str, 
                  civilisation: str, 
