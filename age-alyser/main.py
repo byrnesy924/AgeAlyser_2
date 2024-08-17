@@ -4,6 +4,7 @@ import pandas as pd
 # import os
 import math
 from scipy.ndimage import label, generate_binary_structure
+from scipy.spatial import distance
 from shapely import Point, Polygon
 import logging
 from pathlib import Path
@@ -350,13 +351,14 @@ class GamePlayer:
                                               castle_time: pd.Timedelta,
                                             #   player_technologies_research: pd.DataFrame,  # TODO side effects see method
                                               player_eco_buildings: pd.DataFrame,
-                                              player_actions: pd.DataFrame,
+                                              player_walls: pd.DataFrame,
                                               ) -> pd.Series:
         # TODO
         # Feudal age wood and farm upgrade; # TODO think about early/late/skip dending on comparison with castle
         double_bit_axe_time = self.identify_technology_research_and_time("Double-Bit Axe", civilisation=self.civilisation)
         horse_collar_time = self.identify_technology_research_and_time("Horse Collar", civilisation=self.civilisation)
-        
+        wheelbarrow_time = self.identify_technology_research_and_time("Wheelbarrow", civilisation=self.civilisation)
+
         # feudal age number of farms
         # find all "Reseed" inputs and "Build - Farm actions"
         # TODO - understand if a built farm is deleted
@@ -381,7 +383,6 @@ class GamePlayer:
                 farms_results.loc[key] = farms_in_feudal.iloc[farms_number, :]["timestmap"]
         farms_results = pd.concat([{"NumberFeudalFarms": number_farms_made}, farms_results])
 
-
         # dark age number of deer taken
         # dark age number of boars/rhinos taken
         # dark age number of sheep taken
@@ -390,6 +391,21 @@ class GamePlayer:
         # number of walls in dark age
         # number of walls in feudal age
         # number of houses in dark age + feudal (assume part of walls)
+        # Identify all walls
+        # calculate chebyshev distance of each wall segment
+        # sum in periods
+        palisade_walls = player_walls.loc[player_walls["payload.building"] == "Palisade Wall", :]
+        # Calculate chebyshev distance between the wall start and end
+        palisade_walls["NumberTilesPlaced"] = palisade_walls.apply(lambda x: distance.chebyshev(
+            x[["position.x", "position.y"]], x[["payload.x_end", "payload.y_end"]]
+            ), axis=1)
+        dark_age_walls = palisade_walls.loc[palisade_walls["timestamp"] < feudal_time, "NumberTilesPlaced"].sum()
+        feudal_age_walls = palisade_walls.loc[
+            (palisade_walls["timestamp"] >= feudal_time) &
+            (palisade_walls["timestamp"] <= castle_time),
+            "NumberTilesPlaced"
+        ].sum()
+        post_castle_walls = palisade_walls.loc[palisade_walls["timestamp"] > castle_time, "NumberTilesPlaced"].sum()
 
         # Return castle age time! the most important
         stats_to_return = {
