@@ -15,7 +15,7 @@ from pathlib import Path
 from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 
-from enums import BuildTimesEnum, TechnologyResearchTimes, UnitCreationTime
+from enums import BuildTimesEnum, TechnologyResearchTimes, UnitCreationTime, MilitaryBuildings
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -63,32 +63,74 @@ class GamePlayer:
         # self.actions_df.to_csv(Path("DataExploration/actions.csv"))  # TODO log or save
         # self.inputs_df.to_csv(Path("DataExploration/inputs.csv"))
 
+        # Units and unqueing - TODO unqueue
         self.queue_units = self.inputs_df.loc[self.inputs_df["type"] == "Queue", :]
         self.unqueue_units = self.inputs_df.loc[self.inputs_df["type"] == "Unqueue", :]
 
+        # all techs researched 
         self.research_techs = self.inputs_df.loc[self.inputs_df["type"] == "Research", :]
-        self.economic_buildings_created = self.inputs_df.loc[self.inputs_df["type"] == "Build", :]
 
-        military_buildings = ["Stable", "Archery Range", "Barracks", "Siege Workshop"]
+        # Buildings created
+        all_buildings_created = self.inputs_df.loc[(self.inputs_df["type"] == "Build") | (self.inputs_df["type"] == "Reseed"), :]
+        # Split into military production buildings and everything else
+        self.military_buildings_created = all_buildings_created[
+            all_buildings_created.loc[:, "param"].isin(MilitaryBuildings)
+            ].copy()
 
-        self.military_buildings_created = self.economic_buildings_created[
-            self.economic_buildings_created.loc[:, "param"].isin(military_buildings)
-            ]  # TODO factor in build times!
-        # TODO factor in number of vils!
-        # TODO cumans Feudal TC; lower priority Sicilians dark age TC 
+        self.economic_buildings_created = all_buildings_created[
+            ~all_buildings_created.loc[:, "param"].isin(MilitaryBuildings)
+            ].copy()
+
+        # Player walls - Palisade Wall(s) and Stone Wall(s)
+        self.player_walls = self.inputs_df.loc[self.inputs_df["type"] == "Wall", :]
 
         self.opening = pd.Series()
 
-    def return_location(self) -> pd.Series:
+    def full_player_choices_and_strategy(self) -> pd.Series:
+        """Main API - call to analyse the player's choices"""
+
+        # Extract the key statistics / data points
+        # research age timings and loom to mine out
+        self.feudal_time = self.identify_technology_research_and_time("Feudal Age", civilisation=self.civilisation)  # Get feudal times of the players
+        self.castle_time = self.identify_technology_research_and_time("Castle Age", civilisation=self.civilisation)
+        self.loom_times = self.identify_technology_research_and_time("Loom", civilisation=self.civilisation)  # Get loom time
+
+        self.dark_age_stats = self.extract_feudal_time_information(
+            feudal_time=self.feudal_time,
+            loom_time=self.loom_times
+        )
+
+        # Identify Feudal and Dark Age military Strategy
+        self.opening_strategy = self.extract_opening_strategy(
+            feudal_time=self.feudal_time,
+            castle_time=self.castle_time,
+            military_buildings_spawned=self.military_buildings_created,
+            units_queued=self.queue_units,
+        )
+
+        # Identify Feudal and Dark Age economic choices
+        self.feudal_economic_choices_and_castle_time = self.extract_early_game_economic_strat(
+            castle_time=self.castle_time,
+            feudal_time=self.feudal_time,
+            player_eco_buildings=self.economic_buildings_created,
+            player_walls=self.player_walls.loc[self.player_walls["payload.building"] == "Palisade Wall", :]
+        )
+
+        self.opening = pd.concat([self.opening, self.dark_age_stats])  # include self as is it empty series
+        self.opening = pd.concat([self.opening, self.opening_strategy, self.feudal_economic_choices_and_castle_time])
+
+        return self.opening
+
+    def identify_location(self) -> pd.Series:
         """Wrapper to return a pandas friendly starting position object"""
         return pd.Series({"StartingLocation": self.starting_position})
 
-    def return_civilisation(self) -> pd.Series:
+    def identify_civilisation(self) -> pd.Series:
         """Wrapper to return civilisation"""
         return pd.Series({"Civilisation": self.civilisation})
 
     def identify_technology_research_and_time(self, technology: str, civilisation: str = None) -> pd.Timedelta:
-        """A helper function that can identify when players research certain things and the timing of that
+        """A helper method that can identify when players research certain things and the timing of that
 
         :param technology: technology that can be research TODO enumerate this
         :type technology: str
@@ -122,7 +164,7 @@ class GamePlayer:
         return relevent_research.iloc[len(relevent_research) - 1] + pd.Timedelta(seconds=time_to_research) 
 
     def identify_building_and_timing(self, building, civilisation: str = None) -> pd.DataFrame:
-        """Helper to find all the creations of an economic building type. TODO Build times.
+        """Helper to find all the creations of an economic building type.
 
         :param building: _description_ TODO
         :type building: _type_
@@ -143,10 +185,16 @@ class GamePlayer:
 
         relevent_building = self.economic_buildings_created.loc[
             self.economic_buildings_created["param"] == building,
-            ["timestamp", "player"]
+            ["timestamp", "player", "payload.object_ids"]
             ]
+        if relevent_building.empty:
+            # TODO log this and return empty data frame but with correct columns - handle accordingly
+            return relevent_building
 
-        relevent_building["timestamp"] = relevent_building["timestamp"] + pd.Timedelta(seconds=time_to_build)
+        relevent_building["NumberVillsBuilding"] = relevent_building["payload.object_ids"].apply(lambda x: len(x))
+        relevent_building["TimeToBuild"] = (3*time_to_build)/(relevent_building["NumberVillsBuilding"] + 2)
+        relevent_building["TimeToBuild"] = pd.to_timedelta(relevent_building["TimeToBuild"])
+        relevent_building["timestamp"] = relevent_building["timestamp"] + relevent_building["TimeToBuild"]
 
         return relevent_building
 
@@ -178,13 +226,82 @@ class GamePlayer:
 
         return pd.Series(feudal_stats_to_return)
 
-    def identify_militia_based_strategy(self,
-                                        castle_time: pd.Timedelta,
-                                        military_buildings_spawned: pd.DataFrame,
-                                        mill_created_time: pd.Timedelta,
-                                        units_queued: pd.DataFrame,
-                                        maa_upgrade: pd.Timedelta = None
-                                        ) -> pd.Series:
+    def extract_opening_strategy(self,
+                                 feudal_time: pd.Timedelta,
+                                 castle_time: pd.Timedelta,
+                                 military_buildings_spawned: pd.DataFrame,
+                                 units_queued: pd.DataFrame,
+                                 ) -> pd.Series:
+        """Function that identifies military stratgy. Uses Militia and Feudal military methods"""
+        # TODO identify what it looks like if a player un-queus a unit
+
+        # time of maa tech for maa function
+        maa_time = self.identify_technology_research_and_time("Man-At-Arms", civilisation=self.civilisation)
+        # time of first mill for maa function
+        self.all_mill_times = self.identify_building_and_timing("Mill")
+        first_mill_time = self.all_mill_times["timestamp"].min()
+
+        # identify drush and categorise into MAA/Pre-mill/Drush
+        dark_age_approach = self.militia_based_strategy(
+            castle_time=castle_time,
+            military_buildings_spawned=military_buildings_spawned,
+            mill_created_time=first_mill_time,
+            units_queued=units_queued,
+            maa_upgrade=maa_time
+        )  # TODO - identify towers or a fast castle
+
+        feudal_approach = self.feudal_military_choices(
+            feudal_time=feudal_time,
+            castle_time=castle_time,
+            units_queued=units_queued
+        )
+
+        # Extract number of steals
+        match (dark_age_approach["MilitiaStrategyIdentified"],
+               feudal_approach["OpeningMilitaryBuilding"],
+               feudal_approach["Archer"] > 0,
+               feudal_approach["Skirmisher"] > 0,
+               feudal_approach["Scout Cavalry"] > 0):
+            case ("Drush", "Archery Range", _, _, _):
+                strategy = "Drush Flush"
+            case ("Pre-Mill Drush", "Archery Range", _, _, _):
+                strategy = "Pre-Mill Drush Flush"
+            case ("MAA", "Archery Range", _, _, _):
+                strategy = "MAA Archers"
+            case (_, "Archery Range", True, True, True):
+                strategy = "Archery Range into Full Feudal"
+            case (_, "Stable", True, True, True):
+                strategy = "Scouts into Full Feudal"
+            case (_, "Archery Range", True, True, _):
+                strategy = "Archers and Skirms"
+            case (_, "Archery Range", True, _, True):
+                strategy = "Archers into scouts"
+            case (_, "Archery Range", True, _, True):
+                strategy = "Skirms into scouts"
+            case (_, "Stable", True, _, _):
+                strategy = "Scouts into archers"
+            case (_, "Stable", _, True, _):
+                strategy = "Scouts into skirms"
+            case (_, "Archery Range", True, False, False):
+                strategy = "Straight Archers"
+            case (_, "Archery Range", False, True, False):
+                strategy = "Straight Skirms or Trash Rush"
+            case (_, "Archery Range", False, False, True):
+                strategy = "Full scouts or Scouts into Castle"
+            case (_, _, _, _, _):
+                strategy = "Could not Identify!"
+                logger.warning("Couldn't identify this strategy")
+
+        # Map approximately to known strategies
+        return pd.concat([pd.Series({"OpeningStrategy": strategy}), dark_age_approach, feudal_approach])
+
+    def militia_based_strategy(self,
+                               castle_time: pd.Timedelta,
+                               military_buildings_spawned: pd.DataFrame,
+                               mill_created_time: pd.Timedelta,
+                               units_queued: pd.DataFrame,
+                               maa_upgrade: pd.Timedelta = None
+                               ) -> pd.Series:
         """Logic to identify groups of MAA or Militia based strategy: MAA, pre-mill drush, drush"""
         # Identify key timings and choices associated with these strategies
         dark_age_feudal_barracks = military_buildings_spawned.loc[(military_buildings_spawned["param"] == "Barracks") &
@@ -218,11 +335,11 @@ class GamePlayer:
 
         return pd.Series(dark_age_choices_to_return)
 
-    def identify_feudal_military_choices(self,
-                                         feudal_time: pd.Timedelta,
-                                         castle_time: pd.Timedelta,
-                                         units_queued: pd.DataFrame
-                                         ) -> pd.Series:
+    def feudal_military_choices(self,
+                                feudal_time: pd.Timedelta,
+                                castle_time: pd.Timedelta,
+                                units_queued: pd.DataFrame
+                                ) -> pd.Series:
         """Draws out the base military decisions in feudal age, e.g. buildings created, number of units, etc.
 
         :param feudal_time: _description_
@@ -271,10 +388,7 @@ class GamePlayer:
 
         # Extract time to 3 of first units
         # TODO - need to build out a method for working out when an object could produce a unit
-        # TODO Extract idle time of first military building - best method is with object that handles queue length times
-
-        # TODO extract second military building
-        # TODO Extract second military unit
+        # TODO identify different buildings by their ID
 
         military_stats_to_return = {
             "OpeningMilitaryBuildingTime": opening_timing.iloc[0],
@@ -283,87 +397,66 @@ class GamePlayer:
 
         return pd.concat([pd.Series(military_stats_to_return), number_of_each_unit])
 
-    def extract_opening_strategy(self,
-                                 feudal_time: pd.Timedelta,
-                                 castle_time: pd.Timedelta,
-                                 military_buildings_spawned: pd.DataFrame,
-                                 mill_created_time: pd.Timedelta,
-                                 units_queued: pd.DataFrame,
-                                 maa_upgrade: pd.Timedelta = None
-                                 ) -> pd.Series:
+    def extract_early_game_economic_strat(self,
+                                          feudal_time: pd.Timedelta,
+                                          castle_time: pd.Timedelta,
+                                          #   player_technologies_research: pd.DataFrame,  # TODO side effects see method
+                                          player_eco_buildings: pd.DataFrame,
+                                          player_walls: pd.DataFrame,
+                                          ) -> pd.Series:
 
-        # identify drush and categorise into MAA/Pre-mill/Drush
-        dark_age_approach = self.identify_militia_based_strategy(
-            castle_time=castle_time,
-            military_buildings_spawned=military_buildings_spawned,
-            mill_created_time=mill_created_time,
-            units_queued=units_queued,
-            maa_upgrade=maa_upgrade
-        )  # TODO - identify towers or a fast castle
+        # TODO - extract information from the dark age: sheep, deer, boars, berries
+        # dark_age_economic_development = self.extract_dark_age_economic_tactics()
 
-        feudal_approach = self.identify_feudal_military_choices(
-            feudal_time=feudal_time,
-            castle_time=castle_time,
-            units_queued=units_queued
-        )
-
-        # Extract number of steals
-        match (dark_age_approach["MilitiaStrategyIdentified"],
-               feudal_approach["OpeningMilitaryBuilding"],
-               feudal_approach["Archer"] > 0,
-               feudal_approach["Skirmisher"] > 0,
-               feudal_approach["Scout Cavalry"] > 0):
-            case ("Drush", "Archery Range", _, _, _):
-                strategy = "Drush Flush"
-            case ("Pre-Mill Drush", "Archery Range", _, _, _):
-                strategy = "Pre-Mill Drush Flush"
-            case ("MAA", "Archery Range", _, _, _):
-                strategy = "MAA Archers"
-            case (_, "Archery Range", True, True, True):
-                strategy = "Archery Range into Full Feudal"
-            case (_, "Stable", True, True, True):
-                strategy = "Scouts into Full Feudal"
-            case (_, "Archery Range", True, True, _):
-                strategy = "Archers and Skirms"
-            case (_, "Archery Range", True, _, True):
-                strategy = "Archers into scouts"
-            case (_, "Archery Range", True, _, True):
-                strategy = "Skirms into scouts"
-            case (_, "Stable", True, _, _):
-                strategy = "Scouts into archers"
-            case (_, "Stable", _, True, _):
-                strategy = "Scouts into skirms"
-            case (_, "Archery Range", True, False, False):
-                strategy = "Straight Archers"
-            case (_, "Archery Range", False, True, False):
-                strategy = "Straight Skirms or Trash Rush"
-            case (_, "Archery Range", False, False, True):
-                strategy = "Full scouts or Scouts into Castle"
-            case (_, _, _, _, _):
-                strategy = "Could not Identify!"
-                logger.warning("Couldn't identify this strategy")
-
-        # Map approximately to known strategies
-        return pd.concat([pd.Series({"OpeningStrategy": strategy}), dark_age_approach, feudal_approach])
-
-    def extract_feudal_and_dark_age_economics(self,
-                                              feudal_time: pd.Timedelta,
-                                              castle_time: pd.Timedelta,
-                                            #   player_technologies_research: pd.DataFrame,  # TODO side effects see method
-                                              player_eco_buildings: pd.DataFrame,
-                                              player_walls: pd.DataFrame,
-                                              ) -> pd.Series:
-        # TODO
-        # Feudal age wood and farm upgrade; # TODO think about early/late/skip dending on comparison with castle
+        # Feudal age wood and farm upgrade;
         double_bit_axe_time = self.identify_technology_research_and_time("Double-Bit Axe", civilisation=self.civilisation)
         horse_collar_time = self.identify_technology_research_and_time("Horse Collar", civilisation=self.civilisation)
         wheelbarrow_time = self.identify_technology_research_and_time("Wheelbarrow", civilisation=self.civilisation)
 
+        feudal_technology_times = pd.Series({"DoubleBitAxe": double_bit_axe_time,
+                                             "HorseCollar": horse_collar_time,
+                                             "Wheelbarrow": wheelbarrow_time
+                                             })
+
+        # Extract how quickly they develop their farming economy
+        farm_development = self.farm_economic_development(feudal_time, castle_time, player_eco_buildings)
+        # Extract when/if they choose to wall their map
+        walling_tactics = self.walling_tactics(feudal_time, castle_time, player_eco_buildings, player_walls)
+
+        # Return castle age time - the most important
+        castle_time = pd.Series({
+            "CastleTime": castle_time,
+        })
+
+        # Concat to pandas series and return
+        stats_to_return = pd.concat([feudal_technology_times, castle_time, farm_development, walling_tactics])
+        return stats_to_return
+
+    def dark_age_economic_tactics(self) -> pd.Series:
+        # dark age number of deer taken
+        # dark age number of boars/rhinos taken
+        # dark age number of sheep taken
+        # dark age time of mill on berries + number of vils on berries
+        pass
+
+    def farm_economic_development(self,
+                                  feudal_time: pd.Timedelta,
+                                  castle_time: pd.Timedelta,
+                                  player_eco_buildings: pd.DataFrame,
+                                  ) -> pd.Series:
+        """Parse the economic buildings created for farms built and reseeded; note timing
+
+        :param feudal_time: _description_
+        :param castle_time: _description_
+        :param player_eco_buildings: _description_
+        :return: _description_
+        :rtype: pd.Series
+        """
         # feudal age number of farms
         # find all "Reseed" inputs and "Build - Farm actions"
         # TODO - understand if a built farm is deleted
         farms_in_feudal = player_eco_buildings.loc[
-            (player_eco_buildings["param"] == "Farm") &
+            (player_eco_buildings["payload.building"] == "Farm") &
             (player_eco_buildings["timestamp"] > feudal_time) &
             (player_eco_buildings["timestamp"] < castle_time),
             :
@@ -380,22 +473,28 @@ class GamePlayer:
         for key, farms_number in zip(farms_results.index.to_list(), [2, 5, 9, 14, 19]):
             if number_farms_made >= farms_number:
                 # Need guard statement incase dataframe is not long enough
-                farms_results.loc[key] = farms_in_feudal.iloc[farms_number, :]["timestmap"]
-        farms_results = pd.concat([{"NumberFeudalFarms": number_farms_made}, farms_results])
+                farms_results.loc[key] = farms_in_feudal.iloc[farms_number, :]["timestamp"]
+        farms_results = pd.concat([pd.Series({"NumberFeudalFarms": number_farms_made}), farms_results])
 
-        # dark age number of deer taken
-        # dark age number of boars/rhinos taken
-        # dark age number of sheep taken
-        # dark age time of mill on berries + number of vils on berries
-        
-        # number of walls in dark age
-        # number of walls in feudal age
-        # number of houses in dark age + feudal (assume part of walls)
-        # Identify all walls
-        # calculate chebyshev distance of each wall segment
-        # sum in periods
+        return farms_results
+
+    def walling_tactics(self,
+                        feudal_time: pd.Timedelta,
+                        castle_time: pd.Timedelta,
+                        player_eco_buildings: pd.DataFrame,
+                        player_walls: pd.DataFrame
+                        ) -> pd.Series:
+        """Helper function to extract walls built in the early game
+        :param feudal_time: _description_
+        :param castle_time: _description_
+        :param player_eco_buildings: _description_
+        :return: _description_
+        :rtype: pd.Series
+        """
+        # Note on houses - include as a proxy for fortifying your map/walls in the mid game (feudal - castle)
+        # Walls - # calculate chebyshev distance of each wall segment - sum in each age
         palisade_walls = player_walls.loc[player_walls["payload.building"] == "Palisade Wall", :]
-        # Calculate chebyshev distance between the wall start and end
+        # Calculate chebyshev distance between the wall start and end to get # of tiles
         palisade_walls["NumberTilesPlaced"] = palisade_walls.apply(lambda x: distance.chebyshev(
             x[["position.x", "position.y"]], x[["payload.x_end", "payload.y_end"]]
             ), axis=1)
@@ -407,56 +506,20 @@ class GamePlayer:
         ].sum()
         post_castle_walls = palisade_walls.loc[palisade_walls["timestamp"] > castle_time, "NumberTilesPlaced"].sum()
 
-        # Return castle age time! the most important
-        stats_to_return = {
-            "CastleTime": castle_time,
-        }
+        # Houses - for the moment limit to feudal. Number of Houses is probably a poor proxy for identifying walling tactics, 
+        # as they aren't always used to reinforce walls
+        # Some sort of really complicated location analysis would be required to amend this - I will not go down this path.
+        houses_built = player_eco_buildings.loc[player_eco_buildings["payload.building"] == "House", "timestamp"]
+        feudal_houses = len(houses_built.loc[(houses_built > feudal_time) & (houses_built < castle_time)])
 
-        return pd.Series(stats_to_return)
+        walling_results = pd.Series({
+            "DarkAgeWallsNumber": dark_age_walls, 
+            "FeudalWallsNumber": feudal_age_walls,
+            "PostCastleWalls": post_castle_walls,
+            "FeudalHousesBuilt": feudal_houses
+        })
 
-    def extract_player_choices_and_strategy(self) -> pd.Series:
-        # TODO mine if boar or elephant
-        # TODO mine if scout lost
-        # TODO identify what it looks like if a player un-queus a unit
-
-        # Extract the key statistics / data points
-        # research times to mine out
-        self.feudal_time = self.identify_technology_research_and_time("Feudal Age", civilisation=self.civilisation)  # Get feudal times of the players
-        self.castle_time = self.identify_technology_research_and_time("Castle Age", civilisation=self.civilisation)
-        self.loom_times = self.identify_technology_research_and_time("Loom", civilisation=self.civilisation)  # Get loom time
-
-        # Military timings to mine out
-        self.maa_time = self.identify_technology_research_and_time("Man-At-Arms", civilisation=self.civilisation)  # TODO check name
-
-        # economic times to mine out
-        self.all_mill_times = self.identify_building_and_timing("Mill")
-        first_mill_time = self.all_mill_times["timestamp"].min()
-
-        self.dark_age_stats = self.extract_feudal_time_information(
-            feudal_time=self.feudal_time,
-            loom_time=self.loom_times
-        )
-
-        self.opening = pd.concat([self.opening, self.dark_age_stats])  # include self as is it empty series
-
-        # Identify Feudal Age Strategy
-        self.opening_strategy = self.extract_opening_strategy(
-            feudal_time=self.feudal_time,
-            castle_time=self.castle_time,
-            military_buildings_spawned=self.military_buildings_created,
-            mill_created_time=first_mill_time,
-            units_queued=self.queue_units,
-            maa_upgrade=self.maa_time,
-        )
-
-        self.feudal_economic_choices_and_castle_time = self.extract_feudal_and_dark_age_economics(
-            castle_time=self.castle_time,
-            feudal_time=self.feudal_time
-        )
-
-        self.opening = pd.concat([self.opening, self.opening_strategy, self.feudal_economic_choices_and_castle_time])
-
-        return self.opening
+        return walling_results
 
 
 class AgeMap:
@@ -650,7 +713,7 @@ class AgeMap:
             if wood.groupby(["x", "y"]).ngroups != total_trees:
                 raise Exception(f"Woodline number {woodline_index} has duplicate tiles")  # TODO proper logging
 
-            if total_trees == 1:
+            if total_trees < 3:
                 # Picked up stragglers around TC, disregard these
                 continue
 
@@ -903,11 +966,11 @@ class AgeGame:
 
         # Identify the opening strategy and choices of each player
         for player in self.players:
-            player_opening_strategies = player.extract_player_choices_and_strategy()
+            player_opening_strategies = player.full_player_choices_and_strategy()
             player_opening_strategies = player_opening_strategies.add_prefix(f"Player{player.number}.")
             self.opening = pd.concat([self.opening, player_opening_strategies])
 
-            location_and_civilisation = pd.concat([player.return_civilisation(), player.return_location()])
+            location_and_civilisation = pd.concat([player.identify_civilisation(), player.identify_location()])
             location_and_civilisation = location_and_civilisation.add_prefix(f"Player{player.number}.")
 
             self.game_results = pd.concat([self.game_results, location_and_civilisation, self.opening])
@@ -930,9 +993,9 @@ class AgeGame:
 class ProductionBuilding:
     """TODO This class models the function of a production building, including creating units, storing upgrades, measuring idle time"""
     def __init__(self, 
-                 building_type: str, 
-                 civilisation: str, 
-                 unit_queue_times: pd.DataFrame, 
+                 building_type: str,
+                 civilisation: str,
+                 unit_queue_times: pd.DataFrame,
                  relevant_technologytimes: pd.DataFrame,
                  building_id: int = None  # Data may limit this being able to be used
                  ) -> None:

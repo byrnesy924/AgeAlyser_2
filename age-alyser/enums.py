@@ -2,6 +2,9 @@
 Data for this including some notes and exceptions can be found in the Data folder
 """
 from enum import Enum
+from typing import Final, List
+
+MilitaryBuildings: Final[List[str]] = ["Stable", "Archery Range", "Barracks", "Siege Workshop", "Castle", "Donjon", "Monastery", "Krepost"]
 
 
 class BuildTimesEnum(Enum):
