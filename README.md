@@ -10,7 +10,6 @@ Experiments in Analyzing AOE2 Recorded Games
 - https://api-dev.ageofempires.com/
 - https://wiki.librematch.org/librematch/design/backend/authentication/start
 
-
 ### Idea
 - Need a way to download top rec games
 - Use parser to extract features of top games
@@ -77,6 +76,7 @@ https://aoe.ms/replay/?gameId=301103008&profileId=197964
 **GamePlayer**
 - Models the decisions/strategies/tactics made by individuals
 - How strategies and choices are mined
+- Two key lines of analysis - Military and Economic strategy/tactics
 
 **AgeGame**
 - Central object, contains key data for the game, also houses behaviour

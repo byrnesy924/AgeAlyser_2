@@ -60,14 +60,14 @@ class GamePlayer:
         self.inputs_df["timestamp"] = pd.to_timedelta(self.inputs_df["timestamp"])
         self.actions_df["timestamp"] = pd.to_timedelta(self.actions_df["timestamp"])
 
-        # self.actions_df.to_csv(Path("DataExploration/actions.csv"))  # TODO log or save
-        # self.inputs_df.to_csv(Path("DataExploration/inputs.csv"))
+        self.actions_df.to_csv(Path(f"DataExploration/Player{self.number}_actions.csv"))
+        self.inputs_df.to_csv(Path(f"DataExploration/Player{self.number}_inputs.csv"))
 
         # Units and unqueing - TODO unqueue
         self.queue_units = self.inputs_df.loc[self.inputs_df["type"] == "Queue", :]
         self.unqueue_units = self.inputs_df.loc[self.inputs_df["type"] == "Unqueue", :]
 
-        # all techs researched 
+        # all techs researched
         self.research_techs = self.inputs_df.loc[self.inputs_df["type"] == "Research", :]
 
         # Buildings created
@@ -91,7 +91,7 @@ class GamePlayer:
 
         # Extract the key statistics / data points
         # research age timings and loom to mine out
-        self.feudal_time = self.identify_technology_research_and_time("Feudal Age", civilisation=self.civilisation)  # Get feudal times of the players
+        self.feudal_time = self.identify_technology_research_and_time("Feudal Age", civilisation=self.civilisation)
         self.castle_time = self.identify_technology_research_and_time("Castle Age", civilisation=self.civilisation)
         self.loom_times = self.identify_technology_research_and_time("Loom", civilisation=self.civilisation)  # Get loom time
 
@@ -116,8 +116,7 @@ class GamePlayer:
             player_walls=self.player_walls.loc[self.player_walls["payload.building"] == "Palisade Wall", :]
         )
 
-        self.opening = pd.concat([self.opening, self.dark_age_stats])  # include self as is it empty series
-        self.opening = pd.concat([self.opening, self.opening_strategy, self.feudal_economic_choices_and_castle_time])
+        self.opening = pd.concat([self.opening, self.dark_age_stats, self.opening_strategy, self.feudal_economic_choices_and_castle_time])
 
         return self.opening
 
@@ -423,13 +422,8 @@ class GamePlayer:
         # Extract when/if they choose to wall their map
         walling_tactics = self.walling_tactics(feudal_time, castle_time, player_eco_buildings, player_walls)
 
-        # Return castle age time - the most important
-        castle_time = pd.Series({
-            "CastleTime": castle_time,
-        })
-
         # Concat to pandas series and return
-        stats_to_return = pd.concat([feudal_technology_times, castle_time, farm_development, walling_tactics])
+        stats_to_return = pd.concat([feudal_technology_times, farm_development, walling_tactics])
         return stats_to_return
 
     def dark_age_economic_tactics(self) -> pd.Series:
@@ -506,14 +500,14 @@ class GamePlayer:
         ].sum()
         post_castle_walls = palisade_walls.loc[palisade_walls["timestamp"] > castle_time, "NumberTilesPlaced"].sum()
 
-        # Houses - for the moment limit to feudal. Number of Houses is probably a poor proxy for identifying walling tactics, 
+        # Houses - for the moment limit to feudal. Number of Houses is probably a poor proxy for identifying walling tactics,
         # as they aren't always used to reinforce walls
         # Some sort of really complicated location analysis would be required to amend this - I will not go down this path.
         houses_built = player_eco_buildings.loc[player_eco_buildings["payload.building"] == "House", "timestamp"]
         feudal_houses = len(houses_built.loc[(houses_built > feudal_time) & (houses_built < castle_time)])
 
         walling_results = pd.Series({
-            "DarkAgeWallsNumber": dark_age_walls, 
+            "DarkAgeWallsNumber": dark_age_walls,
             "FeudalWallsNumber": feudal_age_walls,
             "PostCastleWalls": post_castle_walls,
             "FeudalHousesBuilt": feudal_houses
@@ -907,7 +901,7 @@ class AgeGame:
             self.match_json = serialize(self.match)
 
         # Raw data from the game
-        self.teams: list = self.match_json["teams"]  # Just a list lists with teams and player IDs per team 
+        self.teams: list = self.match_json["teams"]  # Just a list lists with teams and player IDs per team
         self.rated_game: bool = self.match_json["rated"]  # bool
         self.game_speed: str = self.match_json["speed"]  # String
         self.game_data_set: str = self.match_json["dataset"]  # Just DE, not necessary
@@ -956,24 +950,21 @@ class AgeGame:
     def advanced_parser(self) -> None:
         # TODO get the winner from players
         # TODO mine if boar or elephant
-        # TODO mine if scout lost --> probably cant
         # TODO identify what it looks like if a player un-queus a unit
 
         # Extract the key statistics / data points
         # research times to mine out
-        self.opening = pd.Series()
         self.game_results = pd.Series()
 
         # Identify the opening strategy and choices of each player
         for player in self.players:
             player_opening_strategies = player.full_player_choices_and_strategy()
             player_opening_strategies = player_opening_strategies.add_prefix(f"Player{player.number}.")
-            self.opening = pd.concat([self.opening, player_opening_strategies])
 
             location_and_civilisation = pd.concat([player.identify_civilisation(), player.identify_location()])
             location_and_civilisation = location_and_civilisation.add_prefix(f"Player{player.number}.")
 
-            self.game_results = pd.concat([self.game_results, location_and_civilisation, self.opening])
+            self.game_results = pd.concat([self.game_results, player_opening_strategies, location_and_civilisation])
 
         # Distance between players
         self.game_results["DistanceBetweenPlayers"] = self.calculate_distance_between_players(
@@ -992,7 +983,7 @@ class AgeGame:
 
 class ProductionBuilding:
     """TODO This class models the function of a production building, including creating units, storing upgrades, measuring idle time"""
-    def __init__(self, 
+    def __init__(self,
                  building_type: str,
                  civilisation: str,
                  unit_queue_times: pd.DataFrame,
@@ -1006,7 +997,7 @@ class ProductionBuilding:
         pass
 
     def produce_units(self) -> pd.DataFrame:
-        """Take the time stamps of units, as well as the upgrades, and work out when they wouldve been produced, 
+        """Take the time stamps of units, as well as the upgrades, and work out when they wouldve been produced,
         taking into account 1 at a time creation (i.e., queuing)
 
         :return pd.DataFrame: a dataframe of units and when they were created
@@ -1019,7 +1010,7 @@ class ProductionBuilding:
 
 
 if __name__ == "__main__":
-    # TODO think about the best structure of the module in order to create a good API and workflow 
+    # TODO think about the best structure of the module in order to create a good API and workflow
     # - what information is must-have, what is optional
     # - some sort of fast vs full API, or breaking up by sections of analysis
     # - Maybe an option is like Opening - Feudal - Castle - Map analyses
@@ -1033,7 +1024,7 @@ if __name__ == "__main__":
     test_match.advanced_parser()
     print("\n")
     print(test_match.game_results)
-    print(test_match.player_map_analysis)
+    # print(test_match.player_map_analysis)
     test_results = pd.concat([test_match.game_results, test_match.player_map_analysis]).sort_index()
     test_match.game_results.to_csv("tests/Test_Games/Test_results.csv")
 
