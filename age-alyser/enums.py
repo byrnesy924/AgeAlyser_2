@@ -6,6 +6,7 @@ from typing import Final, List
 
 MilitaryBuildings: Final[List[str]] = ["Stable", "Archery Range", "Barracks", "Siege Workshop", "Castle", "Donjon", "Monastery", "Krepost"]
 
+FeudalAgeMilitaryUnits: Final[List[str]] = ["Scout Cavalry", "Skirmisher", "Archer", "Spearman"]
 
 class BuildTimesEnum(Enum):
     """Enum of building times with override
@@ -237,7 +238,6 @@ class TechnologyResearchTimes(Enum):
             return False
         else:
             return True
-        
 
     @classmethod
     def get(cls, name: str, civilisation: str):

@@ -15,7 +15,7 @@ from pathlib import Path
 from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 
-from enums import BuildTimesEnum, TechnologyResearchTimes, UnitCreationTime, MilitaryBuildings
+from enums import BuildTimesEnum, TechnologyResearchTimes, UnitCreationTime, MilitaryBuildings, FeudalAgeMilitaryUnits
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -23,8 +23,6 @@ logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=loggi
 
 # TODO step one - identify the things within an AOE game that I can find, publish this as a package; 
 # e.g. how close the map is; front or back woodlines, civs, winner, units created, timings etc.
-
-# TODO put objects to utils script and import them
 
 # TODO idea for structure - design a player that keeps track of their actions and their location and stuff
 # store this within game; use to mine features for analysis
@@ -131,7 +129,7 @@ class GamePlayer:
     def identify_technology_research_and_time(self, technology: str, civilisation: str = None) -> pd.Timedelta:
         """A helper method that can identify when players research certain things and the timing of that
 
-        :param technology: technology that can be research TODO enumerate this
+        :param technology: technology being researches
         :type technology: str
         :param civilisations: civilisations to handle faster research times, defaults to None
         :type civilisations: dict, optional
@@ -149,13 +147,11 @@ class GamePlayer:
 
         # TODO check why there is two clicks - maybe one for queue and one for actually clicking up?
         # Handle two clicks
-        # TODO Side effects!
         relevent_research = self.research_techs.loc[self.research_techs["param"] == technology, "timestamp"]  # handle unqueue
 
         # TODO check civ parameter passed correctly
 
         if relevent_research.empty:
-            # Should return empty series instead? for type safety? hmm TODO
             # TODO log if cannot find
             return None
 
@@ -165,12 +161,10 @@ class GamePlayer:
     def identify_building_and_timing(self, building, civilisation: str = None) -> pd.DataFrame:
         """Helper to find all the creations of an economic building type.
 
-        :param building: _description_ TODO
-        :type building: _type_
-        :param civilisations: _description_, defaults to None
-        :type civilisations: dict, optional
+        :param building: the string name of the building. See enums for validation. Errors if incorrect
+        :param civilisations: player's civilisation, defaults to None
         :raises ValueError: _description_
-        :return: _description_
+        :return: df with all the instances of building creation and time of completion
         :rtype: pd.DataFrame
         """
 
@@ -198,7 +192,7 @@ class GamePlayer:
         return relevent_building
 
     def extract_feudal_time_information(self, feudal_time: pd.Timedelta, loom_time: pd.Timedelta, civilisation: str = None) -> pd.Series:
-        """_summary_ TODO
+        """_summary_
 
         :param feudal_time: _description_
         :type feudal_time: datetime
@@ -368,8 +362,7 @@ class GamePlayer:
         opening_military_building = feudal_military_buildings.loc[feudal_military_buildings["timestamp"] == opening_timing, "param"]
 
         # extract the units created and how many of those created
-        feudal_units = ["Scout Cavalry", "Skirmisher", "Archer", "Spearman"]  # TODO store this information somewhere
-        feudal_military_units = units_queued.loc[(units_queued["param"].isin(feudal_units)) &
+        feudal_military_units = units_queued.loc[(units_queued["param"].isin(FeudalAgeMilitaryUnits)) &
                                                  (units_queued["timestamp"] < castle_time),
                                                  :
                                                  ]
@@ -378,7 +371,7 @@ class GamePlayer:
         number_of_each_unit = feudal_military_units.groupby("param").count()["type"]
 
         # Handle instance where they do not produce this unit
-        for unit in ["Archer", "Skirmisher", "Scout Cavalry", "Spearman"]:
+        for unit in FeudalAgeMilitaryUnits:
             if unit not in number_of_each_unit.index:
                 number_of_each_unit[unit] = 0
 
@@ -386,7 +379,6 @@ class GamePlayer:
         # non_spear_military_units = feudal_military_units.loc[feudal_military_units["param"] != "Spearman", :]  # TODO
 
         # Extract time to 3 of first units
-        # TODO - need to build out a method for working out when an object could produce a unit
         # TODO identify different buildings by their ID
 
         military_stats_to_return = {
@@ -399,7 +391,6 @@ class GamePlayer:
     def extract_early_game_economic_strat(self,
                                           feudal_time: pd.Timedelta,
                                           castle_time: pd.Timedelta,
-                                          #   player_technologies_research: pd.DataFrame,  # TODO side effects see method
                                           player_eco_buildings: pd.DataFrame,
                                           player_walls: pd.DataFrame,
                                           ) -> pd.Series:
@@ -542,7 +533,7 @@ class AgeMap:
         self.tiles = self.tiles.merge(self.elevation_map, on=["x", "y"], how="left")
 
         self.player_locations = player_starting_locations
-        # Judge a hill for each player res by elevation greater than starting location; TODO think of a more elegant solution
+        # Judge a hill for each player res by elevation greater than starting location; could think of a more elegant solution
         self.height_of_player_locations = [
             self.tiles.loc[(self.tiles["x"] == player[0]) & (self.tiles["y"] == player[1]), "elevation"].mean()
             for player in self.player_locations
@@ -570,15 +561,10 @@ class AgeMap:
                                                                       min_height_for_hill=self.height_of_player_locations[1])
 
         self.map_analysis = pd.concat([p_1_resource_analysis, p_2_resources_analysis])
-        # TODO do something with deer/ostrich/zebra
 
         # TODO actually test results against actual
 
         return
-
-    def analyse_map_between_players(self) -> None:
-        # TODO - count number of tree lines, # hills like standard deviation of elevation maybe, etc.
-        pass
 
     def analyse_map_features_for_player(self,
                                         player: int,
@@ -794,10 +780,6 @@ class AgeMap:
 
         return [c1, c2, c3, c4]
 
-    def identify_key_hills_between_players(self):
-        # TODO
-        pass
-
     def identify_resources_or_feature_between_players(self,
                                                       map_feature_locations: pd.DataFrame, 
                                                       polygon_to_check_within: list
@@ -808,18 +790,6 @@ class AgeMap:
         poly = Polygon(polygon_to_check_within)
         map_feature_locations["BetweenPlayers"] = map_feature_locations.apply(lambda x: Point(x["x"], x["y"],).within(poly), axis=1)
         return map_feature_locations.loc[:, ["instance_id", "BetweenPlayers"]]
-
-    def identify_player_front_gold(self):
-        """ Analysis Function"""
-        # TODO or how forward a gold is with some sort of modelling
-        # TODO gold is on a hill, main gold
-        # TODO identify clusters of gold
-        pass
-
-    def identify_player_wood_setup(self):
-        """Analysis Function"""
-        # TODO
-        pass
 
     def identify_islands_of_resources(self, dataframe_of_map: pd.DataFrame, resource: str) -> pd.DataFrame:
         """Search for islands of resrouces in the 2D image of the map. Label the dataframe of resources with groups found"""
@@ -860,7 +830,6 @@ class AgeMap:
         :return: Collumns of object ID, closest player, and distance to both players
         :rtype: pd.DataFrame
         """
-        # TODO make sure player 1 and 2 locations are correct order - would be stupid for end user if these end up switched
         # Identify the main resources around a player and assign to that player for further analysis
         # Distance to player 1 = norm of vecotr: x_resource - x_player, y_resource - y_player
         map_feature_locations["DistancePlayer1"] = map_feature_locations.apply(
@@ -939,7 +908,7 @@ class AgeGame:
 
         return
 
-    def calculate_distance_between_players(self, location_one: tuple, location_two: tuple) -> pd.Series:  # TODO or list
+    def calculate_distance_between_players(self, location_one: tuple, location_two: tuple) -> pd.Series:
         return math.dist(location_one, location_two)
 
     def calculate_difference_in_elo(self, player_one: GamePlayer, player_two: GamePlayer):
@@ -1028,6 +997,5 @@ if __name__ == "__main__":
     test_results = pd.concat([test_match.game_results, test_match.player_map_analysis]).sort_index()
     test_match.game_results.to_csv("tests/Test_Games/Test_results.csv")
 
-    # Next TODO is feudal age and castle age economic choices
+    # TODO Next castle age economic choices
     # And Next TODO is check order of players is correct and maybe validate map analysis
-    # Then maybe castle age economic choices
