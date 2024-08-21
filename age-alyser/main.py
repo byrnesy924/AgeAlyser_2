@@ -1157,24 +1157,16 @@ class AbstractProductionBuildingFactory(ABC):
         pass
 
     @abstractmethod
-    def create_production_building_and_remove_used_id(self, data):
-        pass
-
-
-class ArcheryRangeProductionBuildingFactory(AbstractProductionBuildingFactory):
-    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame) -> ProductionBuilding:
-        return ArcheryRange(building_type=building_type, units=ArcheryRangeUnits, id=id, x=x, y=y, data=data)
-
-    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame):
+    def create_production_building_and_remove_used_id(self, building_type: str, units: list, inputs_data: pd.DataFrame):
         """Identify all the Production Buildings and Create them"""
-        relevent_buildings_produced = inputs_data.loc[(inputs_data["param"] == "Archery Range") & (inputs_data["type"] == "Build")]
+        relevent_buildings_produced = inputs_data.loc[(inputs_data["param"] == building_type) & (inputs_data["type"] == "Build")]
         if relevent_buildings_produced.empty:
             # TODO handle when it should not create the object; log m
             return None
 
         relevent_buildings_produced = relevent_buildings_produced[["timestamp", "param", "position.x", "position.y"]]
 
-        relevent_units_queued = inputs_data.loc[inputs_data["param"].isin(ArcheryRangeUnits)]
+        relevent_units_queued = inputs_data.loc[inputs_data["param"].isin(units)]
         relevent_units_queued["payload.object_ids"] = relevent_units_queued["payload.object_ids"].apply(lambda x: x[0]) 
 
         first_appearance_of_each_building = relevent_units_queued.groupby("payload.object_ids", as_index=False).min()
@@ -1186,7 +1178,7 @@ class ArcheryRangeProductionBuildingFactory(AbstractProductionBuildingFactory):
         )
 
         return [
-            self.factory_method("Archery Range",
+            self.factory_method(building_type,
                                 id=x["payload.object_ids"],
                                 x=x["position.x"],
                                 y=x["position.y"],
@@ -1196,14 +1188,28 @@ class ArcheryRangeProductionBuildingFactory(AbstractProductionBuildingFactory):
         ]
 
 
+class ArcheryRangeProductionBuildingFactory(AbstractProductionBuildingFactory):
+    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame) -> ProductionBuilding:
+        return ArcheryRange(building_type=building_type, units=ArcheryRangeUnits, id=id, x=x, y=y, data=data)
+
+    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame):
+        return super().create_production_building_and_remove_used_id("Archery Range", ArcheryRangeUnits, inputs_data)
+
+
 class StableProductionBuildingFactory(AbstractProductionBuildingFactory):
     def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame) -> ProductionBuilding:
         return Stable(building_type=building_type, units=StableUnits, id=id, x=x, y=y, data=data)
 
+    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame):
+        return super().create_production_building_and_remove_used_id("Stable", StableUnits, inputs_data)
+
 
 class SiegeWorkshopProductionBuildingFactory(AbstractProductionBuildingFactory):
     def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame) -> ProductionBuilding:
-        return SiegeWorkshop(building_type=building_type, units=SiegeWorkshop, id=id, x=x, y=y, data=data)
+        return SiegeWorkshop(building_type=building_type, units=SiegeWorkshopUnits, id=id, x=x, y=y, data=data)
+
+    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame):
+        return super().create_production_building_and_remove_used_id("Siege Workshop", SiegeWorkshopUnits, inputs_data)
 
 
 if __name__ == "__main__":
@@ -1234,7 +1240,8 @@ if __name__ == "__main__":
     archery_ranges = ArcheryRangeProductionBuildingFactory().create_production_building_and_remove_used_id(inputs_data=test_inputs)
     print(archery_ranges)
     print("\n")
-    print(test_inputs.loc[test_inputs["param"] == "Archery Range"])
+    siege_shops = SiegeWorkshopProductionBuildingFactory().create_production_building_and_remove_used_id(inputs_data=test_inputs)
+    print(siege_shops)
 
     # TODO Next castle age economic choices
     # And Next TODO is check order of players is correct and maybe validate map analysis
