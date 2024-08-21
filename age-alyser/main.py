@@ -3,6 +3,7 @@ import pandas as pd
 # import json
 # import os
 import math
+from abc import ABC, abstractmethod
 from scipy.ndimage import label, generate_binary_structure
 from scipy.spatial import distance
 from shapely import Point, Polygon
@@ -15,7 +16,18 @@ from pathlib import Path
 from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 
-from enums import BuildTimesEnum, TechnologyResearchTimes, UnitCreationTime, MilitaryBuildings, FeudalAgeMilitaryUnits
+from enums import (  # Getting a bit too cute here with constants but it will do for now
+    BuildTimesEnum,
+    TechnologyResearchTimes,
+    UnitCreationTime,
+    MilitaryBuildings,
+    FeudalAgeMilitaryUnits,
+    ArcheryRangeUnits,
+    StableUnits,
+    SiegeWorkshopUnits
+
+)
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -950,21 +962,11 @@ class AgeGame:
         return
 
 
-class ProductionBuilding:
-    """TODO This class models the function of a production building, including creating units, storing upgrades, measuring idle time"""
-    def __init__(self,
-                 building_type: str,
-                 civilisation: str,
-                 unit_queue_times: pd.DataFrame,
-                 relevant_technologytimes: pd.DataFrame,
-                 building_id: int = None  # Data may limit this being able to be used
-                 ) -> None:
-        # Parse information
+class ProductionBuilding(ABC):
+    """This abstract base class models the function of a production building, including:
+    - creating units, - storing upgrades, - measuring idle time"""
 
-        # TODO add error handling that all civilisations are valid, all units passed are valid, the type of building is valid
-
-        pass
-
+    @abstractmethod
     def produce_units(self) -> pd.DataFrame:
         """Take the time stamps of units, as well as the upgrades, and work out when they wouldve been produced,
         taking into account 1 at a time creation (i.e., queuing)
@@ -972,10 +974,236 @@ class ProductionBuilding:
         :return pd.DataFrame: a dataframe of units and when they were created
 
         """
+        # TODO write this functionality
         pass
 
+    @abstractmethod
+    def apply_unit_upgrades(self) -> pd.DataFrame:
+        """Method for finding when units have been upgraded. Requires coupling with player technologies"""
+        pass
+
+    @abstractmethod
     def count_building_idle_time(self) -> int:
         pass
+
+    @property
+    @abstractmethod
+    def building_type(self):
+        return self._building_type  # string type
+
+    @property
+    @abstractmethod
+    def units(self):
+        return self._units  # CONST list of units
+
+    @property
+    @abstractmethod
+    def id(self):
+        return self._id  # Buildings ID
+
+    @property
+    @abstractmethod
+    def x(self):
+        return self._x
+
+    @property
+    @abstractmethod
+    def y(self):
+        return self._y
+
+    @property
+    @abstractmethod
+    def data(self):
+        return self._data
+
+
+class ArcheryRange(ProductionBuilding):
+    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame) -> None:
+        self._building_type = building_type
+        self._units = units
+        self._id = id
+        self._x = x
+        self._y = y
+        self._data = data
+
+    def produce_units(self) -> pd.DataFrame:
+        return super().produce_units()
+
+    def apply_unit_upgrades(self) -> pd.DataFrame:
+        return super().apply_unit_upgrades()
+
+    def count_building_idle_time(self) -> int:
+        return super().count_building_idle_time()
+
+    @property
+    def building_type(self):
+        return self._building_type  # string type
+
+    @property
+    def units(self):
+        return self._units  # CONST list of units
+
+    @property
+    def id(self):
+        return self._id  # Building's ID
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
+
+    @property
+    def data(self):
+        return self._data
+
+
+class Stable(ProductionBuilding):
+    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame) -> None:
+        self._building_type = building_type
+        self._units = units
+        self._id = id
+        self._x = x
+        self._y = y
+        self._data = data
+
+    def produce_units(self) -> pd.DataFrame:
+        return super().produce_units()
+
+    def apply_unit_upgrades(self) -> pd.DataFrame:
+        return super().apply_unit_upgrades()
+
+    def count_building_idle_time(self) -> int:
+        return super().count_building_idle_time()
+
+    @property
+    def building_type(self):
+        return self._building_type  # string type
+
+    @property
+    def units(self):
+        return self._units  # CONST list of units
+
+    @property
+    def id(self):
+        return self._id  # Building's ID
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
+
+    @property
+    def data(self):
+        return self._data
+
+
+class SiegeWorkshop(ProductionBuilding):
+    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame) -> None:
+        self._building_type = building_type
+        self._units = units
+        self._id = id
+        self._x = x
+        self._y = y
+        self._data = data
+        super()
+
+    def produce_units(self) -> pd.DataFrame:
+        return super().produce_units()
+
+    def apply_unit_upgrades(self) -> pd.DataFrame:
+        return super().apply_unit_upgrades()
+
+    def count_building_idle_time(self) -> int:
+        return super().count_building_idle_time()
+
+    @property
+    def building_type(self):
+        return self._building_type  # string type
+
+    @property
+    def units(self):
+        return self._units  # CONST list of units
+
+    @property
+    def id(self):
+        return self._id  # Building's ID
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
+
+    @property
+    def data(self):
+        return self._data
+
+
+class AbstractProductionBuildingFactory(ABC):
+    """This Factory solves the complex problem of identifying production buildings in the input data and creating the correct 
+    Production Building Object, with its type, location, and, critically, its ID!
+    In brief, because of the structure of the input data, we need to get the ID from the first unit created there, but IDs cannot be re-used.
+    """
+    @abstractmethod
+    def factory_method(self):
+        pass
+
+    @abstractmethod
+    def create_production_building_and_remove_used_id(self, data):
+        pass
+
+
+class ArcheryRangeProductionBuildingFactory(AbstractProductionBuildingFactory):
+    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame) -> ProductionBuilding:
+        return ArcheryRange(building_type=building_type, units=ArcheryRangeUnits, id=id, x=x, y=y, data=data)
+
+    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame):
+        """Identify all the Production Buildings and Create them"""
+        relevent_buildings_produced = inputs_data.loc[(inputs_data["param"] == "Archery Range") & (inputs_data["type"] == "Build")]
+        if relevent_buildings_produced.empty:
+            # TODO handle when it should not create the object; log m
+            return None
+
+        relevent_buildings_produced = relevent_buildings_produced[["timestamp", "param", "position.x", "position.y"]]
+
+        relevent_units_queued = inputs_data.loc[inputs_data["param"].isin(ArcheryRangeUnits)]
+        relevent_units_queued["payload.object_ids"] = relevent_units_queued["payload.object_ids"].apply(lambda x: x[0]) 
+
+        first_appearance_of_each_building = relevent_units_queued.groupby("payload.object_ids", as_index=False).min()
+        dataframe_to_marry_up_to_production = first_appearance_of_each_building[["timestamp", "payload.object_ids"]]
+
+        df_to_return = pd.concat(
+            [relevent_buildings_produced.reset_index(drop=True), dataframe_to_marry_up_to_production["payload.object_ids"].reset_index(drop=True)],
+            axis=1,
+        )
+
+        return [
+            self.factory_method("Archery Range",
+                                id=x["payload.object_ids"],
+                                x=x["position.x"],
+                                y=x["position.y"],
+                                data=relevent_units_queued
+                                )
+            for index, x in df_to_return.iterrows()
+        ]
+
+
+class StableProductionBuildingFactory(AbstractProductionBuildingFactory):
+    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame) -> ProductionBuilding:
+        return Stable(building_type=building_type, units=StableUnits, id=id, x=x, y=y, data=data)
+
+
+class SiegeWorkshopProductionBuildingFactory(AbstractProductionBuildingFactory):
+    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame) -> ProductionBuilding:
+        return SiegeWorkshop(building_type=building_type, units=SiegeWorkshop, id=id, x=x, y=y, data=data)
 
 
 if __name__ == "__main__":
@@ -987,15 +1215,26 @@ if __name__ == "__main__":
     # TODO change so that functions and methods have LESS SIDE EFFECTS - THEN CAN BE TESTED EFFECTIVELY
     # TODO errors and logging
 
-    test_file = Path("tests/Test_Games/SD-AgeIIDE_Replay_324565276.aoe2record")
+    def main():
 
-    test_match = AgeGame(path=test_file)
-    test_match.advanced_parser()
+        test_file = Path("tests/Test_Games/SD-AgeIIDE_Replay_324565276.aoe2record")
+
+        test_match = AgeGame(path=test_file)
+        test_match.advanced_parser()
+        print("\n")
+        print(test_match.game_results)
+        # print(test_match.player_map_analysis)
+        test_results = pd.concat([test_match.game_results, test_match.player_map_analysis]).sort_index()
+        test_match.game_results.to_csv("tests/Test_Games/Test_results.csv")
+
+        return test_match.players[0].inputs_df
+    
+    test_inputs = main()
+
+    archery_ranges = ArcheryRangeProductionBuildingFactory().create_production_building_and_remove_used_id(inputs_data=test_inputs)
+    print(archery_ranges)
     print("\n")
-    print(test_match.game_results)
-    # print(test_match.player_map_analysis)
-    test_results = pd.concat([test_match.game_results, test_match.player_map_analysis]).sort_index()
-    test_match.game_results.to_csv("tests/Test_Games/Test_results.csv")
+    print(test_inputs.loc[test_inputs["param"] == "Archery Range"])
 
     # TODO Next castle age economic choices
     # And Next TODO is check order of players is correct and maybe validate map analysis

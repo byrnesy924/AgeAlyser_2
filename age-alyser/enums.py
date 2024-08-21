@@ -8,6 +8,17 @@ MilitaryBuildings: Final[List[str]] = ["Stable", "Archery Range", "Barracks", "S
 
 FeudalAgeMilitaryUnits: Final[List[str]] = ["Scout Cavalry", "Skirmisher", "Archer", "Spearman"]
 
+ArcheryRangeUnits: Final[List[str]] = ["Skirmisher", "Archer", "Cavalry Archer", "Elephant Archer", "Slinger", "Hand Canoneer", "Genitour"]
+
+StableUnits: Final[List[str]] = ["Scout Cavalry", "Knight", "Camel Rider", "Battle Elephant", "Steppe Lancer", "Tarkan", "Shrivamsha Rider"]
+
+BarracksUnits: Final[List[str]] = ["Militia", "Spearman", "Eagle Scout", "Condottiero", "Huskarl", "Flemish Militia"]
+
+SiegeWorkshopUnits: Final[List[str]] = ["Battering Ram", "Armoured Elephant", "Mangonel", "Scorpion", "Siege Tower", "Bombard Cannon"]
+
+ProductionBuildings: Final[List[str]] = ["Archery Range", "Barracks", "Castle", "Donjon", "Krepost", "Stable", "Siege Workshop", "Dock", ""]
+
+
 class BuildTimesEnum(Enum):
     """Enum of building times with override
     """
