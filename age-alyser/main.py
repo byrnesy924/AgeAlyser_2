@@ -33,10 +33,11 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
 
 
-# TODO step one - identify the things within an AOE game that I can find, publish this as a package; 
+# step one - identify the things within an AOE game that I can find, publish this as a package; 
 # e.g. how close the map is; front or back woodlines, civs, winner, units created, timings etc.
 
-# TODO idea for structure - design a player that keeps track of their actions and their location and stuff
+# idea for structure - design a player that keeps track of their actions and their location and stuff
+# Also have production building modelling
 # store this within game; use to mine features for analysis
 # construct a timeline? timeseries data?
 
@@ -73,7 +74,7 @@ class GamePlayer:
         # self.actions_df.to_csv(Path(f"DataExploration/Player{self.number}_actions.csv"))
         # self.inputs_df.to_csv(Path(f"DataExploration/Player{self.number}_inputs.csv"))
 
-        # Units and unqueing - TODO unqueue
+        # Units and unqueing. Note that unqueuing is not possible to handle...
         self.queue_units = self.inputs_df.loc[self.inputs_df["type"] == "Queue", :]
         self.unqueue_units = self.inputs_df.loc[self.inputs_df["type"] == "Unqueue", :]
 
@@ -161,8 +162,6 @@ class GamePlayer:
         # Handle two clicks
         relevent_research = self.research_techs.loc[self.research_techs["param"] == technology, "timestamp"]  # handle unqueue
 
-        # TODO check civ parameter passed correctly
-
         if relevent_research.empty:
             # TODO log if cannot find
             return None
@@ -238,8 +237,6 @@ class GamePlayer:
                                  units_queued: pd.DataFrame,
                                  ) -> pd.Series:
         """Function that identifies military stratgy. Uses Militia and Feudal military methods"""
-        # TODO identify what it looks like if a player un-queus a unit
-
         # time of maa tech for maa function
         maa_time = self.identify_technology_research_and_time("Man-At-Arms", civilisation=self.civilisation)
         # time of first mill for maa function
@@ -391,7 +388,6 @@ class GamePlayer:
         # non_spear_military_units = feudal_military_units.loc[feudal_military_units["param"] != "Spearman", :]  # TODO
 
         # Extract time to 3 of first units
-        # TODO identify different buildings by their ID
 
         military_stats_to_return = {
             "OpeningMilitaryBuildingTime": opening_timing.iloc[0],
@@ -574,7 +570,7 @@ class AgeMap:
 
         self.map_analysis = pd.concat([p_1_resource_analysis, p_2_resources_analysis])
 
-        # TODO actually test results against actual
+        # TODO test results against actual
 
         return
 
@@ -931,7 +927,6 @@ class AgeGame:
     def advanced_parser(self) -> None:
         # TODO get the winner from players
         # TODO mine if boar or elephant
-        # TODO identify what it looks like if a player un-queus a unit
 
         # Extract the key statistics / data points
         # research times to mine out
