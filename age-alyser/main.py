@@ -976,19 +976,11 @@ if __name__ == "__main__":
         print(test_match.game_results)
         # print(test_match.player_map_analysis)
         test_results = pd.concat([test_match.game_results, test_match.player_map_analysis]).sort_index()
-        # test_results.to_csv("tests/Test_Games/Test_results.csv")
+        test_results.to_csv("tests/Test_Games/Test_results.csv")
 
         return test_match.players[0].inputs_df
 
     test_inputs = main()
-
-    archery_ranges = utils.ArcheryRangeProductionBuildingFactory().create_production_building_and_remove_used_id(inputs_data=test_inputs,
-                                                                                                                 player=1)
-    print(archery_ranges)
-    print("\n")
-    siege_shops = utils.SiegeWorkshopProductionBuildingFactory().create_production_building_and_remove_used_id(inputs_data=test_inputs,
-                                                                                                               player=1)
-    print(siege_shops)
 
     # TODO Next castle age economic choices
     # And Next TODO is check order of players is correct and maybe validate map analysis
