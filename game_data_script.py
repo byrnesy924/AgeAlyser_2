@@ -1,14 +1,11 @@
-"""Script for getting game data
-"""
+# Script for getting game data
+
 # Start link for Libre match API: https://wiki.librematch.org/rlink/start
 # https://github.com/librematch
 # https://github.com/librematch/librematch-rlink_client/tree/main/rlink_client_python
 
 # dj0wns has charted this territory - see their github project 
 # https://github.com/dj0wns/AoE_Rec_Opening_Analysis/blob/main/aoe_opening_data/find_replays_from_ms_api.py
-
-
-endpoint = "https://aoe.ms/replay/?gameId=<game_id>&profileId=<profile_id>"
 
 # Another method of getting match IDs and so on - https://aoestats.io/api-info/
 # Get them from the parquet dumps for aoestats, and then use the id and profile id to git the aoe.ms API
@@ -18,6 +15,13 @@ import requests
 import io
 import zipfile
 from pprint import pprint
+
+"""URLs to test:
+https://aoe-api.worldsedgelink.com/community/leaderboard/getLeaderBoard2?leaderboard_id=3&title=age2
+https://aoe-api.worldsedgelink.com/community/leaderboard/getRecentMatchHistory?title=age2&matchtype_id=6&profile_ids=[199325]
+https://aoe.ms/replay/?gameId=329144498&profileId=199325
+
+"""
 
 
 # Taken from https://github.com/dj0wns/AoE_Rec_Opening_Analysis/blob/main/aoe_opening_data/find_replays_from_ms_api.py
