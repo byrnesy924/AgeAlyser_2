@@ -14,6 +14,8 @@
 import requests
 import io
 import zipfile
+from pathlib import Path
+from time import perf_counter
 
 """URLs to test:
 https://aoe-api.worldsedgelink.com/community/leaderboard/getLeaderBoard2?leaderboard_id=3&title=age2
@@ -99,6 +101,7 @@ if __name__ == "__main__":
     matches_to_find = []
 
     # Find relevant top players and get their recent matches
+    start = perf_counter()  # time
     for player_id in player_ids.values():
         # # Can get more players from the profiles section of this, especially if filtering for only stored ones
         player_matches_reponse = get_match_history_for_player_ids([player_id], LEADERBOARD_IDS["RM_SOLO"][1])
@@ -119,10 +122,12 @@ if __name__ == "__main__":
             } for rec_match_json in player_matches]
 
         matches_to_find.extend(match_metadata)
+    middle = perf_counter()
+    print(f"Took {(middle - start)/60} mins to identify matches of top players")
 
     excluded_match_ids = []  # the ms api drops games very quickly - do not waste reqeusts on these
     # Loop for downloading the games found
-    for match in matches_to_find:
+    for index, match in enumerate(matches_to_find[0:20]):
         if match["id"] in excluded_match_ids:
             # log missing IDs TODO
             continue
@@ -137,8 +142,12 @@ if __name__ == "__main__":
 
         replay = download_match(match["id"], match["playerOne"])
         if replay is not None:
+            # TODO save replay
+            base_path = Path("Data\RawAoe2RecordBytes") 
+            with open(base_path / f"AOE2ReplayBinary_{index}.aoe2record", "wb") as replay_binary:
+                replay_binary.write(replay)
+        else:
             # No replay on the API - log this ID TODO
             excluded_match_ids.append(match["id"])
-        else:
-            # TODO save replay
-            print("temp")
+
+    print(f"Took {(perf_counter() - middle)/60} mins to find all games")
