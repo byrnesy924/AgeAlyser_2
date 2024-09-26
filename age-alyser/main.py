@@ -969,6 +969,7 @@ if __name__ == "__main__":
     def main():
 
         test_file = Path("tests/Test_Games/SD-AgeIIDE_Replay_324565276.aoe2record")
+        # test_file = Path("../Data/RawAoe2RecordBytes/AOE2ReplayBinary_2.aoe2record")  # Using a downloaded game from the scraper worked
 
         test_match = AgeGame(path=test_file)
         test_match.advanced_parser()
