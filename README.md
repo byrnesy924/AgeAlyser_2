@@ -1,18 +1,23 @@
 # AgeAlyser_2
-This package is an attempt to mine out key strategic choices and statistics from an age of empires game for analysis. Built ontop of the mgz parser, the package takes in a .AOE2RECORD and produces a pandas Series that documents:
+This package is an attempt to mine out key strategic choices and statistics from an age of empires 2 game for analysis. Built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz), the package takes in a .AOE2RECORD and produces a pandas Series that documents:
 - The military strategy choices of both players throughout the game, including unit choice, mass, and timings
 - The economic choices of each player through the game
 - the players' maps
 and so on.
 
-The goal is to create an open source project that enables strong large scale analytics in the game. Capture Age provides incredible analysis tools for watching replays, however there is a gap in terms of being able to extract statistical data from games en masse for analytics purposes. The task is difficult, given the structure of an mgz file.
+The goal is to create an open source project that enables large scale analytics of the game. Capture Age provides incredible analysis tools for watching replays, however there is a gap in terms of being able to extract statistical data from games en masse for analytics purposes. The task is difficult, given the structure of an mgz file, see below.
+
 Aside from this package, to my knowledge, the best progress so far has been made by: 
 - [dj0wns](https://github.com/dj0wns/AoE_Rec_Opening_Analysis/tree/main)
 - [aoe insights](https://www.aoe2insights.com/)
 - [AOE Pulse made by dj0wns](https://www.aoepulse.com/home)
 
-I know there is a large section of the community that would love to run large scale analytics beyond just "which civilisation is the best" or civ matchups. The goal of this package is to bridge this gap.
+I know there is a large section of the community that would love to run large scale analytics beyond civ matchups. The goal of this package is to bridge this gap.
 
+## Installation
+TODO - yet to publish
+
+## Usage
 ### Modeling Structure and package API
 **AgeMap** 
 - Models the map itself and the natural objects within
