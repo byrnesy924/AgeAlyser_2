@@ -14,18 +14,17 @@ from pathlib import Path
 # from mgz.summary import Summary
 from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
-import utils
+# import utils
 
 from enums import (  # Getting a bit too cute here with constants but it will do for now
     BuildTimesEnum,
     TechnologyResearchTimes,
-    UnitCreationTime,
+    # UnitCreationTime,
     MilitaryBuildings,
     FeudalAgeMilitaryUnits,
-    ArcheryRangeUnits,
-    StableUnits,
-    SiegeWorkshopUnits
-
+    # ArcheryRangeUnits,
+    # StableUnits,
+    # SiegeWorkshopUnits
 )
 
 
@@ -33,7 +32,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
 
 
-# step one - identify the things within an AOE game that I can find, publish this as a package; 
+# step one - identify the things within an AOE game that I can find, publish this as a package;
 # e.g. how close the map is; front or back woodlines, civs, winner, units created, timings etc.
 
 # idea for structure - design a player that keeps track of their actions and their location and stuff
