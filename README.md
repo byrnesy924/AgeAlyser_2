@@ -1,26 +1,60 @@
 # AgeAlyser_2
-Experiments in Analyzing AOE2 Recorded Games
+This package is an attempt to mine out key strategic choices and statistics from an age of empires game for analysis. Built ontop of the mgz parser, the package takes in a .AOE2RECORD and produces a pandas Series that documents:
+- The military strategy choices of both players throughout the game, including unit choice, mass, and timings
+- The economic choices of each player through the game
+- the players' maps
+and so on.
 
-### Utilities
-- [AOE Pulse - very cool Opening strategy analytics work that is similar to what I'm doing](https://www.aoepulse.com/home)
-- [The Original Repository for AOE Opening Analysis](https://github.com/dj0wns/AoE_Rec_Opening_Analysis/tree/main)
+The goal is to create an open source project that enables strong large scale analytics in the game. Capture Age provides incredible analysis tools for watching replays, however there is a gap in terms of being able to extract statistical data from games en masse for analytics purposes. The task is difficult, given the structure of an mgz file.
+Aside from this package, to my knowledge, the best progress so far has been made by: 
+- [dj0wns](https://github.com/dj0wns/AoE_Rec_Opening_Analysis/tree/main)
+- [aoe insights](https://www.aoe2insights.com/)
+- [AOE Pulse made by dj0wns](https://www.aoepulse.com/home)
+
+I know there is a large section of the community that would love to run large scale analytics beyond just "which civilisation is the best" or civ matchups. The goal of this package is to bridge this gap.
+
+### Modeling Structure and package API
+**AgeMap** 
+- Models the map itself and the natural objects within
+- key are hills, resources, especially trees
+- attempts to extract relevant features from this, e.g. resources on front/hills, distance to opponent
+
+**GamePlayer**
+- Models the decisions/strategies/tactics made by individuals
+- How strategies and choices are mined
+- Two key lines of analysis - Military and Economic strategy/tactics
+
+**AgeGame**
+- Central object, contains key data for the game, also houses behaviour
+
+
+## Appendices
+### MGZ Parser version to use
+If the original aoc-mgz is behind the current game update and therefore not functional, use aoeinsights fork:
+```
+git clone https://github.com/aoeinsights/aoc-mgz
+```
+then 
+```
+python  setup.py install
+```
+
+### AOE Devleopment Utilities
+- [Siege Engineers GitHub](https://github.com/SiegeEngineers)
 - [Relic/MS Documentation](https://wiki.librematch.org/librematch/data_sources/start)
 - [Download Recs Manually @ aoe2recs.com](https://aoe2recs.com/)
 - [AOE 2 rules for content](https://www.xbox.com/en-GB/developers/rules)
 - https://api-dev.ageofempires.com/
 - https://wiki.librematch.org/librematch/design/backend/authentication/start
 
-### Idea
-- Need a way to download top rec games
-- Use parser to extract features of top games
-    - resource collection
-    - Starting question: 1TC vs 2 TC vs 3 TC play
-    - Development of each civ in terms of resources
-- perform an interesting analysis of strategies, maybe using ML
+### mgz game structure
+The .AOE2RECORD file type (in essence) only contains the starting state of the game and the series of actions made by both players. This is extremely limiting when it comes to mining out statistics for a game. 
 
-Iterate back and forth on points 2 and 3
+For example, my original idea was to map growth in total resources as a proxy for development and analyse the decisions that contributed to that. However, resource amounts are not stored in the game files. In order to know how many resources have been collected at a point in time, you would need to basically simulate the whole game until that point in time, or create a mathematical model for villager gathering. Modelling villager gather rates is extremely hard, what with their pathing, bumping, getting stuck, and the changing efficiency as the shape of a resource changes, etc. causing fluctuations in gather rates. In summary, modelling resource collected is very difficult.
 
-### Initially analysis
+This package has turned into an exploration into what the mgz package can produce, and trying to gleam from that as much as possible.
+
+### Initial planned pieces of analysis
 Comparison of detailed opening strategy
 Features:
 - civilisations
@@ -57,50 +91,3 @@ Features:
     - timing of 1st TC
     - timing of second TC
     - TC idle time
-
-
-### Bulk downloading of games
-AOE insights has links for a particular game - it hits the aoe ms website api to download it
-I will need to work out how to authenticate against that
-https://www.aoe2insights.com/match/301103008/#savegames
-
-e.g. this is a Hera and Yo game
-https://aoe.ms/replay/?gameId=301103008&profileId=197964
-
-### Modeling Structure
-**AgeGame** 
-- Models the map itself and the natural objects within
-- key are hills, resources, especially trees
-- attempts to extract relevant features from this, e.g. resources on front/hills, distance to other player
-
-**GamePlayer**
-- Models the decisions/strategies/tactics made by individuals
-- How strategies and choices are mined
-- Two key lines of analysis - Military and Economic strategy/tactics
-
-**AgeGame**
-- Central object, contains key data for the game, also houses behaviour
-
-
-
-### Version of Parser to use - AOE Insights's own fork of MGZ
-```
-git clone https://github.com/aoeinsights/aoc-mgz
-```
-then 
-```
-python  setup.py install
-```
-Note this might have to be done outside of VS code, as VS code wont release the lock on the .egg file, stopping installation
-
-
-### mgz game structure
-Items in the mgz game json once serialised
-
-Key items: actions; inputs --> that is the list of things that the game runs on
-
-dict_keys(['players', 'teams', 'gaia', 'map', 'file', 'restored', 'restored_at', 'speed', 'speed_id', 'cheats', 'lock_teams', 'population', 'chat', 'guid', 'lobby', 'rated', 'dataset', 'type', 'type_id', 'map_reveal', 'map_reveal_id', 'difficulty_id', 'starting_age', 'starting_age_id', 'team_together', 'lock_speed', 'all_technologies', 'multiqueue', 'duration', 'diplomacy_type', 'completed', 'dataset_id', 'version', 'game_version', 'save_version', 'log_version', 'build_version', 'timestamp', 'spec_delay', 'allow_specs', 'hidden_civs', 'private', 'hash', 'actions', 'inputs'])
-
-
-### AOE 2 objects
-Town Centre - class id = 80, object id = 109
