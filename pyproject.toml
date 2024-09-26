@@ -1,3 +1,32 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "age-alyser"
+version = "0.0.1"
+authors = [
+  { name="byrnesy924", email="b.byrnesy@gmail.com" },
+]
+description = "A python package for extracting key features of an AOE2 recorded games"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "mgz>=1.8.26",
+  "pandas>=2.2.2",
+  "numpy>=2.0.0",
+  "scipy>=1.14.0",
+  "shapely>=2.0.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/byrnesy924/AgeAlyser_2"
+Issues = "https://github.com/byrnesy924/AgeAlyser_2/issues"
+
+[flake8]
+max-line-length = 140
