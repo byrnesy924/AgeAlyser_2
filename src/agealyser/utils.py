@@ -3,7 +3,8 @@ import pandas as pd
 from abc import ABC, abstractmethod
 # import logging
 
-from enums import (  # Getting a bit too cute here with constants but it will do for now
+from agealyser.enums import (  # Getting a bit too cute here with constants but it will do for now
+    UnitCreationTime,
     ArcheryRangeUnits,
     StableUnits,
     SiegeWorkshopUnits
@@ -16,18 +17,40 @@ class ProductionBuilding(ABC):
     - creating units, - storing upgrades, - measuring idle time"""
 
     @abstractmethod
-    def produce_units(self, data: pd.DataFrame, production_building_units: list, units_production_enum) -> pd.DataFrame:
+    def produce_units(self, data: pd.DataFrame, units_production_enum) -> pd.DataFrame:
         """Take the time stamps of units, as well as the upgrades, and work out when they wouldve been produced,
         taking into account 1 at a time creation (i.e., queuing)
 
         :return pd.DataFrame: a dataframe of units and when they were created
 
         """
-        if not all(col in data.columns.to_list() for col in ["timestamp", "param", "payload.object_ids"]):
+        # TODO - add in upgrades before this
+        if not all(col in data.columns.to_list() for col in ["timestamp", "param"]):
             # TODO log
-            raise ValueError("Missing a column from data in Production Building")
+            raise ValueError(f"Missing a column from data in Production Building.\nCols: {data.columns}")
 
-        pass
+        # coerce timestamp to time delta
+        data["timestamp"] = pd.to_timedelta(data["timestamp"])
+
+        # identify start times of all relevant units
+        data["CreationTime"] = data["param"].apply(lambda x: pd.Timedelta(seconds=units_production_enum.get(name=x, civilisation="")))  # TODO add civ to this object
+        data["UnitCreatedTimestamp"] = data["timestamp"] + data["CreationTime"]
+        data.reset_index(inplace=True)
+
+        # Iterate through units. If queued during creation of previous unit, then push out times
+        for index, row in data.iterrows():
+            if index == 0:  # skip first unit
+                continue
+            if pd.Timedelta(row["timestamp"]) < data.loc[index - 1, "UnitCreatedTimestamp"]:
+                data.loc[index, "UnitCreatedTimestamp"] += data.loc[index - 1, "UnitCreatedTimestamp"] - row["timestamp"]
+                data.loc[index, "timestamp"] += data.loc[index - 1, "UnitCreatedTimestamp"] - row["timestamp"]
+        
+        # sort table
+        # maybe iterate through is simplest - if start_above + creation_time_above > start_time
+        # then start_time = start_above + creation_time_above
+        # problem - distribution of units across buildings?? way to differentiate?
+
+        return data[["param", "UnitCreatedTimestamp"]]
 
     @abstractmethod
     def apply_unit_upgrades(self) -> pd.DataFrame:
@@ -85,7 +108,7 @@ class ArcheryRange(ProductionBuilding):
         self._player = player
 
     def produce_units(self) -> pd.DataFrame:
-        return super().produce_units()
+        return super().produce_units(self._data, UnitCreationTime)
 
     def apply_unit_upgrades(self) -> pd.DataFrame:
         return super().apply_unit_upgrades()
@@ -116,6 +139,10 @@ class ArcheryRange(ProductionBuilding):
     @property
     def data(self):
         return self._data
+
+    @property
+    def player(self):
+        return self._player
 
 
 class Stable(ProductionBuilding):
@@ -129,7 +156,7 @@ class Stable(ProductionBuilding):
         self._player = player
 
     def produce_units(self) -> pd.DataFrame:
-        return super().produce_units()
+        return super().produce_units(self._data, UnitCreationTime)
 
     def apply_unit_upgrades(self) -> pd.DataFrame:
         return super().apply_unit_upgrades()
@@ -160,6 +187,10 @@ class Stable(ProductionBuilding):
     @property
     def data(self):
         return self._data
+    
+    @property
+    def player(self):
+        return self._player
 
 
 class SiegeWorkshop(ProductionBuilding):
@@ -173,7 +204,7 @@ class SiegeWorkshop(ProductionBuilding):
         self._player = player
 
     def produce_units(self) -> pd.DataFrame:
-        return super().produce_units()
+        return super().produce_units(self._data, UnitCreationTime)
 
     def apply_unit_upgrades(self) -> pd.DataFrame:
         return super().apply_unit_upgrades()
@@ -204,6 +235,10 @@ class SiegeWorkshop(ProductionBuilding):
     @property
     def data(self):
         return self._data
+    
+    @property
+    def player(self):
+        return self._player
 
 
 class AbstractProductionBuildingFactory(ABC):
@@ -224,12 +259,20 @@ class AbstractProductionBuildingFactory(ABC):
             # TODO handle when it should not create the object; log m
             return None
 
-        relevent_buildings_produced = relevent_buildings_produced[["timestamp", "param", "position.x", "position.y"]]
+        relevent_buildings_produced = relevent_buildings_produced[["timestamp", "payload.object_ids", "param", "position.x", "position.y"]]
 
         relevent_units_queued = inputs_data.loc[inputs_data["param"].isin(units)]
-        relevent_units_queued["payload.object_ids"] = relevent_units_queued["payload.object_ids"].apply(lambda x: x[0])
+        # Discovery - the payload object IDs are the buildings queued in. This is a list of buildings
+        # so - split them up by building and assign accordingly.
+        # Need to parse string literal of a list (i.e., "[2000, 2001]" and split by comma. Also abuses that this array is always sorted.
+        relevent_units_queued.loc[:, "payload.object_ids"] = relevent_units_queued["payload.object_ids"].str.replace(
+            "\[|\]", "", regex=True
+        )
+        relevent_units_queued = relevent_units_queued.join(
+            relevent_units_queued.loc[:, "payload.object_ids"].str.split(pat=",", expand=True)
+        )
 
-        first_appearance_of_each_building = relevent_units_queued.groupby("payload.object_ids", as_index=False).min()
+        first_appearance_of_each_building = relevent_buildings_produced.groupby("timestamp", as_index=False).min()
         dataframe_to_marry_up_to_production = first_appearance_of_each_building[["timestamp", "payload.object_ids"]]
 
         df_to_return = pd.concat(
@@ -243,7 +286,7 @@ class AbstractProductionBuildingFactory(ABC):
                                 id=x["payload.object_ids"],
                                 x=x["position.x"],
                                 y=x["position.y"],
-                                data=relevent_units_queued,
+                                data=relevent_units_queued[["timestamp", "type", "param", index]].dropna(subset=index),
                                 player=player
                                 )
             for index, x in df_to_return.iterrows()
@@ -278,8 +321,9 @@ class SiegeWorkshopProductionBuildingFactory(AbstractProductionBuildingFactory):
 
 
 if __name__ == "__main__":
-    test_inputs = pd.read_csv(r"DataExploration\Player1_inputs.csv")
+    test_inputs = pd.read_csv(r"Data\TestGameDataExploration\Player1_inputs.csv")  # ..\..\
 
     archery_ranges = ArcheryRangeProductionBuildingFactory().create_production_building_and_remove_used_id(inputs_data=test_inputs,
                                                                                                            player=1)
-    print(archery_ranges)
+    archery_ranges[0].produce_units()
+    print(archery_range)

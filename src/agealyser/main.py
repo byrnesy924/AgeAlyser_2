@@ -16,7 +16,7 @@ from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 # import utils
 
-from enums import (  # Getting a bit too cute here with constants but it will do for now
+from .enums import (  # Getting a bit too cute here with constants but it will do for now
     BuildTimesEnum,
     TechnologyResearchTimes,
     # UnitCreationTime,
@@ -27,6 +27,7 @@ from enums import (  # Getting a bit too cute here with constants but it will do
     # SiegeWorkshopUnits
 )
 
+# from .utils import 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
