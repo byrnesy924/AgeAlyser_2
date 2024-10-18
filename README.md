@@ -1,5 +1,5 @@
-# AgeAlyser_2
-This package is an attempt to mine out key strategic choices and statistics from an age of empires 2 game for analysis. Built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz), the package takes in a .AOE2RECORD and produces a pandas Series that documents:
+# The Age (2) Alyser
+This package is an attempt to mine out key strategic choices and statistics from an Age of Empires 2 game for analysis. Built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz), the package takes in a .AOE2RECORD and produces a pandas Series that documents:
 - The military strategy choices of both players throughout the game, including unit choice, mass, and timings
 - The economic choices of each player through the game
 - the players' maps
