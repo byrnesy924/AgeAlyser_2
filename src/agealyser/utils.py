@@ -25,6 +25,8 @@ class ProductionBuilding(ABC):
 
         """
         # TODO - add in upgrades before this
+        # self.apply_unit_upgrades()  # call this method first, so that below works, and that produce_units() is only main call
+
         if not all(col in data.columns.to_list() for col in ["timestamp", "param"]):
             # TODO log
             raise ValueError(f"Missing a column from data in Production Building.\nCols: {data.columns}")
@@ -33,7 +35,9 @@ class ProductionBuilding(ABC):
         data["timestamp"] = pd.to_timedelta(data["timestamp"])
 
         # identify start times of all relevant units
-        data["CreationTime"] = data["param"].apply(lambda x: pd.Timedelta(seconds=units_production_enum.get(name=x, civilisation="")))  # TODO add civ to this object
+        data["CreationTime"] = data["param"].apply(
+            lambda x: pd.Timedelta(seconds=units_production_enum.get(name=x, civilisation=""))
+        )  # TODO add civ to this object
         data["UnitCreatedTimestamp"] = data["timestamp"] + data["CreationTime"]
         data.reset_index(inplace=True)
 
@@ -262,34 +266,36 @@ class AbstractProductionBuildingFactory(ABC):
         relevent_buildings_produced = relevent_buildings_produced[["timestamp", "payload.object_ids", "param", "position.x", "position.y"]]
 
         relevent_units_queued = inputs_data.loc[inputs_data["param"].isin(units)]
+
         # Discovery - the payload object IDs are the buildings queued in. This is a list of buildings
         # so - split them up by building and assign accordingly.
-        # Need to parse string literal of a list (i.e., "[2000, 2001]" and split by comma. Also abuses that this array is always sorted.
-        relevent_units_queued.loc[:, "payload.object_ids"] = relevent_units_queued["payload.object_ids"].str.replace(
-            "\[|\]", "", regex=True
-        )
-        relevent_units_queued = relevent_units_queued.join(
-            relevent_units_queued.loc[:, "payload.object_ids"].str.split(pat=",", expand=True)
-        )
+        all_units_all_buildings = pd.get_dummies(relevent_units_queued["payload.object_ids"].explode())
+        building_ids = all_units_all_buildings.columns
+        relevent_units_queued = relevent_units_queued.join(all_units_all_buildings)
 
-        first_appearance_of_each_building = relevent_buildings_produced.groupby("timestamp", as_index=False).min()
+        first_appearance_of_each_building = relevent_buildings_produced.groupby(["position.x", "position.y"], as_index=False).min()
         dataframe_to_marry_up_to_production = first_appearance_of_each_building[["timestamp", "payload.object_ids"]]
 
+        # get x and y coords of buildings
         df_to_return = pd.concat(
             [relevent_buildings_produced.reset_index(drop=True),
-             dataframe_to_marry_up_to_production["payload.object_ids"].reset_index(drop=True)],
+             dataframe_to_marry_up_to_production["timestamp"].reset_index(drop=True)],
             axis=1,
         )
 
+        df_to_return = df_to_return.loc[0:len(building_ids) - 1, :]  # remove unused buildigns
+        df_to_return.index = building_ids.sort_values()
+
+        # if - else handles buildings that never make units
         return [
             self.factory_method(building_type,
-                                id=x["payload.object_ids"],
+                                id=index,
                                 x=x["position.x"],
                                 y=x["position.y"],
-                                data=relevent_units_queued[["timestamp", "type", "param", index]].dropna(subset=index),
+                                data=relevent_units_queued.loc[relevent_units_queued[index], ["timestamp", "type", "param"]],
                                 player=player
                                 )
-            for index, x in df_to_return.iterrows()
+            if index in relevent_units_queued.columns else None for index, x in df_to_return.iterrows()
         ]
 
 
@@ -325,5 +331,5 @@ if __name__ == "__main__":
 
     archery_ranges = ArcheryRangeProductionBuildingFactory().create_production_building_and_remove_used_id(inputs_data=test_inputs,
                                                                                                            player=1)
-    archery_ranges[0].produce_units()
-    print(archery_range)
+    print(archery_ranges[0].produce_units())
+    

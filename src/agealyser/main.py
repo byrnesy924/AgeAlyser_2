@@ -16,7 +16,7 @@ from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 # import utils
 
-from .enums import (  # Getting a bit too cute here with constants but it will do for now
+from enums import (  # Getting a bit too cute here with constants but it will do for now
     BuildTimesEnum,
     TechnologyResearchTimes,
     # UnitCreationTime,
@@ -27,7 +27,7 @@ from .enums import (  # Getting a bit too cute here with constants but it will d
     # SiegeWorkshopUnits
 )
 
-# from .utils import 
+from utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -67,16 +67,14 @@ class GamePlayer:
         self.inputs_df: pd.DataFrame = inputs
         self.actions_df: pd.DataFrame = actions
 
-        # Data formatting
+        self.opening = pd.Series()
+
+        # Data formatting - parse str to timestamp
         self.inputs_df["timestamp"] = pd.to_timedelta(self.inputs_df["timestamp"])
         self.actions_df["timestamp"] = pd.to_timedelta(self.actions_df["timestamp"])
 
         # self.actions_df.to_csv(Path(f"DataExploration/Player{self.number}_actions.csv"))
         # self.inputs_df.to_csv(Path(f"DataExploration/Player{self.number}_inputs.csv"))
-
-        # Units and unqueing. Note that unqueuing is not possible to handle...
-        self.queue_units = self.inputs_df.loc[self.inputs_df["type"] == "Queue", :]
-        self.unqueue_units = self.inputs_df.loc[self.inputs_df["type"] == "Unqueue", :]
 
         # all techs researched
         self.research_techs = self.inputs_df.loc[self.inputs_df["type"] == "Research", :]
@@ -95,7 +93,39 @@ class GamePlayer:
         # Player walls - Palisade Wall(s) and Stone Wall(s)
         self.player_walls = self.inputs_df.loc[self.inputs_df["type"] == "Wall", :]
 
-        self.opening = pd.Series()
+        # Units and unqueing. Note that unqueuing is not possible to handle...
+        self.queue_units = self.inputs_df.loc[self.inputs_df["type"] == "Queue", :]
+        self.unqueue_units = self.inputs_df.loc[self.inputs_df["type"] == "Unqueue", :]
+
+        self.archery_ranges = ArcheryRangeProductionBuildingFactory().create_production_building_and_remove_used_id(
+            inputs_data=self.inputs_df,
+            player=self.number
+        )
+        if len(self.archery_ranges) > 0:
+            self.archery_units = pd.concat([range_.produce_units() for range_ in self.archery_ranges])
+        else:
+            self.archery_units = pd.DataFrame()
+
+        self.stables = StableProductionBuildingFactory().create_production_building_and_remove_used_id(
+            inputs_data=self.inputs_df,
+            player=self.number
+        )
+        if len(self.stables) > 0:
+            self.stable_units = pd.concat([stable.produce_units() for stable in self.stables])
+        else:
+            self.stable_units = pd.DataFrame()
+
+        self.siege_shops = SiegeWorkshopProductionBuildingFactory().create_production_building_and_remove_used_id(
+            inputs_data=self.inputs_df,
+            player=self.number
+        )
+        if len(self.siege_shops) > 0:
+            self.siege_units = pd.concat([seige_shop.produce_units() for seige_shop in self.siege_shops])
+        else:
+            self.siege_units = pd.DataFrame()
+
+        self.military_units = pd.concat([self.archery_units, self.stable_units, self.siege_units])
+        # TODO - barracks, castle, donjon, dock. Lots of boiler plate
 
     def full_player_choices_and_strategy(self) -> pd.Series:
         """Main API - call to analyse the player's choices"""
@@ -116,7 +146,7 @@ class GamePlayer:
             feudal_time=self.feudal_time,
             castle_time=self.castle_time,
             military_buildings_spawned=self.military_buildings_created,
-            units_queued=self.queue_units,
+            units_queued=self.military_units,
         )
 
         # Identify Feudal and Dark Age economic choices
@@ -248,7 +278,7 @@ class GamePlayer:
             castle_time=castle_time,
             military_buildings_spawned=military_buildings_spawned,
             mill_created_time=first_mill_time,
-            units_queued=units_queued,
+            units_created=units_queued,
             maa_upgrade=maa_time
         )  # TODO - identify towers or a fast castle
 
@@ -301,7 +331,7 @@ class GamePlayer:
                                castle_time: pd.Timedelta,
                                military_buildings_spawned: pd.DataFrame,
                                mill_created_time: pd.Timedelta,
-                               units_queued: pd.DataFrame,
+                               units_created: pd.DataFrame,
                                maa_upgrade: pd.Timedelta = None
                                ) -> pd.Series:
         """Logic to identify groups of MAA or Militia based strategy: MAA, pre-mill drush, drush"""
@@ -310,8 +340,8 @@ class GamePlayer:
                                                                   (military_buildings_spawned["timestamp"] < castle_time), :]
         first_barracks_time = dark_age_feudal_barracks["timestamp"].min()
         pre_mill_barracks = first_barracks_time < mill_created_time
-        militia_created = units_queued.loc[(units_queued["param"] == "Militia") &
-                                           (units_queued["timestamp"] < castle_time), :]
+        militia_created = units_created.loc[(units_created["param"] == "Militia") &
+                                           (units_created["UnitCreatedTimestamp"] < castle_time), :]
 
         # convert raw information into strategy - number of units
         number_of_militia_or_maa = len(militia_created)
@@ -372,12 +402,12 @@ class GamePlayer:
 
         # extract the units created and how many of those created
         feudal_military_units = units_queued.loc[(units_queued["param"].isin(FeudalAgeMilitaryUnits)) &
-                                                 (units_queued["timestamp"] < castle_time),
+                                                 (units_queued["UnitCreatedTimestamp"] < castle_time),
                                                  :
                                                  ]
 
         # Count of each military unit
-        number_of_each_unit = feudal_military_units.groupby("param").count()["type"]
+        number_of_each_unit = feudal_military_units.groupby("param").count()["UnitCreatedTimestamp"]
 
         # Handle instance where they do not produce this unit
         for unit in FeudalAgeMilitaryUnits:
@@ -466,7 +496,7 @@ class GamePlayer:
         for key, farms_number in zip(farms_results.index.to_list(), [2, 5, 9, 14, 19]):
             if number_farms_made >= farms_number:
                 # Need guard statement incase dataframe is not long enough
-                farms_results.loc[key] = farms_in_feudal.iloc[farms_number, :]["timestamp"]
+                farms_results.loc[key] = farms_in_feudal.iloc[farms_number-1, :]["timestamp"]
         farms_results = pd.concat([pd.Series({"NumberFeudalFarms": number_farms_made}), farms_results])
 
         return farms_results
@@ -532,6 +562,9 @@ class AgeMap:
         self.tiles = pd.DataFrame(gaia)
         self.tiles = self.tiles.join(self.tiles["position"].apply(pd.Series), validate="one_to_one")  # Explode out dict into cols for x + y
 
+        self.tiles["x"] = self.tiles["x"].astype(int) 
+        self.tiles["y"] = self.tiles["y"].astype(int)
+
         self.elevation_map: pd.DataFrame = pd.DataFrame(self.map["tiles"])  # Elevation of each tile
         # Explode out dict into cols for x + y
         self.elevation_map = self.elevation_map.join(self.elevation_map["position"].apply(pd.Series), validate="one_to_one")
@@ -547,10 +580,18 @@ class AgeMap:
             for player in self.player_locations
             ]
 
-        self.tiles["name"] = self.tiles["name"].str.replace(r"\s\(.*\)", "", regex=True)  # Remove anything in brackets - treat together
+        # Data parsing - coerce some varied names to regular ones.
+        # Remove anything in brackets - treat together (trees)
+        self.tiles["name"] = self.tiles["name"].str.replace(r"\s\(.*\)", "", regex=True)
+        # Coerce different types of starting food into one type for processing
+        self.tiles["name"] = self.tiles["name"].str.replace(pat="(Forage Bush)|(Berry Bush)", repl="Fruit Bush", regex=True)
+        self.tiles["name"] = self.tiles["name"].str.replace(pat="(Llama)|(Goat)|(Goose)|(Turkey)|(Pig)|(Turkey)", repl="Sheep", regex=True)
+        self.tiles["name"] = self.tiles["name"].str.replace(pat="(Zebra)|(Ostrich)|(Ibex)|(Gazelle)", repl="Deer", regex=True)
+        self.tiles["name"] = self.tiles["name"].str.replace(pat="(Elephant)|(Rhinoceros)", repl="Wild Boar", regex=True)
+        # TODO mark if elephant or rhino as more food
+        # TODO maybe treat water buffalo and cows seperately... if needed
 
         # Identify islands (groups) of resources for minin information from later
-        # TODO handle that Fruit Bush == Berries in this case
         resources_to_check_between_players = ["Fruit Bush", "Gold Mine", "Stone Mine", "Tree"]  # Check these resources
 
         # Wrapper function that gets the following for the object and stores it in the object:
@@ -559,7 +600,6 @@ class AgeMap:
         # - Falgs the resources between the players
         self.process_resource_locations(resources_to_identify=resources_to_check_between_players)
 
-        # TODO check that player 1 = first starting location passed
         p_1_resource_analysis = self.analyse_map_features_for_player(player=1,
                                                                      player_resources=self.tiles.loc[self.tiles["ClosestPlayer"] == 1, :],
                                                                      min_height_for_hill=self.height_of_player_locations[0])
@@ -630,7 +670,6 @@ class AgeMap:
             resource_analysis = pd.concat([resource_analysis, pd.Series({f"Player{player}.{gold_name}": analysis_of_current_gold})])
 
         # Identify berries
-        # TODO handle berries vs Fruit Bush etc etc.
         berries = player_resources.loc[player_resources["name"] == "Fruit Bush", :]
 
         # Apply to analysis method (Hill/Front/Back) to berries
@@ -796,7 +835,7 @@ class AgeMap:
         or can identify forward golds"""
         # TODO generalise this to just polygons, so that the sides can be checked for resources
         poly = Polygon(polygon_to_check_within)
-        map_feature_locations["BetweenPlayers"] = map_feature_locations.apply(lambda x: Point(x["x"], x["y"],).within(poly), axis=1)
+        map_feature_locations.loc[:, "BetweenPlayers"] = map_feature_locations.apply(lambda x: Point(x["x"], x["y"],).within(poly), axis=1)
         return map_feature_locations.loc[:, ["instance_id", "BetweenPlayers"]]
 
     def identify_islands_of_resources(self, dataframe_of_map: pd.DataFrame, resource: str) -> pd.DataFrame:
@@ -968,8 +1007,8 @@ if __name__ == "__main__":
 
     def main():
 
-        test_file = Path("tests/Test_Games/SD-AgeIIDE_Replay_324565276.aoe2record")
-        # test_file = Path("../Data/RawAoe2RecordBytes/AOE2ReplayBinary_2.aoe2record")  # Using a downloaded game from the scraper worked
+        # test_file = Path("../../Data/RawAoe2RecordBytes/SD-AgeIIDE_Replay_324565276.aoe2record")
+        test_file = Path("Data/RawAoe2RecordBytes/AOE2ReplayBinary_2.aoe2record")  # ../../ Using a downloaded game from the scraper worked
 
         test_match = AgeGame(path=test_file)
         test_match.advanced_parser()

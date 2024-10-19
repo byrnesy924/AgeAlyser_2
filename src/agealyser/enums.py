@@ -411,6 +411,9 @@ class UnitCreationTime(Enum):
         # TODO - Franks stables
         # TODO think about passing the building as a parameter here to reduce the if statements - more readable and faster code
         # TODO - Romans centurion and knight; need to be included
+        if " " in name:
+            name = name.replace(" ", "_")
+
         match (name, civilisation):
             case "Monk", "Lithuanians":
                 return cls[name].value/1.20
