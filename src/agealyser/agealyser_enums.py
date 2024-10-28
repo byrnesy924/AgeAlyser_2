@@ -1,6 +1,9 @@
 """Enums for build times, research times, creation times.
 Data for this including some notes and exceptions can be found in the Data folder
 """
+import logging
+logger = logging.getLogger(__name__)
+
 from enum import Enum
 from typing import Final, List
 
