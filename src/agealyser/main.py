@@ -16,7 +16,7 @@ from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 # import utils
 
-from enums import (  # Getting a bit too cute here with constants but it will do for now
+from .agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
     BuildTimesEnum,
     TechnologyResearchTimes,
     # UnitCreationTime,
@@ -27,7 +27,7 @@ from enums import (  # Getting a bit too cute here with constants but it will do
     # SiegeWorkshopUnits
 )
 
-from utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
+from .utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -70,8 +70,8 @@ class GamePlayer:
         self.opening = pd.Series()
 
         # Data formatting - parse str to timestamp
-        self.inputs_df["timestamp"] = pd.to_timedelta(self.inputs_df["timestamp"])
-        self.actions_df["timestamp"] = pd.to_timedelta(self.actions_df["timestamp"])
+        self.inputs_df["timestamp"] = pd.to_timedelta(self.inputs_df["timestamp"].copy())
+        self.actions_df["timestamp"] = pd.to_timedelta(self.actions_df["timestamp"].copy())
 
         # self.actions_df.to_csv(Path(f"DataExploration/Player{self.number}_actions.csv"))
         # self.inputs_df.to_csv(Path(f"DataExploration/Player{self.number}_inputs.csv"))
@@ -101,7 +101,7 @@ class GamePlayer:
             inputs_data=self.inputs_df,
             player=self.number
         )
-        if len(self.archery_ranges) > 0:
+        if self.archery_ranges is not None and len(self.archery_ranges) > 0:
             self.archery_units = pd.concat([range_.produce_units() for range_ in self.archery_ranges])
         else:
             self.archery_units = pd.DataFrame()
@@ -110,7 +110,7 @@ class GamePlayer:
             inputs_data=self.inputs_df,
             player=self.number
         )
-        if len(self.stables) > 0:
+        if self.stables is not None and len(self.stables) > 0:
             self.stable_units = pd.concat([stable.produce_units() for stable in self.stables])
         else:
             self.stable_units = pd.DataFrame()
@@ -119,7 +119,7 @@ class GamePlayer:
             inputs_data=self.inputs_df,
             player=self.number
         )
-        if len(self.siege_shops) > 0:
+        if self.siege_shops is not None and len(self.siege_shops) > 0:
             self.siege_units = pd.concat([seige_shop.produce_units() for seige_shop in self.siege_shops])
         else:
             self.siege_units = pd.DataFrame()
@@ -698,7 +698,7 @@ class AgeMap:
         )
 
         # Identify and analyse structure of woodlines
-        woodlines = player_resources.loc[player_resources["name"] == "Tree", :]
+        woodlines = player_resources.loc[player_resources["name"] == "Tree", :]#.drop_duplicates()
 
         # Apply woodlines analysis
         woodlines_analysis = self.analyse_player_woodlines(woodlines=woodlines, player_number=player)
@@ -835,7 +835,9 @@ class AgeMap:
         or can identify forward golds"""
         # TODO generalise this to just polygons, so that the sides can be checked for resources
         poly = Polygon(polygon_to_check_within)
-        map_feature_locations.loc[:, "BetweenPlayers"] = map_feature_locations.apply(lambda x: Point(x["x"], x["y"],).within(poly), axis=1)
+        map_feature_locations.loc[:, "BetweenPlayers"] = map_feature_locations.apply(
+            lambda x: Point(x["x"], x["y"],).within(poly), axis=1
+        ).copy()
         return map_feature_locations.loc[:, ["instance_id", "BetweenPlayers"]]
 
     def identify_islands_of_resources(self, dataframe_of_map: pd.DataFrame, resource: str) -> pd.DataFrame:
@@ -846,7 +848,7 @@ class AgeMap:
 
         df = dataframe_of_map[["y", "x", "instance_id", "name"]]  # Reduce columns
         # The AOE Game engine starts these objects in the centre of the tile. Remove the decimal if it exists.
-        df.loc[:, ["x", "y"]] = np.floor(df[["x", "y"]]).astype(np.int32)  # remove decimal of floats
+        df.loc[:, ["x", "y"]] = np.floor(df[["x", "y"]].round()).astype(np.int32)  # remove decimal of floats
         df = df.loc[df["name"] == resource, ["x", "y", "instance_id"]]
 
         map_of_resources = np.zeros((self.map_size_int, self.map_size_int))
@@ -963,7 +965,7 @@ class AgeGame:
             return player_one.elo - player_two.elo
         return player_two.elo - player_one.elo
 
-    def advanced_parser(self) -> None:
+    def advanced_parser(self, include_map_analyses: bool = True) -> pd.Series:
         # TODO get the winner from players
         # TODO mine if boar or elephant
 
@@ -993,7 +995,9 @@ class AgeGame:
             player_two=self.players[1]
         )
 
-        return
+        if include_map_analyses:
+            return pd.concat([self.game_results, self.player_map_analysis])
+        return self.game_results
 
 
 if __name__ == "__main__":

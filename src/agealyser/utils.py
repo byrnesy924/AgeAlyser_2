@@ -1,9 +1,10 @@
 import pandas as pd
+import logging
+logger = logging.getLogger(__name__)
 
 from abc import ABC, abstractmethod
-# import logging
 
-from agealyser.enums import (  # Getting a bit too cute here with constants but it will do for now
+from agealyser.agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
     UnitCreationTime,
     ArcheryRangeUnits,
     StableUnits,
@@ -282,9 +283,13 @@ class AbstractProductionBuildingFactory(ABC):
              dataframe_to_marry_up_to_production["timestamp"].reset_index(drop=True)],
             axis=1,
         )
-
-        df_to_return = df_to_return.loc[0:len(building_ids) - 1, :]  # remove unused buildigns
-        df_to_return.index = building_ids.sort_values()
+        buildings_used = len(building_ids)
+        df_to_return = df_to_return.loc[0:buildings_used - 1, :]  # remove unused buildigns
+        if len(df_to_return.index) < buildings_used:
+            logger.warning("Producing from more buildings than have created! TODO log what game this is") # TODO log what game is this
+            df_to_return.index = building_ids.sort_values()[0:len(df_to_return)]
+        else:
+            df_to_return.index = building_ids.sort_values()
 
         # if - else handles buildings that never make units
         return [
