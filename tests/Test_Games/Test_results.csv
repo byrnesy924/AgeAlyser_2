@@ -1,79 +1,79 @@
 ,0
-DifferenceInELO,46
-DistanceBetweenPlayers,80.36168241145776
-Player1.Archer,1
+DifferenceInELO,89
+DistanceBetweenPlayers,77.78174593052023
+Player1.Archer,0
 Player1.Back,2
-Player1.Berries,Back
-Player1.Civilisation,Dravidians
-Player1.DarkAgeIdleTime,6.875
+Player1.Berries,Unknown
+Player1.Civilisation,Koreans
+Player1.DarkAgeIdleTime,9.325
 Player1.DarkAgeLoom,True
 Player1.DarkAgeWallsNumber,0.0
-Player1.DoubleBitAxe,0 days 00:08:59.397000
-Player1.FeudalHousesBuilt,10.0
-Player1.FeudalTime,0 days 00:08:26.883000
-Player1.FeudalWallsNumber,13.0
-Player1.FirstBarracksTime,0 days 00:07:45.647000
-Player1.Front,1
-Player1.HorseCollar,0 days 00:08:56.230000
-Player1.MainGold,Front
+Player1.DoubleBitAxe,0 days 00:09:00.008000
+Player1.FeudalHousesBuilt,11.0
+Player1.FeudalTime,0 days 00:08:29.327000
+Player1.FeudalWallsNumber,41.0
+Player1.FirstBarracksTime,0 days 00:08:05.147000
+Player1.Front,2
+Player1.HorseCollar,0 days 00:10:09.355000
+Player1.MainGold,Back
 Player1.MilitiaStrategyIdentified,
-Player1.NumberFeudalFarms,12
+Player1.NumberFeudalFarms,14
 Player1.NumberOfMilitiaUnits,0
 Player1.OpeningMilitaryBuilding,Stable
-Player1.OpeningMilitaryBuildingTime,0 days 00:08:31.966000
-Player1.OpeningStrategy,Scouts into Full Feudal
-Player1.PostCastleWalls,1.0
+Player1.OpeningMilitaryBuildingTime,0 days 00:09:04.063000
+Player1.OpeningStrategy,Could not Identify!
+Player1.PostCastleWalls,0.0
 Player1.PreMillBarracks,False
-Player1.Scout Cavalry,3
+Player1.Scout Cavalry,5
 Player1.SecondGold,Back
-Player1.Side,0
-Player1.Skirmisher,3
-Player1.Spearman,2
-Player1.StartingLocation,"(97.0, 72.0)"
-Player1.Stone,Unknown
-Player1.ThirdGold,Unknown
-Player1.TimeFifteenFarms,
-Player1.TimeSixFarms,0 days 00:10:24.494000
-Player1.TimeTenFarms,0 days 00:14:56.883000
+Player1.Side,1
+Player1.Skirmisher,0
+Player1.Spearman,0
+Player1.StartingLocation,"(92.0, 37.0)"
+Player1.Stone,Back
+Player1.ThirdGold,Back
+Player1.TimeFifteenFarms,0 days 00:14:13.619000
+Player1.TimeSixFarms,0 days 00:11:02.688000
+Player1.TimeTenFarms,0 days 00:12:26.577000
 Player1.TimeTentyFarms,
-Player1.TimeThreeFarms,0 days 00:09:36.355000
+Player1.TimeThreeFarms,0 days 00:10:25.508000
 Player1.Villagers,20
-Player1.Wheelbarrow,0 days 00:13:21.063000
+Player1.Wheelbarrow,0 days 00:34:40.744000
 Player2.Archer,0
 Player2.Back,0
-Player2.Berries,Unknown
-Player2.Civilisation,Vietnamese
-Player2.DarkAgeIdleTime,15.4
+Player2.Berries,Back
+Player2.Civilisation,Teutons
+Player2.DarkAgeIdleTime,23.95
 Player2.DarkAgeLoom,True
 Player2.DarkAgeWallsNumber,0.0
-Player2.DoubleBitAxe,0 days 00:08:52.799000
+Player2.DoubleBitAxe,0 days 00:09:18.494000
 Player2.FeudalHousesBuilt,7.0
-Player2.FeudalTime,0 days 00:08:35.424000
-Player2.FeudalWallsNumber,39.0
-Player2.FirstBarracksTime,0 days 00:07:52.355000
-Player2.Front,3
-Player2.HorseCollar,0 days 00:08:50.091000
-Player2.MainGold,Back
+Player2.FeudalTime,0 days 00:08:43.952000
+Player2.FeudalWallsNumber,22.0
+Player2.FirstBarracksTime,0 days 00:07:01.369000
+Player2.Front,1
+Player2.HorseCollar,0 days 00:09:29.952000
+Player2.MainGold,Front
 Player2.MilitiaStrategyIdentified,
-Player2.NumberFeudalFarms,17
+Player2.NumberFeudalFarms,16
 Player2.NumberOfMilitiaUnits,0
-Player2.OpeningMilitaryBuilding,Archery Range
-Player2.OpeningMilitaryBuildingTime,0 days 00:11:46.758000
+Player2.OpeningMilitaryBuilding,Stable
+Player2.OpeningMilitaryBuildingTime,0 days 00:08:52.077000
 Player2.OpeningStrategy,Could not Identify!
 Player2.PostCastleWalls,0.0
 Player2.PreMillBarracks,False
 Player2.Scout Cavalry,6
 Player2.SecondGold,Back
-Player2.Side,0
-Player2.Skirmisher,5
-Player2.Spearman,5
-Player2.StartingLocation,"(20.0, 49.0)"
+Player2.Side,2
+Player2.Skirmisher,0
+Player2.Spearman,0
+Player2.StartingLocation,"(37.0, 92.0)"
 Player2.Stone,Unknown
 Player2.ThirdGold,Back
-Player2.TimeFifteenFarms,0 days 00:17:09.119000
-Player2.TimeSixFarms,0 days 00:11:30.105000
-Player2.TimeTenFarms,0 days 00:15:08.869000
+Player2.TimeFifteenFarms,0 days 00:14:29.258000
+Player2.TimeSixFarms,0 days 00:10:20.230000
+Player2.TimeTenFarms,0 days 00:12:09.508000
 Player2.TimeTentyFarms,
-Player2.TimeThreeFarms,0 days 00:10:31.202000
+Player2.TimeThreeFarms,0 days 00:09:46.924000
 Player2.Villagers,20
-Player2.Wheelbarrow,0 days 00:14:44.216000
+Player2.Wheelbarrow,0 days 00:31:29.605000
