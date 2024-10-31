@@ -416,18 +416,20 @@ class GamePlayer:
             opening_military_building = opening_military_building.iloc[0]
 
         # extract the units created and how many of those created
-        feudal_military_units = units_queued.loc[(units_queued["param"].isin(FeudalAgeMilitaryUnits)) &
-                                                 (units_queued["UnitCreatedTimestamp"] < castle_time),
-                                                 :
-                                                 ]
+        if units_queued.empty:
+            number_of_each_unit = [0]*len(FeudalAgeMilitaryUnits)
+        else:
+            feudal_military_units = units_queued.loc[(units_queued["param"].isin(FeudalAgeMilitaryUnits)) &
+                                                     (units_queued["UnitCreatedTimestamp"] < castle_time),
+                                                     :
+                                                    ]
+            # Count of each military unit
+            number_of_each_unit = feudal_military_units.groupby("param").count()["UnitCreatedTimestamp"]
 
-        # Count of each military unit
-        number_of_each_unit = feudal_military_units.groupby("param").count()["UnitCreatedTimestamp"]
-
-        # Handle instance where they do not produce this unit
-        for unit in FeudalAgeMilitaryUnits:
-            if unit not in number_of_each_unit.index:
-                number_of_each_unit[unit] = 0
+            # Handle instance where they do not produce this unit
+            for unit in FeudalAgeMilitaryUnits:
+                if unit not in number_of_each_unit.index:
+                    number_of_each_unit[unit] = 0
 
         # Non spear units - to identify strategy
         # non_spear_military_units = feudal_military_units.loc[feudal_military_units["param"] != "Spearman", :]  # TODO
