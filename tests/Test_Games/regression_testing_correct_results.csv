@@ -1,0 +1,79 @@
+,0,1,2,3,4,5,6,7,8
+Player1.FeudalTime,0 days 00:09:10.563000,0 days 00:07:27.369000,0 days 00:08:29.327000,0 days 00:09:40.008000,0 days 00:09:12.591000,0 days 00:08:26.883000,0 days 00:08:52.688000,0 days 00:10:21.045000,0 days 00:08:38.063000
+Player1.Villagers,22,17,20,23,22,20,21,24,20
+Player1.DarkAgeIdleTime,0.55,22.35,9.325,5.0,2.575,6.875,7.675,21.025,18.05
+Player1.DarkAgeLoom,True,False,True,True,True,True,True,False,True
+Player1.OpeningStrategy,Archers into scouts,Could not Identify!,Could not Identify!,Could not Identify!,Could not Identify!,Scouts into Full Feudal,Straight Skirms or Trash Rush,Could not Identify!,Could not Identify!
+Player1.FirstBarracksTime,0 days 00:06:20.133000,,0 days 00:08:05.147000,,0 days 00:08:13.883000,0 days 00:07:45.647000,0 days 00:08:04.549000,0 days 00:09:14.764000,0 days 00:08:19.174000
+Player1.MilitiaStrategyIdentified,,,,,,,,,
+Player1.NumberOfMilitiaUnits,0,0,0,0,0,0,0,0,0
+Player1.PreMillBarracks,False,False,False,False,False,False,False,False,False
+Player1.OpeningMilitaryBuildingTime,0 days 00:09:16.647000,0 days 00:07:27.369000,0 days 00:09:04.063000,0 days 00:09:40.008000,0 days 00:09:18.272000,0 days 00:08:31.966000,0 days 00:08:59.209000,0 days 00:10:21.045000,0 days 00:09:15.438000
+Player1.OpeningMilitaryBuilding,Archery Range,Towers/Barracks/FC,Stable,Towers/Barracks/FC,Stable,Stable,Archery Range,Towers/Barracks/FC,Stable
+Player1.Archer,14,0,0,0,0,1,0,0,0
+Player1.Scout Cavalry,1,0,5,0,0,3,0,0,0
+Player1.Skirmisher,0,0,0,0,0,3,13,0,0
+Player1.Spearman,0,0,0,0,0,0,0,0,0
+Player1.DoubleBitAxe,0 days 00:09:47.341000,0 days 00:08:53.105000,0 days 00:09:00.008000,0 days 00:13:10.258000,0 days 00:09:54.452000,0 days 00:08:59.397000,0 days 00:09:22.376000,,0 days 00:11:31.146000
+Player1.HorseCollar,0 days 00:17:27.897000,0 days 00:09:24.258000,0 days 00:10:09.355000,,0 days 00:10:27.633000,0 days 00:08:56.230000,0 days 00:10:55.305000,,
+Player1.Wheelbarrow,0 days 00:15:27.202000,0 days 00:18:52.966000,0 days 00:34:40.744000,,0 days 00:15:29.841000,0 days 00:13:21.063000,0 days 00:16:46.629000,,
+Player1.NumberFeudalFarms,12,2,14,3,15,12,15,0,3
+Player1.TimeThreeFarms,0 days 00:10:48.063000,0 days 00:09:38.994000,0 days 00:10:25.508000,0 days 00:13:42.952000,0 days 00:10:45.424000,0 days 00:09:19.702000,0 days 00:12:09.493000,,0 days 00:11:46.160000
+Player1.TimeSixFarms,0 days 00:12:41.397000,,0 days 00:11:02.688000,,0 days 00:11:15.480000,0 days 00:10:22.869000,0 days 00:13:09.149000,,
+Player1.TimeTenFarms,0 days 00:14:02.244000,,0 days 00:12:26.577000,,0 days 00:12:13.369000,0 days 00:14:33.730000,0 days 00:13:42.716000,,
+Player1.TimeFifteenFarms,,,0 days 00:14:13.619000,,0 days 00:13:18.174000,,0 days 00:15:04.898000,,
+Player1.TimeTentyFarms,,,,,,,,,
+Player1.DarkAgeWallsNumber,0.0,0.0,0.0,0.0,2.0,0.0,0.0,16.0,0.0
+Player1.FeudalWallsNumber,14.0,0.0,41.0,1.0,35.0,13.0,31.0,13.0,0.0
+Player1.PostCastleWalls,0.0,0.0,0.0,0.0,0.0,1.0,0.0,2.0,0.0
+Player1.FeudalHousesBuilt,0.0,2.0,11.0,0.0,11.0,10.0,7.0,0.0,3.0
+Player1.Civilisation,Huns,Turks,Koreans,Koreans,Bohemians,Dravidians,Byzantines,Huns,Mongols
+Player1.StartingLocation,"(92.0, 36.0)","(96.0, 60.0)","(92.0, 37.0)","(96.0, 45.0)","(50.0, 20.0)","(97.0, 72.0)","(33.0, 89.0)","(43.0, 60.0)","(66.0, 20.0)"
+Player2.FeudalTime,0 days 00:09:16.993666670,0 days 00:08:20.994000,0 days 00:08:43.952000,0 days 00:07:59.258000,0 days 00:08:27.702000,0 days 00:08:35.424000,0 days 00:08:25.674000,0 days 00:10:44.633000,0 days 00:08:15.313000
+Player2.Villagers,22,20,20,19,20,20,20,25,19
+Player2.DarkAgeIdleTime,6.975,0.975,23.95,4.25,7.7,15.4,5.65,19.625,20.3
+Player2.DarkAgeLoom,True,False,True,True,True,True,True,False,True
+Player2.OpeningStrategy,Archery Range into Full Feudal,Could not Identify!,Could not Identify!,Scouts into Full Feudal,Could not Identify!,Could not Identify!,Could not Identify!,Could not Identify!,Could not Identify!
+Player2.FirstBarracksTime,0 days 00:07:12.549000,,0 days 00:07:01.369000,0 days 00:06:41.063000,0 days 00:07:38.952000,0 days 00:07:52.355000,0 days 00:07:51.744000,,0 days 00:07:25.952000
+Player2.MilitiaStrategyIdentified,,,,,,,,,
+Player2.NumberOfMilitiaUnits,0,0,0,0,0,0,0,0,0
+Player2.PreMillBarracks,False,False,False,False,False,False,False,False,False
+Player2.OpeningMilitaryBuildingTime,0 days 00:12:06.063000,0 days 00:08:20.994000,0 days 00:08:52.077000,0 days 00:08:02.924000,0 days 00:08:38.466000,0 days 00:11:46.758000,0 days 00:08:59.612000,0 days 00:10:44.633000,0 days 00:08:30.952000
+Player2.OpeningMilitaryBuilding,Archery Range,Towers/Barracks/FC,Stable,Stable,Stable,Archery Range,Stable,Towers/Barracks/FC,Stable
+Player2.Archer,14,0,0,3,0,0,0,0,0
+Player2.Scout Cavalry,4,0,6,11,5,6,8,0,3
+Player2.Skirmisher,4,0,0,14,0,5,0,0,0
+Player2.Spearman,0,0,0,0,0,0,0,0,0
+Player2.DoubleBitAxe,0 days 00:09:47.952000,,0 days 00:09:18.494000,0 days 00:08:28.522000,0 days 00:09:18.702000,0 days 00:08:52.799000,0 days 00:10:01.987000,0 days 00:11:45.075000,
+Player2.HorseCollar,0 days 00:20:40.258000,0 days 00:09:27.105000,0 days 00:09:29.952000,0 days 00:12:19.758000,0 days 00:10:16.258000,0 days 00:08:50.091000,0 days 00:10:46.348000,0 days 00:12:42.644000,0 days 00:09:56.771000
+Player2.Wheelbarrow,0 days 00:33:51.188000,0 days 00:17:55.272000,0 days 00:31:29.605000,,0 days 00:24:01.105000,0 days 00:14:44.216000,0 days 00:26:42.702000,0 days 00:20:52.058000,
+Player2.NumberFeudalFarms,22,8,16,26,13,17,14,4,6
+Player2.TimeThreeFarms,0 days 00:10:36.077000,0 days 00:09:34.119000,0 days 00:09:46.924000,0 days 00:09:43.674000,0 days 00:10:20.022000,0 days 00:10:03.577000,0 days 00:11:32.429000,0 days 00:12:32.635000,0 days 00:10:43.396000
+Player2.TimeSixFarms,0 days 00:11:23.605000,0 days 00:11:35.188000,0 days 00:10:20.230000,0 days 00:11:52.244000,0 days 00:11:08.980000,0 days 00:11:05.938000,0 days 00:12:24.980000,,0 days 00:12:13.993000
+Player2.TimeTenFarms,0 days 00:13:19.188000,,0 days 00:12:09.508000,0 days 00:13:39.897000,0 days 00:12:07.077000,0 days 00:13:31.577000,0 days 00:13:01.952000,,
+Player2.TimeFifteenFarms,0 days 00:18:26.924000,,0 days 00:14:29.258000,0 days 00:17:16.230000,,0 days 00:16:35.813000,0 days 00:14:30.823000,,
+Player2.TimeTentyFarms,0 days 00:20:32.452000,,,0 days 00:18:48.244000,,,,,
+Player2.DarkAgeWallsNumber,18.0,0.0,0.0,0.0,2.0,0.0,0.0,0.0,0.0
+Player2.FeudalWallsNumber,0.0,0.0,22.0,0.0,36.0,39.0,58.0,0.0,29.0
+Player2.PostCastleWalls,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Player2.FeudalHousesBuilt,20.0,0.0,7.0,8.0,9.0,7.0,4.0,2.0,3.0
+Player2.Civilisation,Malay,Burmese,Teutons,Georgians,Sicilians,Vietnamese,Bohemians,Portuguese,Burmese
+Player2.StartingLocation,"(32.0, 88.0)","(24.0, 60.0)","(37.0, 92.0)","(21.0, 71.0)","(71.0, 98.0)","(20.0, 49.0)","(98.0, 54.0)","(191.0, 92.0)","(22.0, 72.0)"
+DistanceBetweenPlayers,79.39773296511683,72.0,77.78174593052023,79.37883848986453,80.77747210701756,80.36168241145776,73.824115301167,151.4199458459816,68.11754546370561
+DifferenceInELO,46,-33,89,46,141,46,143,150,-43
+Player1.MainGold,Front,Front,Back,Back,Back,Front,Front,Back,Back
+Player1.ThirdGold,Back,Back,Back,Unknown,Unknown,Unknown,Back,Back,Back
+Player1.SecondGold,Back,Back,Back,Back,Unknown,Back,Back,Back,Back
+Player1.Berries,Back,Back,Unknown,Unknown,Back,Back,Back,Unknown,Unknown
+Player1.Stone,Unknown,Back,Back,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown
+Player1.Front,1,0,2,1,1,1,2,2,0
+Player1.Side,1,1,1,1,1,0,0,0,3
+Player1.Back,5,2,5,2,1,2,6,2,2
+Player2.MainGold,Front,Front,Front,Back,Front Hill,Back,Back,Back,Back
+Player2.ThirdGold,Back,Back,Back,Unknown,Back,Back,Back,Unknown,Back
+Player2.SecondGold,Back,Back,Back,Back,Unknown,Back,Back,Back,Back
+Player2.Berries,Back,Unknown,Back,Unknown,Unknown,Unknown,Back,Unknown,Unknown
+Player2.Stone,Unknown,Unknown,Unknown,Unknown,Back,Unknown,Back,Unknown,Unknown
+Player2.Front,0,0,1,1,1,3,2,1,1
+Player2.Side,1,1,2,0,2,1,1,0,1
+Player2.Back,7,1,3,3,1,0,2,4,3

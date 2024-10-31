@@ -139,6 +139,11 @@ class GamePlayer:
         self.castle_time = self.identify_technology_research_and_time("Castle Age", civilisation=self.civilisation)
         self.loom_times = self.identify_technology_research_and_time("Loom", civilisation=self.civilisation)  # Get loom time
 
+        # Handle if the game ends in feudal for this player
+        # TODO - think of a good way of handling this in the logic of the package
+        if self.castle_time is None:
+            self.castle_time = self.actions_df["timestamp"].max()  # end of the game
+
         self.dark_age_stats = self.extract_feudal_time_information(
             feudal_time=self.feudal_time,
             loom_time=self.loom_times
@@ -417,7 +422,7 @@ class GamePlayer:
 
         # extract the units created and how many of those created
         if units_queued.empty:
-            number_of_each_unit = [0]*len(FeudalAgeMilitaryUnits)
+            number_of_each_unit = pd.Series([0]*len(FeudalAgeMilitaryUnits), index=FeudalAgeMilitaryUnits)
         else:
             feudal_military_units = units_queued.loc[(units_queued["param"].isin(FeudalAgeMilitaryUnits)) &
                                                      (units_queued["UnitCreatedTimestamp"] < castle_time),
