@@ -73,8 +73,8 @@ class GamePlayer:
         self.inputs_df.loc[:, "timestamp"] = pd.to_timedelta(self.inputs_df.loc[:, "timestamp"].copy())
         self.actions_df.loc[:, "timestamp"] = pd.to_timedelta(self.actions_df.loc[:, "timestamp"].copy())
 
-        self.inputs_df["timestamp"] = self.inputs_df.loc[:, "timestamp"].astype("timedelta64[ns]")
-        self.actions_df["timestamp"] = self.inputs_df.loc[:, "timestamp"].astype("timedelta64[ns]")
+        self.inputs_df["timestamp"] = self.inputs_df["timestamp"].astype("timedelta64[ns]")
+        self.actions_df["timestamp"] = self.inputs_df["timestamp"].astype("timedelta64[ns]")
 
         # self.actions_df.to_csv(Path(f"DataExploration/Player{self.number}_actions.csv"))
         # self.inputs_df.to_csv(Path(f"DataExploration/Player{self.number}_inputs.csv"))
@@ -343,18 +343,20 @@ class GamePlayer:
                                                                   (military_buildings_spawned["timestamp"] < castle_time), :]
         first_barracks_time = dark_age_feudal_barracks["timestamp"].min()
         pre_mill_barracks = first_barracks_time < mill_created_time
-        militia_created = units_created.loc[(units_created["param"] == "Militia") &
-                                           (units_created["UnitCreatedTimestamp"] < castle_time), :]
-
-        # convert raw information into strategy - number of units
-        number_of_militia_or_maa = len(militia_created)
+        if units_created.empty:
+            number_of_militia_or_maa = 0
+        else:
+            militia_created = units_created.loc[(units_created["param"] == "Militia") &
+                                                (units_created["UnitCreatedTimestamp"] < castle_time), :]
+            # convert raw information into strategy - number of units
+            number_of_militia_or_maa = len(militia_created)
 
         # convert raw information into strategy - strategy
         if maa_upgrade is not None:
             militia_opening_strategy = "MAA"
-        elif pre_mill_barracks and len(militia_created) > 0:
+        elif pre_mill_barracks and number_of_militia_or_maa > 0:
             militia_opening_strategy = "Pre-Mill Drush"
-        elif len(militia_created) > 0:
+        elif number_of_militia_or_maa > 0:
             militia_opening_strategy = "Drush"
         else:
             militia_opening_strategy = None
@@ -399,9 +401,19 @@ class GamePlayer:
 
         # time of first building
         opening_timing = feudal_military_buildings["timestamp"]
+        if opening_timing.empty:
+            # went for a drush FC, or maa strat - just take feudal time
+            # TODO in future change this depending on MAA, Drush, FC, towers etc.
+            opening_timing = feudal_time
+        else:
+            opening_timing = opening_timing.iloc[0]
 
         # Get the first military building made in feudal
         opening_military_building = feudal_military_buildings.loc[feudal_military_buildings["timestamp"] == opening_timing, "param"]
+        if opening_military_building.empty:
+            opening_military_building = "Towers/Barracks/FC" # TODO as above differentiate between them
+        else:
+            opening_military_building = opening_military_building.iloc[0]
 
         # extract the units created and how many of those created
         feudal_military_units = units_queued.loc[(units_queued["param"].isin(FeudalAgeMilitaryUnits)) &
@@ -423,8 +435,8 @@ class GamePlayer:
         # Extract time to 3 of first units
 
         military_stats_to_return = {
-            "OpeningMilitaryBuildingTime": opening_timing.iloc[0],
-            "OpeningMilitaryBuilding": opening_military_building.iloc[0],
+            "OpeningMilitaryBuildingTime": opening_timing,
+            "OpeningMilitaryBuilding": opening_military_building,
         }
 
         return pd.concat([pd.Series(military_stats_to_return), number_of_each_unit])
