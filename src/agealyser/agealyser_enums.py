@@ -374,6 +374,7 @@ class UnitCreationTime(Enum):
     Siege_Ram = 36
     Skirmisher = 22
     Spearman = 22
+    Steppe_Lancer = 24
     Tarkan = 14
     Teutonic_Knight = 12
     Throwing_Axeman = 17

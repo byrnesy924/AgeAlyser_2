@@ -70,8 +70,11 @@ class GamePlayer:
         self.opening = pd.Series()
 
         # Data formatting - parse str to timestamp
-        self.inputs_df["timestamp"] = pd.to_timedelta(self.inputs_df["timestamp"].copy())
-        self.actions_df["timestamp"] = pd.to_timedelta(self.actions_df["timestamp"].copy())
+        self.inputs_df.loc[:, "timestamp"] = pd.to_timedelta(self.inputs_df.loc[:, "timestamp"].copy())
+        self.actions_df.loc[:, "timestamp"] = pd.to_timedelta(self.actions_df.loc[:, "timestamp"].copy())
+
+        self.inputs_df["timestamp"] = self.inputs_df.loc[:, "timestamp"].astype("timedelta64[ns]")
+        self.actions_df["timestamp"] = self.inputs_df.loc[:, "timestamp"].astype("timedelta64[ns]")
 
         # self.actions_df.to_csv(Path(f"DataExploration/Player{self.number}_actions.csv"))
         # self.inputs_df.to_csv(Path(f"DataExploration/Player{self.number}_inputs.csv"))
@@ -698,7 +701,7 @@ class AgeMap:
         )
 
         # Identify and analyse structure of woodlines
-        woodlines = player_resources.loc[player_resources["name"] == "Tree", :]#.drop_duplicates()
+        woodlines = player_resources.loc[player_resources["name"] == "Tree", :].drop_duplicates(subset=["name", "x", "y"])
 
         # Apply woodlines analysis
         woodlines_analysis = self.analyse_player_woodlines(woodlines=woodlines, player_number=player)
@@ -738,6 +741,7 @@ class AgeMap:
             total_trees = len(wood)
 
             if wood.groupby(["x", "y"]).ngroups != total_trees:
+                # Crazy that this can actually happen - TODO in test game 7 check if these are actually duplicates
                 raise Exception(f"Woodline number {woodline_index} has duplicate tiles")  # TODO proper logging
 
             if total_trees < 3:
@@ -794,9 +798,12 @@ class AgeMap:
              )
         )
         max_distance_to_players = 0.4*distance_between_players
+        # In general max distance of actual golds to players is around 32.
+        # IF the formula above returns something less then it is possible to miss a player's gold
+        # Extra 4 tile golds are around the 45-60 tiles away mark
         df_distances_to_players = self.assign_resource_island_to_player(
             map_feature_locations=self.tiles.copy(),
-            maximum_distance_to_player=max_distance_to_players,
+            maximum_distance_to_player=max(max_distance_to_players, 35),  # 31 October caused some golds to be missed
             player_locations=self.player_locations
         )
 
@@ -835,9 +842,10 @@ class AgeMap:
         or can identify forward golds"""
         # TODO generalise this to just polygons, so that the sides can be checked for resources
         poly = Polygon(polygon_to_check_within)
-        map_feature_locations.loc[:, "BetweenPlayers"] = map_feature_locations.apply(
+        locations = map_feature_locations.copy()
+        map_feature_locations.loc[:, "BetweenPlayers"] = locations.apply(
             lambda x: Point(x["x"], x["y"],).within(poly), axis=1
-        ).copy()
+        )
         return map_feature_locations.loc[:, ["instance_id", "BetweenPlayers"]]
 
     def identify_islands_of_resources(self, dataframe_of_map: pd.DataFrame, resource: str) -> pd.DataFrame:
@@ -953,7 +961,7 @@ class AgeGame:
             winner=player["winner"],
             actions=self.all_actions_df.loc[self.all_actions_df["player"] == player["number"], :],
             inputs=self.all_inputs_df.loc[self.all_inputs_df["player"] == player["number"], :]
-            ) for player in self.players_raw_info]
+            ) for player in self.players_raw_info if isinstance(player, dict)]  # Note some TGs can have extra players but ints
 
         return
 
