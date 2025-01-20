@@ -16,7 +16,7 @@ from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 # import utils
 
-from .agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
+from agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
     BuildTimesEnum,
     TechnologyResearchTimes,
     # UnitCreationTime,
@@ -27,7 +27,7 @@ from .agealyser_enums import (  # Getting a bit too cute here with constants but
     # SiegeWorkshopUnits
 )
 
-from .utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
+from utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -79,26 +79,42 @@ class GamePlayer:
         # self.actions_df.to_csv(Path(f"DataExploration/Player{self.number}_actions.csv"))
         # self.inputs_df.to_csv(Path(f"DataExploration/Player{self.number}_inputs.csv"))
 
-        # all techs researched
-        self.research_techs = self.inputs_df.loc[self.inputs_df["type"] == "Research", :]
+        # all techs researched and their completion time 
+        research_techs = self.inputs_df.loc[self.inputs_df["type"] == "Research", :].dropna(subset="param")
+        # if a tech is added that is not captured by the AOE parser, it will throw an error for us because "" cannot be found in Enums
+        research_techs = research_techs[research_techs["param"] != ""]
+        # can just keep this as a dictionary given its just a hashmap with 1 item
+        self.technologies = {tech: self.identify_technology_research_and_time(tech,
+                                                                              research_data=research_techs,
+                                                                              civilisation=civilisation)
+                             for tech in pd.unique(research_techs["param"])}
+
+        # dict for quickly accessing age up times (not click up times)
+        self.age_up_times = {index + 2: self.identify_technology_research_and_time(age, research_techs, civilisation=self.civilisation)
+                             for index, age in enumerate(["Feudal Age", "Castle Age", "Imperial Age"])}
 
         # Buildings created
         all_buildings_created = self.inputs_df.loc[(self.inputs_df["type"] == "Build") | (self.inputs_df["type"] == "Reseed"), :]
+        self.buildings = pd.concat([self.identify_building_and_timing(building_name=building,
+                                                                      buildings_data=all_buildings_created,
+                                                                      feudal_time=self.age_up_times[2],
+                                                                      castle_time=self.age_up_times[3],
+                                                                      imperial_time=self.age_up_times[4],
+                                                                      civilisation=self.civilisation)
+                                    for building in pd.unique(all_buildings_created["param"])])
+        
         # Split into military production buildings and everything else
+        # TODO check if this is used anywhere
         self.military_buildings_created = all_buildings_created[
             all_buildings_created.loc[:, "param"].isin(MilitaryBuildings)
             ].copy()
 
-        # TODO-Fork use building times to create datastructure with all relevant buildings
-
         self.economic_buildings_created = all_buildings_created[
-            ~all_buildings_created.loc[:, "param"].isin(MilitaryBuildings)
+            ~all_buildings_created.loc[:, "param"].isin(MilitaryBuildings)  # Note not (~)
             ].copy()
 
         # Player walls - Palisade Wall(s) and Stone Wall(s)
         self.player_walls = self.inputs_df.loc[self.inputs_df["type"] == "Wall", :]
-
-        # TODO-Fork get all relevant technologies and store them in a dictionary
 
         # Units and unqueing. Note that unqueuing is not possible to handle...
         self.queue_units = self.inputs_df.loc[self.inputs_df["type"] == "Queue", :]
@@ -131,44 +147,43 @@ class GamePlayer:
         else:
             self.siege_units = pd.DataFrame()
 
-        # TODO-Fork check this
+        # data structure to hold all military units
         self.military_units = pd.concat([self.archery_units, self.stable_units, self.siege_units])
         # TODO - barracks, castle, donjon, dock. Lots of boiler plate
 
-    def full_player_choices_and_strategy(self) -> pd.Series:
+    def full_player_choices_and_strategy(self, feudal_time: pd.Timedelta, castle_time: pd.Timedelta, loom_time: pd.Timedelta, end_of_game: pd.Timedelta) -> pd.Series:
         """Main API - call to analyse the player's choices"""
 
         # Extract the key statistics / data points
         # research age timings and loom to mine out
-        # TODO-Fork move this to a data structure rather than in the method and pass as arguments
-        self.feudal_time = self.identify_technology_research_and_time("Feudal Age", civilisation=self.civilisation)
-        self.castle_time = self.identify_technology_research_and_time("Castle Age", civilisation=self.civilisation)
-        self.loom_times = self.identify_technology_research_and_time("Loom", civilisation=self.civilisation)  # Get loom time
 
         # Handle if the game ends in feudal for this player
         # TODO-Fork - think of a good way of handling this in the logic of the package
-        if self.castle_time is None:
-            self.castle_time = self.actions_df["timestamp"].max()  # end of the game
+        if castle_time is None:
+            castle_time = end_of_game  # end of the game TODO-Fork
 
         self.dark_age_stats = self.extract_feudal_time_information(
-            feudal_time=self.feudal_time,
-            loom_time=self.loom_times
+            feudal_time=feudal_time,
+            loom_time=loom_time
         )
 
         # Identify Feudal and Dark Age military Strategy
         self.opening_strategy = self.extract_opening_strategy(
-            feudal_time=self.feudal_time,
-            castle_time=self.castle_time,
+            feudal_time=feudal_time,
+            castle_time=castle_time,
+            mills_building_data=self.buildings.loc[self.buildings["Building"] == "Mill", :],
+            technologies_researched=self.technologies,
             military_buildings_spawned=self.military_buildings_created,
             units_queued=self.military_units,
         )
 
         # Identify Feudal and Dark Age economic choices
         self.feudal_economic_choices_and_castle_time = self.extract_early_game_economic_strat(
-            castle_time=self.castle_time,
-            feudal_time=self.feudal_time,
+            castle_time=castle_time,
+            feudal_time=feudal_time,
             player_eco_buildings=self.economic_buildings_created,
-            player_walls=self.player_walls.loc[self.player_walls["payload.building"] == "Palisade Wall", :]
+            player_walls=self.player_walls.loc[self.player_walls["payload.building"] == "Palisade Wall", :],
+            technologies=self.technologies
         )
 
         self.opening = pd.concat([self.opening, self.dark_age_stats, self.opening_strategy, self.feudal_economic_choices_and_castle_time])
@@ -183,7 +198,7 @@ class GamePlayer:
         """Wrapper to return civilisation pandas friendly"""
         return pd.Series({"Civilisation": self.civilisation})
 
-    def identify_technology_research_and_time(self, technology: str, civilisation: str = None) -> pd.Timedelta:
+    def identify_technology_research_and_time(self, technology: str, research_data: pd.DataFrame, civilisation: str = None) -> pd.Timedelta:
         """A helper method that can identify when players research certain things and the timing of that
 
         :param technology: technology being researches
@@ -198,13 +213,14 @@ class GamePlayer:
 
         if not TechnologyResearchTimes.has_value(enum_technology):
             logger.error(f"Technology given to find technology research function incorrect. Tech was: {technology}")
+            # consider warning and gracefully returning None rather than failing TODO
             raise ValueError(f"Couldn't find technology: {technology}")
 
         time_to_research = TechnologyResearchTimes.get(enum_technology, civilisation=civilisation)
 
         # TODO check why there is two clicks - maybe one for queue and one for actually clicking up?
         # Handle two clicks
-        relevent_research = self.research_techs.loc[self.research_techs["param"] == technology, "timestamp"]  # handle unqueue
+        relevent_research = research_data.loc[research_data["param"] == technology, "timestamp"]  # handle unqueue
 
         if relevent_research.empty:
             # TODO log if cannot find
@@ -213,7 +229,12 @@ class GamePlayer:
         # using len here handles multiple like a cancel and re-research
         return relevent_research.iloc[len(relevent_research) - 1] + pd.Timedelta(seconds=time_to_research) 
 
-    def identify_building_and_timing(self, building, civilisation: str = None) -> pd.DataFrame:
+    def identify_building_and_timing(self, building_name: str, 
+                                     buildings_data: pd.DataFrame,
+                                     feudal_time: pd.Timedelta | None,
+                                     castle_time: pd.Timedelta | None,
+                                     imperial_time: pd.Timedelta | None,
+                                     civilisation: str = None) -> pd.DataFrame:
         """Helper to find all the creations of an economic building type. TODO-Fork return age in dataframe
 
         :param building: the string name of the building. See enums for validation. Errors if incorrect
@@ -223,26 +244,32 @@ class GamePlayer:
         :rtype: pd.DataFrame
         """
 
-        enum_building_name = building.replace(" ", "_").replace("-", "_")  # TODO for cleanliness, think about handling this in Enum methods
+        enum_building_name = building_name.replace(" ", "_").replace("-", "_")  # TODO for cleanliness, think about handling this in Enum methods
 
         if not BuildTimesEnum.has_value(enum_building_name):
-            logger.error(f"Building given to find building method incorrect. Building was: {building}")
-            raise ValueError(f"Couldn't find building: {building}")
+            logger.error(f"Building given to find building method incorrect. Building was: {building_name}")
+            raise ValueError(f"Couldn't find building: {building_name}")
 
         time_to_build = BuildTimesEnum.get(enum_building_name, civilisation=civilisation)
 
-        relevent_building = self.economic_buildings_created.loc[
-            self.economic_buildings_created["param"] == building,
+        relevent_building = buildings_data.loc[
+            buildings_data["param"] == building_name,
             ["timestamp", "player", "payload.object_ids"]
             ]
         if relevent_building.empty:
             # TODO log this and return empty data frame but with correct columns - handle accordingly
             return relevent_building
-
+        
+        relevent_building["Building"] = building_name
         relevent_building["NumberVillsBuilding"] = relevent_building["payload.object_ids"].apply(lambda x: len(x))
         relevent_building["TimeToBuild"] = (3*time_to_build)/(relevent_building["NumberVillsBuilding"] + 2)
         relevent_building["TimeToBuild"] = pd.to_timedelta(relevent_building["TimeToBuild"])
         relevent_building["timestamp"] = relevent_building["timestamp"] + relevent_building["TimeToBuild"]
+
+        # Age of building creation
+        relevent_building["Age"] = 1  # default is dark age
+        for index, time in enumerate([feudal_time, castle_time, imperial_time]):
+            relevent_building.loc[relevent_building["timestamp"] > time, "Age"] = index + 2  # +2 as need to map from 0= Feudal to Feudal = 2 and so on
 
         return relevent_building
 
@@ -278,14 +305,15 @@ class GamePlayer:
                                  feudal_time: pd.Timedelta,
                                  castle_time: pd.Timedelta,
                                  military_buildings_spawned: pd.DataFrame,
+                                 mills_building_data: pd.DataFrame,
+                                 technologies_researched: dict,
                                  units_queued: pd.DataFrame,
                                  ) -> pd.Series:
         """Function that identifies military stratgy. Uses Militia and Feudal military methods"""
         # time of maa tech for maa function
-        maa_time = self.identify_technology_research_and_time("Man-At-Arms", civilisation=self.civilisation)
+        maa_time = technologies_researched.get("Man-At-Arms", None)
         # time of first mill for maa function
-        self.all_mill_times = self.identify_building_and_timing("Mill")
-        first_mill_time = self.all_mill_times["timestamp"].min()
+        first_mill_time = mills_building_data["timestamp"].min()
 
         # identify drush and categorise into MAA/Pre-mill/Drush
         dark_age_approach = self.militia_based_strategy(
@@ -387,6 +415,7 @@ class GamePlayer:
                                 feudal_time: pd.Timedelta,
                                 castle_time: pd.Timedelta,
                                 units_queued: pd.DataFrame
+                                # TODO add military buildings
                                 ) -> pd.Series:
         """Draws out the base military decisions in feudal age, e.g. buildings created, number of units, etc.
 
@@ -402,11 +431,12 @@ class GamePlayer:
         :rtype: pd.Series
         """
         # get ranges and stables made in feudal
-        feudal_military_buildings = self.military_buildings_created.loc[
-            ((self.military_buildings_created["param"] == "Archery Range") |
-             (self.military_buildings_created["param"] == "Stable")) &
-            (self.military_buildings_created["timestamp"] > feudal_time) &
-            (self.military_buildings_created["timestamp"] < castle_time),
+        # TODO pass buildings as argument
+        feudal_military_buildings = self.buildings.loc[
+            ((self.buildings["Building"] == "Archery Range") |
+             (self.buildings["Building"] == "Stable")) &
+            (self.buildings["timestamp"] > feudal_time) &
+            (self.buildings["timestamp"] < castle_time),
             :
             ]
 
@@ -420,7 +450,7 @@ class GamePlayer:
             opening_timing = opening_timing.iloc[0]
 
         # Get the first military building made in feudal
-        opening_military_building = feudal_military_buildings.loc[feudal_military_buildings["timestamp"] == opening_timing, "param"]
+        opening_military_building = feudal_military_buildings.loc[feudal_military_buildings["timestamp"] == opening_timing, "Building"]
         if opening_military_building.empty:
             opening_military_building = "Towers/Barracks/FC" # TODO as above differentiate between them
         else:
@@ -459,15 +489,16 @@ class GamePlayer:
                                           castle_time: pd.Timedelta,
                                           player_eco_buildings: pd.DataFrame,
                                           player_walls: pd.DataFrame,
+                                          technologies: dict
                                           ) -> pd.Series:
 
         # TODO - extract information from the dark age: sheep, deer, boars, berries
         # dark_age_economic_development = self.extract_dark_age_economic_tactics()
 
         # Feudal age wood and farm upgrade;
-        double_bit_axe_time = self.identify_technology_research_and_time("Double-Bit Axe", civilisation=self.civilisation)
-        horse_collar_time = self.identify_technology_research_and_time("Horse Collar", civilisation=self.civilisation)
-        wheelbarrow_time = self.identify_technology_research_and_time("Wheelbarrow", civilisation=self.civilisation)
+        double_bit_axe_time = technologies.get("Double-Bit Axe", None)
+        horse_collar_time = technologies.get("Horse Collar", None)
+        wheelbarrow_time = technologies.get("Wheelbarrow", None)
 
         feudal_technology_times = pd.Series({"DoubleBitAxe": double_bit_axe_time,
                                              "HorseCollar": horse_collar_time,
@@ -1009,7 +1040,11 @@ class AgeGame:
 
         # Identify the opening strategy and choices of each player
         for player in self.players:
-            player_opening_strategies = player.full_player_choices_and_strategy()
+            player_opening_strategies = player.full_player_choices_and_strategy(feudal_time=player.age_up_times[2],
+                                                                                castle_time=player.age_up_times[3],
+                                                                                loom_time=player.technologies["Loom"],
+                                                                                end_of_game=player.actions_df["timestamp"].max()
+                                                                                )
             player_opening_strategies = player_opening_strategies.add_prefix(f"Player{player.number}.")
 
             location_and_civilisation = pd.concat([player.identify_civilisation(), player.identify_location()])

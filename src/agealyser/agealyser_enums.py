@@ -248,7 +248,7 @@ class TechnologyResearchTimes(Enum):
         try:
             cls[name]
         except KeyError:
-            print("Warning")
+            print("Warning: Can't find a technology that has been researched - the AOE Parser return '' for it. Likely it from a DLC")
             return False
         else:
             return True
