@@ -21,6 +21,7 @@ TODO - yet to publish
 - Refactor so that data structures are created on initialisation
 - Refactor so that methods do not have side effects and are easier to test
 - Consider above changes and update/modify API as necessary
+- Document data structures in AgePlayer
 
 ## Usage
 ### Modeling Structure and package API
