@@ -16,7 +16,7 @@ from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 # import utils
 
-from .agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
+from agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
     BuildTimesEnum,
     TechnologyResearchTimes,
     # UnitCreationTime,
@@ -27,7 +27,7 @@ from .agealyser_enums import (  # Getting a bit too cute here with constants but
     # SiegeWorkshopUnits
 )
 
-from .utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
+from utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -81,9 +81,20 @@ class GamePlayer:
 
         # all techs researched
         self.research_techs = self.inputs_df.loc[self.inputs_df["type"] == "Research", :]
+        
+        # self.age_up_times = {}  # TODO-Fork
 
         # Buildings created
         all_buildings_created = self.inputs_df.loc[(self.inputs_df["type"] == "Build") | (self.inputs_df["type"] == "Reseed"), :]
+        # TODO-Fork include castle and feudal times above from research techs
+        self.buildings = pd.concat([self.identify_building_and_timing(building_name=building,
+                                                                      buildings_data=all_buildings_created,
+                                                                      feudal_time=None,
+                                                                      castle_time=None,
+                                                                      imperial_time=None,
+                                                                      civilisation=self.civilisation)
+                                    for building in pd.unique(all_buildings_created["param"])])
+        
         # Split into military production buildings and everything else
         self.military_buildings_created = all_buildings_created[
             all_buildings_created.loc[:, "param"].isin(MilitaryBuildings)
@@ -213,7 +224,12 @@ class GamePlayer:
         # using len here handles multiple like a cancel and re-research
         return relevent_research.iloc[len(relevent_research) - 1] + pd.Timedelta(seconds=time_to_research) 
 
-    def identify_building_and_timing(self, building, civilisation: str = None) -> pd.DataFrame:
+    def identify_building_and_timing(self, building_name: str, 
+                                     buildings_data: pd.DataFrame,
+                                     feudal_time: pd.Timedelta | None,
+                                     castle_time: pd.Timedelta | None,
+                                     imperial_time: pd.Timedelta | None,
+                                     civilisation: str = None) -> pd.DataFrame:
         """Helper to find all the creations of an economic building type. TODO-Fork return age in dataframe
 
         :param building: the string name of the building. See enums for validation. Errors if incorrect
@@ -223,16 +239,16 @@ class GamePlayer:
         :rtype: pd.DataFrame
         """
 
-        enum_building_name = building.replace(" ", "_").replace("-", "_")  # TODO for cleanliness, think about handling this in Enum methods
+        enum_building_name = building_name.replace(" ", "_").replace("-", "_")  # TODO for cleanliness, think about handling this in Enum methods
 
         if not BuildTimesEnum.has_value(enum_building_name):
-            logger.error(f"Building given to find building method incorrect. Building was: {building}")
-            raise ValueError(f"Couldn't find building: {building}")
+            logger.error(f"Building given to find building method incorrect. Building was: {building_name}")
+            raise ValueError(f"Couldn't find building: {building_name}")
 
         time_to_build = BuildTimesEnum.get(enum_building_name, civilisation=civilisation)
 
-        relevent_building = self.economic_buildings_created.loc[
-            self.economic_buildings_created["param"] == building,
+        relevent_building = buildings_data.loc[
+            buildings_data["param"] == building_name,
             ["timestamp", "player", "payload.object_ids"]
             ]
         if relevent_building.empty:
@@ -243,6 +259,11 @@ class GamePlayer:
         relevent_building["TimeToBuild"] = (3*time_to_build)/(relevent_building["NumberVillsBuilding"] + 2)
         relevent_building["TimeToBuild"] = pd.to_timedelta(relevent_building["TimeToBuild"])
         relevent_building["timestamp"] = relevent_building["timestamp"] + relevent_building["TimeToBuild"]
+
+        # Age of building creation
+        relevent_building["Age"] = 1  # default is dark age
+        for index, time in enumerate([feudal_time, castle_time, imperial_time]):
+            relevent_building.loc[relevent_building["timestamp"] > time, "Age"] = index + 2  # +2 as need to map from 0= Feudal to Feudal = 2 and so on
 
         return relevent_building
 
