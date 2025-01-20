@@ -89,12 +89,16 @@ class GamePlayer:
             all_buildings_created.loc[:, "param"].isin(MilitaryBuildings)
             ].copy()
 
+        # TODO-Fork use building times to create datastructure with all relevant buildings
+
         self.economic_buildings_created = all_buildings_created[
             ~all_buildings_created.loc[:, "param"].isin(MilitaryBuildings)
             ].copy()
 
         # Player walls - Palisade Wall(s) and Stone Wall(s)
         self.player_walls = self.inputs_df.loc[self.inputs_df["type"] == "Wall", :]
+
+        # TODO-Fork get all relevant technologies and store them in a dictionary
 
         # Units and unqueing. Note that unqueuing is not possible to handle...
         self.queue_units = self.inputs_df.loc[self.inputs_df["type"] == "Queue", :]
@@ -127,6 +131,7 @@ class GamePlayer:
         else:
             self.siege_units = pd.DataFrame()
 
+        # TODO-Fork check this
         self.military_units = pd.concat([self.archery_units, self.stable_units, self.siege_units])
         # TODO - barracks, castle, donjon, dock. Lots of boiler plate
 
@@ -135,12 +140,13 @@ class GamePlayer:
 
         # Extract the key statistics / data points
         # research age timings and loom to mine out
+        # TODO-Fork move this to a data structure rather than in the method and pass as arguments
         self.feudal_time = self.identify_technology_research_and_time("Feudal Age", civilisation=self.civilisation)
         self.castle_time = self.identify_technology_research_and_time("Castle Age", civilisation=self.civilisation)
         self.loom_times = self.identify_technology_research_and_time("Loom", civilisation=self.civilisation)  # Get loom time
 
         # Handle if the game ends in feudal for this player
-        # TODO - think of a good way of handling this in the logic of the package
+        # TODO-Fork - think of a good way of handling this in the logic of the package
         if self.castle_time is None:
             self.castle_time = self.actions_df["timestamp"].max()  # end of the game
 
@@ -174,7 +180,7 @@ class GamePlayer:
         return pd.Series({"StartingLocation": self.starting_position})
 
     def identify_civilisation(self) -> pd.Series:
-        """Wrapper to return civilisation"""
+        """Wrapper to return civilisation pandas friendly"""
         return pd.Series({"Civilisation": self.civilisation})
 
     def identify_technology_research_and_time(self, technology: str, civilisation: str = None) -> pd.Timedelta:
@@ -208,7 +214,7 @@ class GamePlayer:
         return relevent_research.iloc[len(relevent_research) - 1] + pd.Timedelta(seconds=time_to_research) 
 
     def identify_building_and_timing(self, building, civilisation: str = None) -> pd.DataFrame:
-        """Helper to find all the creations of an economic building type.
+        """Helper to find all the creations of an economic building type. TODO-Fork return age in dataframe
 
         :param building: the string name of the building. See enums for validation. Errors if incorrect
         :param civilisations: player's civilisation, defaults to None
@@ -241,7 +247,7 @@ class GamePlayer:
         return relevent_building
 
     def extract_feudal_time_information(self, feudal_time: pd.Timedelta, loom_time: pd.Timedelta, civilisation: str = None) -> pd.Series:
-        """_summary_
+        """_summary_ TODO-Fork rename to remove time as time should be arg
 
         :param feudal_time: _description_
         :type feudal_time: datetime
@@ -538,6 +544,7 @@ class GamePlayer:
         """
         # Note on houses - include as a proxy for fortifying your map/walls in the mid game (feudal - castle)
         # Walls - # calculate chebyshev distance of each wall segment - sum in each age
+        # TODO-Fork move into datastructure
         palisade_walls = player_walls.loc[player_walls["payload.building"] == "Palisade Wall", :]
         # Calculate chebyshev distance between the wall start and end to get # of tiles
         palisade_walls["NumberTilesPlaced"] = palisade_walls.apply(lambda x: distance.chebyshev(

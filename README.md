@@ -17,6 +17,11 @@ I know there is a large section of the community that would love to run large sc
 ## Installation
 TODO - yet to publish
 
+## TODO
+- Refactor so that data structures are created on initialisation
+- Refactor so that methods do not have side effects and are easier to test
+- Consider above changes and update/modify API as necessary
+
 ## Usage
 ### Modeling Structure and package API
 **AgeMap** 
