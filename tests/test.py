@@ -15,12 +15,23 @@ def regression_testing():
     results = pd.concat([game.advanced_parser(include_map_analyses=True) for game in test_games], axis=1)
 
     # load the correct map results
-    correct_results = pd.read_csv("regression_testing_correct_results.csv")
+    correct_results = pd.read_csv(r"tests\\Test_Games\\regression_testing_correct_results.csv")
 
-    results.to_csv(r"tests\\Test_Games\\regression_testing_correct_results.csv")
+    for player in results[0].players:
+        player.inputs_df.to_csv(fr"tests\\Test_Games\\Game_Data_Structures\\Player{player.number}_inputs.csv")
+        player.actions_df.to_csv(fr"tests\\Test_Games\\Game_Data_Structures\\Player{player.number}_inputs.csv")
+        player.technologies.to_csv(fr"tests\\Test_Games\\Game_Data_Structures\\Player{player.number}_technologies.csv")
+        player.buildings.to_csv(fr"tests\\Test_Games\\Game_Data_Structures\\Player{player.number}_technologies.csv")
+        player.queue_units.to_csv(fr"tests\\Test_Games\\Game_Data_Structures\\Player{player.number}_queue.csv")
+        player.unqueue_units.to_csv(fr"tests\\Test_Games\\Game_Data_Structures\\Player{player.number}_unqueue.csv")
+        player.military_units.to_csv(fr"tests\\Test_Games\\Game_Data_Structures\\Player{player.number}_units.csv")
+
+
+
+    results.to_csv(r"tests\\Test_Games\\regression_testing_test_results.csv")
 
     assert pd.testing.assert_frame_equal(results, correct_results)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     regression_testing()
