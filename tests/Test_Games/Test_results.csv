@@ -2,7 +2,7 @@
 DifferenceInELO,89
 DistanceBetweenPlayers,77.78174593052023
 Player1.Archer,0
-Player1.Back,2
+Player1.Back,5
 Player1.Berries,Unknown
 Player1.Civilisation,Koreans
 Player1.DarkAgeIdleTime,9.325
@@ -20,7 +20,7 @@ Player1.MilitiaStrategyIdentified,
 Player1.NumberFeudalFarms,14
 Player1.NumberOfMilitiaUnits,0
 Player1.OpeningMilitaryBuilding,Stable
-Player1.OpeningMilitaryBuildingTime,0 days 00:09:04.063000
+Player1.OpeningMilitaryBuildingTime,0 days 00:09:04.063000037
 Player1.OpeningStrategy,Could not Identify!
 Player1.PostCastleWalls,0.0
 Player1.PreMillBarracks,False
@@ -40,7 +40,7 @@ Player1.TimeThreeFarms,0 days 00:10:25.508000
 Player1.Villagers,20
 Player1.Wheelbarrow,0 days 00:34:40.744000
 Player2.Archer,0
-Player2.Back,0
+Player2.Back,3
 Player2.Berries,Back
 Player2.Civilisation,Teutons
 Player2.DarkAgeIdleTime,23.95
@@ -58,7 +58,7 @@ Player2.MilitiaStrategyIdentified,
 Player2.NumberFeudalFarms,16
 Player2.NumberOfMilitiaUnits,0
 Player2.OpeningMilitaryBuilding,Stable
-Player2.OpeningMilitaryBuildingTime,0 days 00:08:52.077000
+Player2.OpeningMilitaryBuildingTime,0 days 00:08:52.077000037
 Player2.OpeningStrategy,Could not Identify!
 Player2.PostCastleWalls,0.0
 Player2.PreMillBarracks,False

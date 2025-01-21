@@ -15,11 +15,12 @@ def regression_testing():
     results = pd.concat([game.advanced_parser(include_map_analyses=True) for game in test_games], axis=1)
 
     # load the correct map results
-    # correct_results = pd.read_csv("regression_testing_correct_results.csv")
+    correct_results = pd.read_csv("regression_testing_correct_results.csv")
 
     results.to_csv(r"tests\\Test_Games\\regression_testing_correct_results.csv")
 
     assert pd.testing.assert_frame_equal(results, correct_results)
+
 
 if __name__=="__main__":
     regression_testing()

@@ -16,7 +16,7 @@ from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 # import utils
 
-from agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
+from .agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
     BuildTimesEnum,
     TechnologyResearchTimes,
     # UnitCreationTime,
@@ -27,7 +27,7 @@ from agealyser_enums import (  # Getting a bit too cute here with constants but 
     # SiegeWorkshopUnits
 )
 
-from utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
+from .utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -158,11 +158,10 @@ class GamePlayer:
         # research age timings and loom to mine out
 
         # Handle if the game ends in feudal for this player
-        # TODO-Fork - think of a good way of handling this in the logic of the package
         if castle_time is None:
-            castle_time = end_of_game  # end of the game TODO-Fork
+            castle_time = end_of_game  # end of the game
 
-        self.dark_age_stats = self.extract_feudal_time_information(
+        self.dark_age_stats = self.extract_feudal_uptime_info(
             feudal_time=feudal_time,
             loom_time=loom_time
         )
@@ -235,7 +234,7 @@ class GamePlayer:
                                      castle_time: pd.Timedelta | None,
                                      imperial_time: pd.Timedelta | None,
                                      civilisation: str = None) -> pd.DataFrame:
-        """Helper to find all the creations of an economic building type. TODO-Fork return age in dataframe
+        """Helper to find all the creations of an economic building type.
 
         :param building: the string name of the building. See enums for validation. Errors if incorrect
         :param civilisations: player's civilisation, defaults to None
@@ -273,7 +272,7 @@ class GamePlayer:
 
         return relevent_building
 
-    def extract_feudal_time_information(self, feudal_time: pd.Timedelta, loom_time: pd.Timedelta, civilisation: str = None) -> pd.Series:
+    def extract_feudal_uptime_info(self, feudal_time: pd.Timedelta, loom_time: pd.Timedelta, civilisation: str = None) -> pd.Series:
         """_summary_ TODO-Fork rename to remove time as time should be arg
 
         :param feudal_time: _description_
@@ -575,7 +574,6 @@ class GamePlayer:
         """
         # Note on houses - include as a proxy for fortifying your map/walls in the mid game (feudal - castle)
         # Walls - # calculate chebyshev distance of each wall segment - sum in each age
-        # TODO-Fork move into datastructure
         palisade_walls = player_walls.loc[player_walls["payload.building"] == "Palisade Wall", :]
         # Calculate chebyshev distance between the wall start and end to get # of tiles
         palisade_walls["NumberTilesPlaced"] = palisade_walls.apply(lambda x: distance.chebyshev(
@@ -1045,10 +1043,10 @@ class AgeGame:
                                                                                 loom_time=player.technologies["Loom"],
                                                                                 end_of_game=player.actions_df["timestamp"].max()
                                                                                 )
-            player_opening_strategies = player_opening_strategies.add_prefix(f"Player{player.number}.")
+            player_opening_strategies = player_opening_strategies.add_prefix(f"Player{player.number}.OpeningStrategy.")
 
             location_and_civilisation = pd.concat([player.identify_civilisation(), player.identify_location()])
-            location_and_civilisation = location_and_civilisation.add_prefix(f"Player{player.number}.")
+            location_and_civilisation = location_and_civilisation.add_prefix(f"Player{player.number}.MapAndCiv.")
 
             self.game_results = pd.concat([self.game_results, player_opening_strategies, location_and_civilisation])
 
