@@ -268,12 +268,13 @@ class GamePlayer:
         # Age of building creation
         relevent_building["Age"] = 1  # default is dark age
         for index, time in enumerate([feudal_time, castle_time, imperial_time]):
-            relevent_building.loc[relevent_building["timestamp"] > time, "Age"] = index + 2  # +2 as need to map from 0= Feudal to Feudal = 2 and so on
+            if time is not None:
+                relevent_building.loc[relevent_building["timestamp"] > time, "Age"] = index + 2  # +2 as need to map from 0= Feudal to Feudal = 2 and so on
 
         return relevent_building
 
     def extract_feudal_uptime_info(self, feudal_time: pd.Timedelta, loom_time: pd.Timedelta, civilisation: str = None) -> pd.Series:
-        """_summary_ TODO-Fork rename to remove time as time should be arg
+        """_summary_
 
         :param feudal_time: _description_
         :type feudal_time: datetime
@@ -284,13 +285,26 @@ class GamePlayer:
         :return: _description_
         :rtype: pd.Series
         """
-
+        # Need to remove the age up time which is built into the feudal time passed to this function
+        feudal_click_up_time = feudal_time - pd.Timedelta(seconds=TechnologyResearchTimes.get("Feudal_Age", civilisation=civilisation))
         loom_in_dark_age = loom_time < feudal_time
+        if loom_in_dark_age:
+            # Need to also remove loom if it was before feudal
+            feudal_click_up_time - pd.Timedelta(seconds=TechnologyResearchTimes.get("Loom", civilisation=civilisation))
+        villager_creation_time = 25 if civilisation != "Persians" else 25*0.95  # Persians in dark age produce 5% faster
 
-        villager_creation_time = 25  # TODO handle other civs that have special things like chinese, Mayans, Hindustanis
-
-        villager_analysis = feudal_time / villager_creation_time
-        number_villagers = villager_analysis.seconds
+        # This basically gives us a float where seconds = int of villagers and ms = % of vil idle time
+        villager_analysis = feudal_click_up_time / villager_creation_time
+        
+        # Get final integer number of villagers - handle Chinese and Mayans
+        number_villagers = villager_analysis.seconds + 3  # 3 for starting villagers
+        if civilisation == "Mayans":
+            number_villagers += 1
+        if civilisation == "Chinese":
+            # assume approx two - a skilled player can get this to near 2.5, which may lead to innaccurate results
+            number_villagers += 2
+        
+        # Get idle time from ms in timedelta
         dark_age_idle_time = (villager_analysis._ms * villager_creation_time) / 1000  # convert ms to s, this is % of villager time
 
         feudal_stats_to_return = {"FeudalTime": feudal_time,
@@ -1052,8 +1066,8 @@ class AgeGame:
 
         # Distance between players
         self.game_results["DistanceBetweenPlayers"] = self.calculate_distance_between_players(
-            location_one=self.game_results["Player1.StartingLocation"],
-            location_two=self.game_results["Player2.StartingLocation"]
+            location_one=self.game_results["Player1.MapAndCiv.StartingLocation"],
+            location_two=self.game_results["Player2.MapAndCiv.StartingLocation"]
         )
 
         # Elo difference between players - negative is winner is lower elo

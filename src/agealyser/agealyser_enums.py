@@ -31,6 +31,7 @@ class BuildTimesEnum(Enum):
     Bombard_Tower = 80
     Castle = 200
     Dock = 35
+    Donjon = 83
     Farm = 15
     Fish_Trap = 53
     Fortified_Wall = 8
@@ -45,6 +46,7 @@ class BuildTimesEnum(Enum):
     Monastery = 40
     Outpost = 15
     Palisade_Wall = 5
+    Palisade_Gate = 30
     Siege_Workshop = 40
     Stable = 50
     Stone_Wall = 8
@@ -171,8 +173,9 @@ class TechnologyResearchTimes(Enum):
     Halberdier = 50
     Hand_Cart = 55
     Heated_Shot = 30
-    Heavy_Camel = 125
+    Heavy_Camel_Rider = 125
     Heavy_Cavalry_Archer = 50
+    Heavy_Cav_Archer = 50
     Heavy_Demolition_Ship = 50
     Heavy_Plow = 40
     Heavy_Scorpion = 50
@@ -184,11 +187,12 @@ class TechnologyResearchTimes(Enum):
     Hussar = 50
     Illumination = 65
     Imperial_Age = 190
+    Imperial_Camel_Rider = 0  # TODO
     Iron_Casting = 70
     Kataparuto = 60
     Keep = 75
     Leather_Archer_Armor = 55
-    Ligth_Cavalry = 45
+    Light_Cavalry = 45
     Logistica = 50
     Long_Swordman = 45
     Loom = 25
@@ -211,6 +215,7 @@ class TechnologyResearchTimes(Enum):
     Sappers = 10
     Scale_Barding_Armor = 45
     Scale_Mail_Armor = 40
+    Shatagni = 0  # TODO
     Shinkichon = 60
     Shipwright = 60
     Siege_Engineers = 45
@@ -220,6 +225,7 @@ class TechnologyResearchTimes(Enum):
     Squires = 40
     Stone_Mining = 30
     Stone_Shaft_Mining = 75
+    Sultans = 0  # TODO not finished
     Supremacy = 60
     Theocracy = 75
     Thumb_Ring = 45
@@ -232,6 +238,7 @@ class TechnologyResearchTimes(Enum):
     Two_Man_Saw = 100
     War_Galley = 50
     Wheelbarrow = 75
+    Winged_Hussar = 0  # TODO
     Yeomen = 60
     Zealotry = 50
     OVERRIDES = {
