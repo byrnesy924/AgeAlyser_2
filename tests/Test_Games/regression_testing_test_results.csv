@@ -1,0 +1,79 @@
+,0,1,2
+Player1.OpeningStrategy.FeudalTime,0 days 00:08:48.008000,0 days 00:12:28.202000,0 days 00:08:29.327000
+Player1.OpeningStrategy.Villagers,18,27,18
+Player1.OpeningStrategy.DarkAgeIdleTime,23.0,18.2,4.325
+Player1.OpeningStrategy.DarkAgeLoom,True,True,True
+Player1.OpeningStrategy.OpeningStrategy,Scouts into archers,Straight Archers,Could not Identify!
+Player1.OpeningStrategy.FirstBarracksTime,0 days 00:07:32.452000,0 days 00:04:52.799000,0 days 00:07:27.382000
+Player1.OpeningStrategy.MilitiaStrategyIdentified,,,
+Player1.OpeningStrategy.NumberOfMilitiaUnits,0,0,0
+Player1.OpeningStrategy.PreMillBarracks,False,True,False
+Player1.OpeningStrategy.OpeningMilitaryBuildingTime,0 days 00:09:30.188000,0 days 00:13:30.825000,0 days 00:09:19.743000
+Player1.OpeningStrategy.OpeningMilitaryBuilding,Stable,Archery Range,Stable
+Player1.OpeningStrategy.Archer,17,4,0
+Player1.OpeningStrategy.Scout Cavalry,7,0,34
+Player1.OpeningStrategy.Skirmisher,0,0,0
+Player1.OpeningStrategy.Spearman,0,0,0
+Player1.OpeningStrategy.DoubleBitAxe,0 days 00:09:20.327000,0 days 00:14:15.908000,0 days 00:08:57.577000
+Player1.OpeningStrategy.HorseCollar,0 days 00:09:37.674000,0 days 00:26:36.575000,0 days 00:09:43.368000
+Player1.OpeningStrategy.Wheelbarrow,0 days 00:34:01.748000,0 days 00:26:50.547000,0 days 00:25:18.787000
+Player1.OpeningStrategy.NumberFeudalFarms,19,0,24
+Player1.OpeningStrategy.TimeThreeFarms,0 days 00:09:54.230000,,0 days 00:10:01.146000
+Player1.OpeningStrategy.TimeSixFarms,0 days 00:12:07.883000,,0 days 00:10:44.618000
+Player1.OpeningStrategy.TimeTenFarms,0 days 00:14:19.716000,,0 days 00:13:11.674000
+Player1.OpeningStrategy.TimeFifteenFarms,0 days 00:15:24.313000,,0 days 00:16:12.875000
+Player1.OpeningStrategy.TimeTwentyFarms,0 days 00:19:28.466000,,0 days 00:17:42.065000
+Player1.OpeningStrategy.DarkAgeWallsNumber,0.0,46.0,0.0
+Player1.OpeningStrategy.FeudalWallsNumber,18.0,0.0,11.0
+Player1.OpeningStrategy.PostCastleWalls,3.0,0.0,0.0
+Player1.OpeningStrategy.FeudalHousesBuilt,0.0,1.0,15.0
+Player1.MapAndCiv.Civilisation,Huns,Ethiopians,Hindustanis
+Player1.MapAndCiv.StartingLocation,"(21.0, 69.0)","(21.0, 69.0)","(33.0, 28.0)"
+Player2.OpeningStrategy.FeudalTime,0 days 00:09:17.258000,0 days 00:08:48.424000,0 days 00:08:49.243000
+Player2.OpeningStrategy.Villagers,20,18,18
+Player2.OpeningStrategy.DarkAgeIdleTime,2.25,23.4,24.225
+Player2.OpeningStrategy.DarkAgeLoom,True,False,True
+Player2.OpeningStrategy.OpeningStrategy,Scouts into Full Feudal,Archers and Skirms,Scouts into archers
+Player2.OpeningStrategy.FirstBarracksTime,0 days 00:07:24.119000,,0 days 00:07:42.007000
+Player2.OpeningStrategy.MilitiaStrategyIdentified,,,
+Player2.OpeningStrategy.NumberOfMilitiaUnits,0,0,0
+Player2.OpeningStrategy.PreMillBarracks,False,False,False
+Player2.OpeningStrategy.OpeningMilitaryBuildingTime,0 days 00:10:08.077000,0 days 00:11:22.021000,0 days 00:09:30.591000
+Player2.OpeningStrategy.OpeningMilitaryBuilding,Stable,Archery Range,Stable
+Player2.OpeningStrategy.Archer,4,6,19
+Player2.OpeningStrategy.Scout Cavalry,5,0,9
+Player2.OpeningStrategy.Skirmisher,8,7,0
+Player2.OpeningStrategy.Spearman,0,0,0
+Player2.OpeningStrategy.DoubleBitAxe,0 days 00:09:44.299000,0 days 00:09:47.952000,0 days 00:09:32.118000
+Player2.OpeningStrategy.HorseCollar,0 days 00:09:40.105000,0 days 00:11:01.160000,0 days 00:10:19.521000
+Player2.OpeningStrategy.Wheelbarrow,,0 days 00:25:30.922000,0 days 00:23:58.461000
+Player2.OpeningStrategy.NumberFeudalFarms,18,15,31
+Player2.OpeningStrategy.TimeThreeFarms,0 days 00:10:05.397000,0 days 00:11:32.575000,0 days 00:10:23.077000
+Player2.OpeningStrategy.TimeSixFarms,0 days 00:11:25.230000,0 days 00:11:59.992000,0 days 00:13:05.577000
+Player2.OpeningStrategy.TimeTenFarms,0 days 00:12:22.105000,0 days 00:14:31.728000,0 days 00:14:11.188000
+Player2.OpeningStrategy.TimeFifteenFarms,0 days 00:13:36.452000,0 days 00:18:28.575000,0 days 00:14:12.007000
+Player2.OpeningStrategy.TimeTwentyFarms,,,0 days 00:14:13.021000
+Player2.OpeningStrategy.DarkAgeWallsNumber,6.0,30.0,0.0
+Player2.OpeningStrategy.FeudalWallsNumber,12.0,0.0,21.0
+Player2.OpeningStrategy.PostCastleWalls,0.0,0.0,0.0
+Player2.OpeningStrategy.FeudalHousesBuilt,22.0,15.0,17.0
+Player2.MapAndCiv.Civilisation,Celts,Sicilians,Poles
+Player2.MapAndCiv.StartingLocation,"(99.0, 53.0)","(98.0, 54.0)","(99.0, 62.0)"
+DistanceBetweenPlayers,79.62411694957753,78.44743462982075,74.24284477308234
+DifferenceInELO,-7,189,-141
+Player1.MainGold,Front,Front,Front Hill
+Player1.ThirdGold,Unknown,Back,Back
+Player1.SecondGold,Back,Back,Back
+Player1.Berries,Back,Back,Unknown
+Player1.Stone,Unknown,Unknown,Unknown
+Player1.Front,1,1,2
+Player1.Side,2,2,1
+Player1.Back,1,5,2
+Player2.MainGold,Front Hill,Front,Front Hill
+Player2.ThirdGold,Back,Back,Back
+Player2.SecondGold,Back,Back,Unknown
+Player2.Berries,Back,Back,Back
+Player2.Stone,Back,Unknown,Unknown
+Player2.Front,1,2,1
+Player2.Side,1,0,2
+Player2.Back,4,5,4
