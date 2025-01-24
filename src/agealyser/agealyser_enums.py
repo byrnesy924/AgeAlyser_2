@@ -15,12 +15,14 @@ ArcheryRangeUnits: Final[List[str]] = ["Skirmisher", "Archer", "Cavalry Archer",
 
 StableUnits: Final[List[str]] = ["Scout Cavalry", "Knight", "Camel Rider", "Battle Elephant", "Steppe Lancer", "Tarkan", "Shrivamsha Rider"]
 
+# TODO include technologies in these units so that they can be modelled
 BarracksUnits: Final[List[str]] = ["Militia", "Spearman", "Eagle Scout", "Condottiero", "Huskarl", "Flemish Militia"]
 
 SiegeWorkshopUnits: Final[List[str]] = ["Battering Ram", "Armoured Elephant", "Mangonel", "Scorpion", "Siege Tower", "Bombard Cannon"]
 
 ProductionBuildings: Final[List[str]] = ["Archery Range", "Barracks", "Castle", "Donjon", "Krepost", "Stable", "Siege Workshop", "Dock", ""]
 
+TownCentreUnitsAndTechs: Final[List[str]] = ["Villager", "Loom", "Wheelbarrow", "Hand Cart", "Town Watch", "Town Patrol", "Feudal Age", "Castle Age", "Imperial Age"]
 
 class BuildTimesEnum(Enum):
     """Enum of building times with override
@@ -291,6 +293,17 @@ class TechnologyResearchTimes(Enum):
 
 
 class UnitCreationTime(Enum):
+    # Technologies that are researched at a production building are put in here just so the code is shorter, see the production buildings
+    # Town Centre
+    Castle_Age = TechnologyResearchTimes.get("Castle_Age", "")
+    Feudal_Age = TechnologyResearchTimes.get("Feudal_Age", "")
+    Imperial_Age = TechnologyResearchTimes.get("Imperial_Age", "")
+    Loom = TechnologyResearchTimes.get("Loom", "")
+    Town_Watch = TechnologyResearchTimes.get("Town_Watch", "")
+    Town_Patrol = TechnologyResearchTimes.get("Town_Patrol", "")
+    Wheelbarrow = TechnologyResearchTimes.get("Wheelbarrow", "")
+
+    # actual units below
     Arbalest = 27
     Archer = 35
     Armored_Elephant = 36

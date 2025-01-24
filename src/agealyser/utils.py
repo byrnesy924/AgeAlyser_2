@@ -8,7 +8,8 @@ from agealyser.agealyser_enums import (  # Getting a bit too cute here with cons
     UnitCreationTime,
     ArcheryRangeUnits,
     StableUnits,
-    SiegeWorkshopUnits
+    SiegeWorkshopUnits,
+    TownCentreUnitsAndTechs
 
 )
 
@@ -246,6 +247,55 @@ class SiegeWorkshop(ProductionBuilding):
         return self._player
 
 
+class TownCentre(ProductionBuilding):
+    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> None:
+        self._building_type = building_type
+        self._units = units  # Include techs like Loom, Wheelbarrow, etc.
+        self._id = id
+        self._x = x
+        self._y = y
+        self._data = data
+        self._player = player
+
+    def produce_units(self) -> pd.DataFrame:
+        return super().produce_units(self._data, UnitCreationTime)
+
+    def apply_unit_upgrades(self) -> pd.DataFrame:
+        """Boiler plate should never be called"""
+        return super().apply_unit_upgrades()
+
+    def count_building_idle_time(self) -> int:
+        return super().count_building_idle_time()
+
+    @property
+    def building_type(self):
+        return self._building_type  # string type
+
+    @property
+    def units(self):
+        return self._units  # CONST list of units
+
+    @property
+    def id(self):
+        return self._id  # Building's ID
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def player(self):
+        return self._player
+
+
 class AbstractProductionBuildingFactory(ABC):
     """This Factory solves the complex problem of identifying production buildings in the input data and creating the correct
     Production Building Object, with its type, location, and, critically, its ID!
@@ -266,7 +316,7 @@ class AbstractProductionBuildingFactory(ABC):
 
         relevent_buildings_produced = relevent_buildings_produced[["timestamp", "payload.object_ids", "param", "position.x", "position.y"]]
 
-        relevent_units_queued = inputs_data.loc[inputs_data["param"].isin(units)]
+        relevent_units_queued = inputs_data.loc[inputs_data["param"].isin(units)]  # 24 Jan note units now includes TECHNOLOGIES
 
         # Discovery - the payload object IDs are the buildings queued in. This is a list of buildings
         # so - split them up by building and assign accordingly.
@@ -327,6 +377,28 @@ class SiegeWorkshopProductionBuildingFactory(AbstractProductionBuildingFactory):
     def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame, player: int):
         return super().create_production_building_and_remove_used_id("Siege Workshop", SiegeWorkshopUnits, inputs_data, player=player)
 
+
+class TownCentreBuildingFactory(AbstractProductionBuildingFactory):
+    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> ProductionBuilding:
+        return TownCentre(building_type=building_type, units=TownCentreUnitsAndTechs, id=id, x=x, y=y, data=data, player=player)
+
+    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame, player: int, position_x: float = None, position_y: float = None):
+        # Hack for town centres - in non-Nomad games, we need to add a line for the first town centre because it is not built
+        check_for_build_town_centre = inputs_data.loc[(inputs_data["type"] == "Build") &
+                                                      (inputs_data["param"] == "Town Center") &
+                                                      (inputs_data["timestamp"] < pd.Timedelta(seconds=100)), :]  # give 100 seconds incase of Nomad start
+
+        if check_for_build_town_centre.empty:
+            # Create the data for this
+            id_of_first_tc = inputs_data.loc[inputs_data["param"] == "Villager", "payload.object_ids"].min()  # Hack - get this from the villagers created
+            initial_tc_cols = ["timestamp", "type", "param", "player", "payload.object_ids", "position.x", "position.y"]
+            initial_tc_vals = [[pd.Timedelta(-150), "Build", "Town Center", player, id_of_first_tc, position_x, position_y]]  # note -150 as takes 150 seconds to build
+
+            tc_df = pd.DataFrame(initial_tc_vals, columns=initial_tc_cols)
+            # concat it onto the inputs data and then the rest of the logic should handle correctly
+            inputs_data = pd.concat([tc_df, inputs_data], ignore_index=True)
+
+        return super().create_production_building_and_remove_used_id("Town Center", TownCentreUnitsAndTechs, inputs_data, player=player)
 
 # TODO - Castle, Dock, Monastery, etc.
 

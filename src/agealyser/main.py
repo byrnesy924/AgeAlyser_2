@@ -22,12 +22,18 @@ from .agealyser_enums import (  # Getting a bit too cute here with constants but
     # UnitCreationTime,
     MilitaryBuildings,
     FeudalAgeMilitaryUnits,
+    TownCentreUnitsAndTechs,
     # ArcheryRangeUnits,
     # StableUnits,
     # SiegeWorkshopUnits
 )
 
-from .utils import ArcheryRangeProductionBuildingFactory, StableProductionBuildingFactory, SiegeWorkshopProductionBuildingFactory
+from .utils import (
+    ArcheryRangeProductionBuildingFactory,
+    StableProductionBuildingFactory,
+    SiegeWorkshopProductionBuildingFactory,
+    TownCentreBuildingFactory
+)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='AdvancedParser.log', encoding='utf-8', level=logging.DEBUG)
@@ -76,6 +82,15 @@ class GamePlayer:
         self.inputs_df["timestamp"] = self.inputs_df["timestamp"].astype("timedelta64[ns]")
         self.actions_df["timestamp"] = self.inputs_df["timestamp"].astype("timedelta64[ns]")
 
+        # discovered an issue where records would be duplicated with around 0.2s apart
+        # iterate through df. Identify duplicate records, then drop one if necessary
+        to_drop_inputs = self.inputs_df[(self.inputs_df['timestamp'].diff() < pd.Timedelta(seconds=0.25)) &
+                                        (self.inputs_df['timestamp'] > pd.Timedelta(seconds=20)) &
+                                        (self.inputs_df.loc[:, ["type", "param", "payload.object_ids"]].eq(self.inputs_df.loc[:, ["type", "param", "payload.object_ids"]].shift(1)).all(axis=1))]
+        to_drop_inputs = to_drop_inputs.loc[to_drop_inputs["type"] == "Queue", :]  # remove anything that is not Queue after
+
+        self.inputs_df = self.inputs_df.drop(to_drop_inputs.index)
+
         # self.actions_df.to_csv(Path(f"DataExploration/Player{self.number}_actions.csv"))
         # self.inputs_df.to_csv(Path(f"DataExploration/Player{self.number}_inputs.csv"))
 
@@ -89,6 +104,24 @@ class GamePlayer:
                                                                               civilisation=civilisation)
                              for tech in pd.unique(research_techs["param"])}
 
+        # Create model form town centre productions, including technologies. The reason to do here is to overwrite research times for age up and Loom/Wheel
+        self.town_centres = TownCentreBuildingFactory().create_production_building_and_remove_used_id(
+            inputs_data=self.inputs_df,
+            player=self.number,
+            position_x=self.starting_position[0],
+            position_y=self.starting_position[1]
+        )
+        if not self.town_centres:
+            raise ValueError(f"Found no town centres for this player. Without this, cannot accurately parse game")
+        else: 
+            self.tc_units_and_techs = pd.concat([tc_.produce_units() for tc_ in self.town_centres])
+        
+        # update research times and age up times after proper unit production
+        for research in TownCentreUnitsAndTechs:
+            if research == "Villager":  # Ignore units of course
+                continue
+            self.technologies[research] = self.tc_units_and_techs.loc[self.tc_units_and_techs["param"] == research, "UnitCreatedTimestamp"]
+
         # dict for quickly accessing age up times (not click up times)
         self.age_up_times = {index + 2: self.identify_technology_research_and_time(age, research_techs, civilisation=self.civilisation)
                              for index, age in enumerate(["Feudal Age", "Castle Age", "Imperial Age"])}
@@ -101,7 +134,7 @@ class GamePlayer:
                                                                       castle_time=self.age_up_times[3],
                                                                       imperial_time=self.age_up_times[4],
                                                                       civilisation=self.civilisation)
-                                    for building in pd.unique(all_buildings_created["param"])])
+                                    for building in pd.unique(all_buildings_created["param"])]).sort_values("timestamp")
         
         # Split into military production buildings and everything else
         # TODO check if this is used anywhere
@@ -120,6 +153,9 @@ class GamePlayer:
         self.queue_units = self.inputs_df.loc[self.inputs_df["type"] == "Queue", :]
         self.unqueue_units = self.inputs_df.loc[self.inputs_df["type"] == "Unqueue", :]
 
+        # Create models for archery ranges, stables etc.
+        # These production buildings allow us to see when a unit is CREATED rather than queued. Otherwise, we only see the time
+        # the player clicks the unit/technology etc, not when it is completed.
         self.archery_ranges = ArcheryRangeProductionBuildingFactory().create_production_building_and_remove_used_id(
             inputs_data=self.inputs_df,
             player=self.number
@@ -262,7 +298,7 @@ class GamePlayer:
         relevent_building["Building"] = building_name
         relevent_building["NumberVillsBuilding"] = relevent_building["payload.object_ids"].apply(lambda x: len(x))
         relevent_building["TimeToBuild"] = (3*time_to_build)/(relevent_building["NumberVillsBuilding"] + 2)
-        relevent_building["TimeToBuild"] = pd.to_timedelta(relevent_building["TimeToBuild"])
+        relevent_building["TimeToBuild"] = pd.to_timedelta(relevent_building["TimeToBuild"], unit="s")
         relevent_building["timestamp"] = relevent_building["timestamp"] + relevent_building["TimeToBuild"]
 
         # Age of building creation
@@ -303,7 +339,7 @@ class GamePlayer:
         if civilisation == "Chinese":
             # assume approx two - a skilled player can get this to near 2.5, which may lead to innaccurate results
             number_villagers += 2
-        
+
         # Get idle time from ms in timedelta
         dark_age_idle_time = (villager_analysis._ms * villager_creation_time) / 1000  # convert ms to s, this is % of villager time
 
@@ -562,7 +598,7 @@ class GamePlayer:
                                    "TimeSixFarms": None,
                                    "TimeTenFarms": None,
                                    "TimeFifteenFarms": None,
-                                   "TimeTentyFarms": None
+                                   "TimeTwentyFarms": None
                                    })
         # Iterate through the number of farms, with the series key and the index number
         for key, farms_number in zip(farms_results.index.to_list(), [2, 5, 9, 14, 19]):
