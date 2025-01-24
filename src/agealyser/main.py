@@ -120,6 +120,7 @@ class GamePlayer:
         for research in TownCentreUnitsAndTechs:
             if research == "Villager":  # Ignore units of course
                 continue
+        # TODO check this is accurate
             self.technologies[research] = self.tc_units_and_techs.loc[self.tc_units_and_techs["param"] == research, "UnitCreatedTimestamp"]
 
         # dict for quickly accessing age up times (not click up times)
