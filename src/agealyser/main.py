@@ -121,7 +121,9 @@ class GamePlayer:
             if research == "Villager":  # Ignore units of course
                 continue
         # TODO check this is accurate
-            self.technologies[research] = self.tc_units_and_techs.loc[self.tc_units_and_techs["param"] == research, "UnitCreatedTimestamp"]
+            self.technologies[research] = self.tc_units_and_techs.loc[self.tc_units_and_techs["param"] == research,
+                                                                      "UnitCreatedTimestamp"
+                                                                      ].to_list()[0]  # need to extract data rather than a series object
 
         # dict for quickly accessing age up times (not click up times)
         self.age_up_times = {index + 2: self.identify_technology_research_and_time(age, research_techs, civilisation=self.civilisation)
@@ -324,7 +326,8 @@ class GamePlayer:
         """
         # Need to remove the age up time which is built into the feudal time passed to this function
         feudal_click_up_time = feudal_time - pd.Timedelta(seconds=TechnologyResearchTimes.get("Feudal_Age", civilisation=civilisation))
-        loom_in_dark_age = loom_time < feudal_time
+        loom_in_dark_age = loom_time < feudal_time  # Returns a series where the only entry is true
+        loom_in_dark_age = loom_in_dark_age.to_list()[0]  # retrieve the Bool
         if loom_in_dark_age:
             # Need to also remove loom if it was before feudal
             feudal_click_up_time - pd.Timedelta(seconds=TechnologyResearchTimes.get("Loom", civilisation=civilisation))
@@ -414,9 +417,12 @@ class GamePlayer:
                 strategy = "Full scouts or Scouts into Castle"
             case (_, _, _, _, _):
                 strategy = "Could not Identify!"
-                logger.warning("Couldn't identify this strategy")
-
-        # Map approximately to known strategies
+                v1, v2, v3, v4, v5 = (dark_age_approach["MilitiaStrategyIdentified"],
+                                      feudal_approach["OpeningMilitaryBuilding"],
+                                      feudal_approach["Archer"] > 0,
+                                      feudal_approach["Skirmisher"] > 0,
+                                      feudal_approach["Scout Cavalry"] > 0)
+                logger.warning(f"Couldn't identify strategy. Dark Age: {v1}, Building: {v2}, Archers, Skirms, Scouts:{v3, v4, v5}")
         return pd.concat([pd.Series({"OpeningStrategy": strategy}), dark_age_approach, feudal_approach])
 
     def militia_based_strategy(self,
@@ -430,6 +436,11 @@ class GamePlayer:
         # Identify key timings and choices associated with these strategies
         dark_age_feudal_barracks = military_buildings_spawned.loc[(military_buildings_spawned["param"] == "Barracks") &
                                                                   (military_buildings_spawned["timestamp"] < castle_time), :]
+        dark_age_feudal_barracks = self.identify_building_and_timing("Barracks",
+                                                                     dark_age_feudal_barracks,
+                                                                     feudal_time=None,
+                                                                     castle_time=castle_time,
+                                                                     civilisation=self.civilisation)
         first_barracks_time = dark_age_feudal_barracks["timestamp"].min()
         pre_mill_barracks = first_barracks_time < mill_created_time
         if units_created.empty:
@@ -593,6 +604,11 @@ class GamePlayer:
             (player_eco_buildings["timestamp"] < castle_time),
             :
         ]
+        farms_in_feudal = self.identify_building_and_timing("Farm",
+                                                            farms_in_feudal,
+                                                            feudal_time,
+                                                            castle_time,
+                                                            self.civilisation)
         number_farms_made = len(farms_in_feudal)
         # time of 3, 6, 10, 15, 20 farms
         farms_results = pd.Series({"TimeThreeFarms": None,
