@@ -302,6 +302,7 @@ class UnitCreationTime(Enum):
     Town_Watch = TechnologyResearchTimes.get("Town_Watch", "")
     Town_Patrol = TechnologyResearchTimes.get("Town_Patrol", "")
     Wheelbarrow = TechnologyResearchTimes.get("Wheelbarrow", "")
+    Hand_Cart = TechnologyResearchTimes.get("Hand_Cart", "")
 
     # actual units below
     Arbalest = 27
