@@ -121,9 +121,12 @@ class GamePlayer:
             if research == "Villager":  # Ignore units of course
                 continue
         # TODO check this is accurate
-            self.technologies[research] = self.tc_units_and_techs.loc[self.tc_units_and_techs["param"] == research,
-                                                                      "UnitCreatedTimestamp"
-                                                                      ].to_list()[0]  # need to extract data rather than a series object
+            if not self.tc_units_and_techs.loc[self.tc_units_and_techs["param"] == research,
+                                               "UnitCreatedTimestamp"
+                                               ].empty:
+                self.technologies[research] = self.tc_units_and_techs.loc[self.tc_units_and_techs["param"] == research,
+                                                                          "UnitCreatedTimestamp"
+                                                                          ].to_list()[0]  # need to extract data rather than a series object
 
         # dict for quickly accessing age up times (not click up times)
         self.age_up_times = {index + 2: self.identify_technology_research_and_time(age, research_techs, civilisation=self.civilisation)
@@ -297,7 +300,7 @@ class GamePlayer:
         if relevent_building.empty:
             # TODO log this and return empty data frame but with correct columns - handle accordingly
             return relevent_building
-        
+
         relevent_building["Building"] = building_name
         relevent_building["NumberVillsBuilding"] = relevent_building["payload.object_ids"].apply(lambda x: len(x))
         relevent_building["TimeToBuild"] = (3*time_to_build)/(relevent_building["NumberVillsBuilding"] + 2)
@@ -327,7 +330,9 @@ class GamePlayer:
         # Need to remove the age up time which is built into the feudal time passed to this function
         feudal_click_up_time = feudal_time - pd.Timedelta(seconds=TechnologyResearchTimes.get("Feudal_Age", civilisation=civilisation))
         loom_in_dark_age = loom_time < feudal_time  # Returns a series where the only entry is true
-        loom_in_dark_age = loom_in_dark_age.to_list()[0]  # retrieve the Bool
+        if isinstance(loom_in_dark_age, pd.Series):
+            loom_in_dark_age = loom_in_dark_age.to_list()[0]  # retrieve the Bool
+
         if loom_in_dark_age:
             # Need to also remove loom if it was before feudal
             feudal_click_up_time - pd.Timedelta(seconds=TechnologyResearchTimes.get("Loom", civilisation=civilisation))
@@ -440,6 +445,7 @@ class GamePlayer:
                                                                      dark_age_feudal_barracks,
                                                                      feudal_time=None,
                                                                      castle_time=castle_time,
+                                                                     imperial_time=None,
                                                                      civilisation=self.civilisation)
         first_barracks_time = dark_age_feudal_barracks["timestamp"].min()
         pre_mill_barracks = first_barracks_time < mill_created_time
@@ -608,6 +614,7 @@ class GamePlayer:
                                                             farms_in_feudal,
                                                             feudal_time,
                                                             castle_time,
+                                                            None,
                                                             self.civilisation)
         number_farms_made = len(farms_in_feudal)
         # time of 3, 6, 10, 15, 20 farms
@@ -618,7 +625,7 @@ class GamePlayer:
                                    "TimeTwentyFarms": None
                                    })
         # Iterate through the number of farms, with the series key and the index number
-        for key, farms_number in zip(farms_results.index.to_list(), [2, 5, 9, 14, 19]):
+        for key, farms_number in zip(farms_results.index.to_list(), [3, 6, 10, 15, 20]):
             if number_farms_made >= farms_number:
                 # Need guard statement incase dataframe is not long enough
                 farms_results.loc[key] = farms_in_feudal.iloc[farms_number-1, :]["timestamp"]
