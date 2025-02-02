@@ -360,11 +360,12 @@ class GamePlayer:
             number_villagers += 2
 
         # Get idle time from ms in timedelta
-        dark_age_idle_time = (villager_analysis._ms * villager_creation_time) / 1000  # convert ms to s, this is % of villager time
+        # TODO-Feature this is no longer correct because of innaccuracies in Feudal Time calculation from mgz package
+        # dark_age_idle_time = (villager_analysis._ms * villager_creation_time) / 1000  # convert ms to s, this is % of villager time
 
         feudal_stats_to_return = {"FeudalTime": feudal_time,
                                   "Villagers": number_villagers,
-                                  "DarkAgeIdleTime": dark_age_idle_time,
+                                  # "DarkAgeIdleTime": dark_age_idle_time,  
                                   "DarkAgeLoom": loom_in_dark_age}
 
         return pd.Series(feudal_stats_to_return)
@@ -385,6 +386,7 @@ class GamePlayer:
 
         # identify drush and categorise into MAA/Pre-mill/Drush
         dark_age_approach = self.militia_based_strategy(
+            feudal_time=feudal_time,
             castle_time=castle_time,
             military_buildings_spawned=military_buildings_spawned,
             mill_created_time=first_mill_time,
@@ -404,7 +406,7 @@ class GamePlayer:
                feudal_approach["Archer"] > 0,
                feudal_approach["Skirmisher"] > 0,
                feudal_approach["Scout Cavalry"] > 0,
-               feudal_time > pd.Timedelta(seconds=25*27)):  # arbitrarily pick 26 vils + loom for feudal time
+               feudal_time > pd.Timedelta(seconds=25*26)):  # arbitrarily pick 25 vils + loom for fastle castle feudal time
             case ("Drush", "Archery Range", _, _, _, True):
                 strategy = "Drush FC"
             case ("Drush", "Archery Range", _, _, _, False): 
@@ -421,6 +423,8 @@ class GamePlayer:
                 strategy = "Archery Range into Full Feudal"
             case (_, "Stable", True, True, True, _):
                 strategy = "Scouts into Full Feudal"
+            case (_, "Stable", False, False, True, _):
+                strategy = "Full Scouts"
             case (_, "Archery Range", True, True, _, _):
                 strategy = "Archers and Skirms"
             case (_, "Archery Range", True, _, True, _):
@@ -435,8 +439,8 @@ class GamePlayer:
                 strategy = "Straight Archers"
             case (_, "Archery Range", False, True, False, _):
                 strategy = "Straight Skirms or Trash Rush"
-            case (_, "Archery Range", False, False, True, _):
-                strategy = "Full scouts or Scouts into Castle"
+            case (_, _, _, _, _, True):
+                strategy = "Fastle Castle"
             case (_, _, _, _, _, _):
                 strategy = "Could not Identify!"
                 v1, v2, v3, v4, v5 = (dark_age_approach["MilitiaStrategyIdentified"],
@@ -461,7 +465,7 @@ class GamePlayer:
                                                                   (military_buildings_spawned["timestamp"] < castle_time), :]
         dark_age_feudal_barracks = self.identify_building_and_timing("Barracks",
                                                                      dark_age_feudal_barracks,
-                                                                     feudal_time=None,
+                                                                     feudal_time=feudal_time,
                                                                      castle_time=castle_time,
                                                                      imperial_time=None,
                                                                      civilisation=self.civilisation)
