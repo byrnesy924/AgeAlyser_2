@@ -30,6 +30,7 @@ from .agealyser_enums import (  # Getting a bit too cute here with constants but
 
 from .utils import (
     ArcheryRangeProductionBuildingFactory,
+    BarracksProductionBuildingFactory,
     StableProductionBuildingFactory,
     SiegeWorkshopProductionBuildingFactory,
     TownCentreBuildingFactory
@@ -170,6 +171,15 @@ class GamePlayer:
             self.archery_units = pd.concat([range_.produce_units() for range_ in self.archery_ranges])
         else:
             self.archery_units = pd.DataFrame()
+        ###
+        self.barracks = BarracksProductionBuildingFactory().create_production_building_and_remove_used_id(
+            inputs_data=self.inputs_df,
+            player=self.number
+        )
+        if self.barracks is not None and len(self.barracks) > 0:
+            self.barracks = pd.concat([range_.produce_units() for range_ in self.barracks])
+        else:
+            self.barracks = pd.DataFrame()
 
         self.stables = StableProductionBuildingFactory().create_production_building_and_remove_used_id(
             inputs_data=self.inputs_df,
@@ -190,8 +200,8 @@ class GamePlayer:
             self.siege_units = pd.DataFrame()
 
         # data structure to hold all military units
-        self.military_units = pd.concat([self.archery_units, self.stable_units, self.siege_units])
-        # TODO - barracks, castle, donjon, dock. Lots of boiler plate
+        self.military_units = pd.concat([self.archery_units, self.barracks, self.stable_units, self.siege_units])
+        # TODO - castle, donjon, dock. Lots of boiler plate
 
     def full_player_choices_and_strategy(self, feudal_time: pd.Timedelta, castle_time: pd.Timedelta, loom_time: pd.Timedelta, end_of_game: pd.Timedelta) -> pd.Series:
         """Main API - call to analyse the player's choices"""
@@ -393,34 +403,41 @@ class GamePlayer:
                feudal_approach["OpeningMilitaryBuilding"],
                feudal_approach["Archer"] > 0,
                feudal_approach["Skirmisher"] > 0,
-               feudal_approach["Scout Cavalry"] > 0):
-            case ("Drush", "Archery Range", _, _, _):
+               feudal_approach["Scout Cavalry"] > 0,
+               feudal_time > pd.Timedelta(seconds=25*27)):  # arbitrarily pick 26 vils + loom for feudal time
+            case ("Drush", "Archery Range", _, _, _, True):
+                strategy = "Drush FC"
+            case ("Drush", "Archery Range", _, _, _, False): 
                 strategy = "Drush Flush"
-            case ("Pre-Mill Drush", "Archery Range", _, _, _):
+            case ("Pre-Mill Drush", "Archery Range", _, _, _, True):
+                strategy = "Pre-Mill Drush FC"
+            case ("Pre-Mill Drush", "Archery Range", _, _, _, False):
                 strategy = "Pre-Mill Drush Flush"
-            case ("MAA", "Archery Range", _, _, _):
+            case ("MAA", "Archery Range", _, _, _, _):
                 strategy = "MAA Archers"
-            case (_, "Archery Range", True, True, True):
+            case ("MAA", _, _, _, _, _):
+                strategy = "MAA"
+            case (_, "Archery Range", True, True, True, _):
                 strategy = "Archery Range into Full Feudal"
-            case (_, "Stable", True, True, True):
+            case (_, "Stable", True, True, True, _):
                 strategy = "Scouts into Full Feudal"
-            case (_, "Archery Range", True, True, _):
+            case (_, "Archery Range", True, True, _, _):
                 strategy = "Archers and Skirms"
-            case (_, "Archery Range", True, _, True):
+            case (_, "Archery Range", True, _, True, _):
                 strategy = "Archers into scouts"
-            case (_, "Archery Range", True, _, True):
+            case (_, "Archery Range", True, _, True, _):
                 strategy = "Skirms into scouts"
-            case (_, "Stable", True, _, _):
+            case (_, "Stable", True, _, _, _):
                 strategy = "Scouts into archers"
-            case (_, "Stable", _, True, _):
+            case (_, "Stable", _, True, _, _):
                 strategy = "Scouts into skirms"
-            case (_, "Archery Range", True, False, False):
+            case (_, "Archery Range", True, False, False, _):
                 strategy = "Straight Archers"
-            case (_, "Archery Range", False, True, False):
+            case (_, "Archery Range", False, True, False, _):
                 strategy = "Straight Skirms or Trash Rush"
-            case (_, "Archery Range", False, False, True):
+            case (_, "Archery Range", False, False, True, _):
                 strategy = "Full scouts or Scouts into Castle"
-            case (_, _, _, _, _):
+            case (_, _, _, _, _, _):
                 strategy = "Could not Identify!"
                 v1, v2, v3, v4, v5 = (dark_age_approach["MilitiaStrategyIdentified"],
                                       feudal_approach["OpeningMilitaryBuilding"],
@@ -431,6 +448,7 @@ class GamePlayer:
         return pd.concat([pd.Series({"OpeningStrategy": strategy}), dark_age_approach, feudal_approach])
 
     def militia_based_strategy(self,
+                               feudal_time: pd.Timedelta,
                                castle_time: pd.Timedelta,
                                military_buildings_spawned: pd.DataFrame,
                                mill_created_time: pd.Timedelta,
@@ -450,29 +468,33 @@ class GamePlayer:
         first_barracks_time = dark_age_feudal_barracks["timestamp"].min()
         pre_mill_barracks = first_barracks_time < mill_created_time
         if units_created.empty:
-            number_of_militia_or_maa = 0
+            number_of_militia_or_maa_dark = 0
         else:
+            militia_created_dark_age = units_created.loc[(units_created["param"] == "Militia") &
+                                                         (units_created["UnitCreatedTimestamp"] < feudal_time), :]
             militia_created = units_created.loc[(units_created["param"] == "Militia") &
-                                                (units_created["UnitCreatedTimestamp"] < castle_time), :]
+                                                (units_created["UnitCreatedTimestamp"] < castle_time),
+                                                :]
             # convert raw information into strategy - number of units
-            number_of_militia_or_maa = len(militia_created)
+            number_of_militia_or_maa_dark = len(militia_created_dark_age)
+            number_of_militia_or_maa_total = len(militia_created)
 
         # convert raw information into strategy - strategy
         if maa_upgrade is not None:
             militia_opening_strategy = "MAA"
-        elif pre_mill_barracks and number_of_militia_or_maa > 0:
+        elif pre_mill_barracks and number_of_militia_or_maa_dark > 0:
             militia_opening_strategy = "Pre-Mill Drush"
-        elif number_of_militia_or_maa > 0:
+        elif number_of_militia_or_maa_dark > 0 or number_of_militia_or_maa_total > 0:
             militia_opening_strategy = "Drush"
         else:
             militia_opening_strategy = None
 
-        # TODO identify the time the militia rock up to the opponents base - click within certain distance
+        # TODO-FeatureIdea identify the time the militia rock up to the opponents base - click within certain distance
         # Return key featues
         dark_age_choices_to_return = {
             "FirstBarracksTime": first_barracks_time,
             "MilitiaStrategyIdentified": militia_opening_strategy,
-            "NumberOfMilitiaUnits": number_of_militia_or_maa,
+            "NumberOfMilitiaUnits": number_of_militia_or_maa_dark,
             "PreMillBarracks": pre_mill_barracks,
         }
 
@@ -530,7 +552,7 @@ class GamePlayer:
             feudal_military_units = units_queued.loc[(units_queued["param"].isin(FeudalAgeMilitaryUnits)) &
                                                      (units_queued["UnitCreatedTimestamp"] < castle_time),
                                                      :
-                                                    ]
+                                                     ]
             # Count of each military unit
             number_of_each_unit = feudal_military_units.groupby("param").count()["UnitCreatedTimestamp"]
 

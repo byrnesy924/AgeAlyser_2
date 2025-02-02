@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from agealyser.agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
     UnitCreationTime,
     ArcheryRangeUnits,
+    BarracksUnits,
     StableUnits,
     SiegeWorkshopUnits,
     TownCentreUnitsAndTechs
@@ -99,6 +100,54 @@ class ProductionBuilding(ABC):
 
     @property
     @abstractmethod
+    def player(self):
+        return self._player
+
+
+class Barracks(ProductionBuilding):
+    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> None:
+        self._building_type = building_type
+        self._units = units
+        self._id = id
+        self._x = x
+        self._y = y
+        self._data = data
+        self._player = player
+
+    def produce_units(self) -> pd.DataFrame:
+        return super().produce_units(self._data, UnitCreationTime)
+
+    def apply_unit_upgrades(self) -> pd.DataFrame:
+        return super().apply_unit_upgrades()
+
+    def count_building_idle_time(self) -> int:
+        return super().count_building_idle_time()
+
+    @property
+    def building_type(self):
+        return self._building_type  # string type
+
+    @property
+    def units(self):
+        return self._units  # CONST list of units
+
+    @property
+    def id(self):
+        return self._id  # Building's ID
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
     def player(self):
         return self._player
 
@@ -352,6 +401,14 @@ class AbstractProductionBuildingFactory(ABC):
                                 )
             if index in relevent_units_queued.columns else None for index, x in df_to_return.iterrows()
         ]
+
+
+class BarracksProductionBuildingFactory(AbstractProductionBuildingFactory):
+    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> ProductionBuilding:
+        return Barracks(building_type=building_type, units=BarracksUnits, id=id, x=x, y=y, data=data, player=player)
+
+    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame, player: int):
+        return super().create_production_building_and_remove_used_id("Barracks", BarracksUnits, inputs_data, player=player)
 
 
 class ArcheryRangeProductionBuildingFactory(AbstractProductionBuildingFactory):
