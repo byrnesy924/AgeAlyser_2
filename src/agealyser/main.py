@@ -1193,5 +1193,4 @@ if __name__ == "__main__":
 
     test_inputs = main()
 
-    # TODO Next castle age economic choices
-    # And Next TODO is check order of players is correct and maybe validate map analysis
+    # TODO-Feature Next castle age economic choices
