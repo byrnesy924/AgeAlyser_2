@@ -1,5 +1,5 @@
 # The Age (2) Alyser
-This package is an attempt to mine out key strategic choices and statistics from an Age of Empires 2 game for analysis. Built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz), the package takes in a .AOE2RECORD and produces a pandas Series that documents:
+This package is an attempt to mine out key strategic choices and statistics from an Age of Empires 2 game for further analysis. Built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz) (see also (this fork)[https://github.com/aoeinsights/aoc-mgz]), the package takes in a .AOE2RECORD file and produces a pandas Series that documents:
 - The military strategy choices of both players throughout the game, including unit choice, mass, and timings
 - The economic choices of each player through the game
 - the players' maps
@@ -12,18 +12,31 @@ Aside from this package, to my knowledge, the best progress so far has been made
 - [aoe insights](https://www.aoe2insights.com/)
 - [AOE Pulse made by dj0wns](https://www.aoepulse.com/home)
 
-I know there is a large section of the community that would love to run large scale analytics beyond civ matchups. The goal of this package is to bridge this gap.
+The goal of this package is to flesh out the statistical data we can mine from replays, and provide this data to anyone who can bash up a python script. Feel free to contribute in any way (including a code review).
 
 ## Installation
 TODO - yet to publish
 
-## TODO
-- Refactor so that data structures are created on initialisation
-- Refactor so that methods do not have side effects and are easier to test
-- Consider above changes and update/modify API as necessary
-- Document data structures in AgePlayer
 
-## Usage
+## Usage and Documentation
+### Parsing Games
+Currently only the advanced parser is implemented - in the future I intend to flesh out the API with other options.
+
+```
+import pandas as pd
+from agealyser import AgeGame
+
+g = AgeGame("file/path/to/game.aoe2record")
+stats: pd.Series = g.advanced_parser()  # optional - include_map_analysis = False
+
+```
+Given that:
+1. This package is dependant on the (mgz package)[https://github.com/happyleavesaoc/aoc-mgz] (and I'm not planning on maintaining a fork or anything)
+2. Updates to the game can often break parsing of a .aoe2record file
+3. This package is an unfinished alpha release to begin with,
+
+I would recommend wrapping the whole thing in a try-except block. In the future I also intend to improve the error handling so the whole package fails more gracefully
+
 ### Modeling Structure and package API
 **AgeMap** 
 - Models the map itself and the natural objects within
@@ -36,18 +49,18 @@ TODO - yet to publish
 - Two key lines of analysis - Military and Economic strategy/tactics
 
 **AgeGame**
-- Central object, contains key data for the game, also houses behaviour
+- Central object, contains key data for the game, also houses parsing behaviour
 
 
 ## Appendices
 ### MGZ Parser version to use
-If the original aoc-mgz is behind the current game update and therefore not functional, use aoeinsights fork:
+If the original aoc-mgz is behind the current game update and therefore not functional, check aoeinsights version and use that fork:
 ```
 git clone https://github.com/aoeinsights/aoc-mgz
 ```
 then 
 ```
-python  setup.py install
+python setup.py install
 ```
 
 ### AOE Devleopment Utilities
@@ -61,7 +74,9 @@ python  setup.py install
 ### mgz game structure
 The .AOE2RECORD file type (in essence) only contains the starting state of the game and the series of actions made by both players. This is extremely limiting when it comes to mining out statistics for a game. 
 
-For example, my original idea was to map growth in total resources as a proxy for development and analyse the decisions that contributed to that. However, resource amounts are not stored in the game files. In order to know how many resources have been collected at a point in time, you would need to basically simulate the whole game until that point in time, or create a mathematical model for villager gathering. Modelling villager gather rates is extremely hard, what with their pathing, bumping, getting stuck, and the changing efficiency as the shape of a resource changes, etc. causing fluctuations in gather rates. In summary, modelling resource collected is very difficult.
+For example, my original idea was to map growth in total resources as a proxy for player development and analyse the decisions that contributed to that. However, resources collected are not stored in the game files, and any modelling of villagers collecting resources would be difficult and woefully inaccurate (Modelling villager gather rates is extremely hard, what with their pathing, bumping, getting stuck, and the changing efficiency as the shape of a resource changes, etc. causing fluctuations in gather rates). 
+In general, what can be mined out of the .aoe2record file is limited. 
+As such, things like up times might be imprecise, as the game only records when a player clicks the research button, and I have had to model when it would complete based on queued villagers/techs etc.
 
 This package has turned into an exploration into what the mgz package can produce, and trying to gleam from that as much as possible.
 
