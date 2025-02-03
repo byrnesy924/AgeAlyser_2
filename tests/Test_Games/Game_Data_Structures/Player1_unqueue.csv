@@ -1,6 +1,0 @@
-,timestamp,type,param,player,payload.object_ids,payload.amount,payload.unit_id,payload.sequence,payload.unit,payload.building_id,payload.building,position.x,position.y,payload.target_id,payload.target_type,payload.order_id,payload.slot_id,payload.x,payload.y,payload.order,payload.stance_id,payload.stance,payload.technology_id,payload.technology,payload.x_end,payload.y_end,payload.formation_id,payload.formation,payload.command_id,payload.command,payload.resource_id,payload.resource,payload.message
-1505,0 days 00:10:20.841000,Unqueue,,1,[748288],,,620841.0,,,,,,-1.0,,4.0,1.0,0.0,0.0,Unqueue,,,,,,,,,,,,,
-5157,0 days 00:27:23.369000,Unqueue,,1,[748288],,,1643369.0,,,,,,-1.0,,4.0,1.0,0.0,0.0,Unqueue,,,,,,,,,,,,,
-5159,0 days 00:27:23.772000,Unqueue,,1,[1220096],,,1643772.0,,,,,,-1.0,,4.0,1.0,0.0,0.0,Unqueue,,,,,,,,,,,,,
-5160,0 days 00:27:23.980000,Unqueue,,1,[1220096],,,1643980.0,,,,,,-1.0,,4.0,1.0,0.0,0.0,Unqueue,,,,,,,,,,,,,
-5161,0 days 00:27:24.188000,Unqueue,,1,[1220096],,,1644188.0,,,,,,-1.0,,4.0,1.0,0.0,0.0,Unqueue,,,,,,,,,,,,,
