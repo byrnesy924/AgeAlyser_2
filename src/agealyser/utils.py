@@ -1,5 +1,6 @@
 import pandas as pd
 import logging
+
 logger = logging.getLogger(__name__)
 
 from abc import ABC, abstractmethod
@@ -10,8 +11,7 @@ from agealyser.agealyser_enums import (  # Getting a bit too cute here with cons
     BarracksUnits,
     StableUnits,
     SiegeWorkshopUnits,
-    TownCentreUnitsAndTechs
-
+    TownCentreUnitsAndTechs,
 )
 
 
@@ -32,14 +32,18 @@ class ProductionBuilding(ABC):
 
         if not all(col in data.columns.to_list() for col in ["timestamp", "param"]):
             # TODO log
-            raise ValueError(f"Missing a column from data in Production Building.\nCols: {data.columns}")
+            raise ValueError(
+                f"Missing a column from data in Production Building.\nCols: {data.columns}"
+            )
 
         # coerce timestamp to time delta
         data["timestamp"] = pd.to_timedelta(data["timestamp"])
 
         # identify start times of all relevant units
         data["CreationTime"] = data["param"].apply(
-            lambda x: pd.Timedelta(seconds=units_production_enum.get(name=x, civilisation=""))
+            lambda x: pd.Timedelta(
+                seconds=units_production_enum.get(name=x, civilisation="")
+            )
         )  # TODO add civ to this object
         data["UnitCreatedTimestamp"] = data["timestamp"] + data["CreationTime"]
         data.reset_index(inplace=True)
@@ -48,10 +52,17 @@ class ProductionBuilding(ABC):
         for index, row in data.iterrows():
             if index == 0:  # skip first unit
                 continue
-            if pd.Timedelta(row["timestamp"]) < data.loc[index - 1, "UnitCreatedTimestamp"]:
-                data.loc[index, "UnitCreatedTimestamp"] += data.loc[index - 1, "UnitCreatedTimestamp"] - row["timestamp"]
-                data.loc[index, "timestamp"] += data.loc[index - 1, "UnitCreatedTimestamp"] - row["timestamp"]
-        
+            if (
+                pd.Timedelta(row["timestamp"])
+                < data.loc[index - 1, "UnitCreatedTimestamp"]
+            ):
+                data.loc[index, "UnitCreatedTimestamp"] += (
+                    data.loc[index - 1, "UnitCreatedTimestamp"] - row["timestamp"]
+                )
+                data.loc[index, "timestamp"] += (
+                    data.loc[index - 1, "UnitCreatedTimestamp"] - row["timestamp"]
+                )
+
         # sort table
         # maybe iterate through is simplest - if start_above + creation_time_above > start_time
         # then start_time = start_above + creation_time_above
@@ -105,7 +116,16 @@ class ProductionBuilding(ABC):
 
 
 class Barracks(ProductionBuilding):
-    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> None:
+    def __init__(
+        self,
+        building_type: str,
+        units: list,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> None:
         self._building_type = building_type
         self._units = units
         self._id = id
@@ -153,7 +173,16 @@ class Barracks(ProductionBuilding):
 
 
 class ArcheryRange(ProductionBuilding):
-    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> None:
+    def __init__(
+        self,
+        building_type: str,
+        units: list,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> None:
         self._building_type = building_type
         self._units = units
         self._id = id
@@ -201,7 +230,16 @@ class ArcheryRange(ProductionBuilding):
 
 
 class Stable(ProductionBuilding):
-    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> None:
+    def __init__(
+        self,
+        building_type: str,
+        units: list,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> None:
         self._building_type = building_type
         self._units = units
         self._id = id
@@ -242,14 +280,23 @@ class Stable(ProductionBuilding):
     @property
     def data(self):
         return self._data
-    
+
     @property
     def player(self):
         return self._player
 
 
 class SiegeWorkshop(ProductionBuilding):
-    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> None:
+    def __init__(
+        self,
+        building_type: str,
+        units: list,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> None:
         self._building_type = building_type
         self._units = units
         self._id = id
@@ -290,14 +337,23 @@ class SiegeWorkshop(ProductionBuilding):
     @property
     def data(self):
         return self._data
-    
+
     @property
     def player(self):
         return self._player
 
 
 class TownCentre(ProductionBuilding):
-    def __init__(self, building_type: str, units: list, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> None:
+    def __init__(
+        self,
+        building_type: str,
+        units: list,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> None:
         self._building_type = building_type
         self._units = units  # Include techs like Loom, Wheelbarrow, etc.
         self._id = id
@@ -351,119 +407,277 @@ class AbstractProductionBuildingFactory(ABC):
     In brief, because of the structure of the input data, we need to get the ID from the first unit created there,
     but IDs cannot be re-used.
     """
+
     @abstractmethod
     def factory_method(self):
         pass
 
     @abstractmethod
-    def create_production_building_and_remove_used_id(self, building_type: str, units: list, inputs_data: pd.DataFrame, player: int):
+    def create_production_building_and_remove_used_id(
+        self, building_type: str, units: list, inputs_data: pd.DataFrame, player: int
+    ):
         """Identify all the Production Buildings and Create them"""
-        relevent_buildings_produced = inputs_data.loc[(inputs_data["param"] == building_type) & (inputs_data["type"] == "Build")]
+        relevent_buildings_produced = inputs_data.loc[
+            (inputs_data["param"] == building_type) & (inputs_data["type"] == "Build")
+        ]
         if relevent_buildings_produced.empty:
             # TODO handle when it should not create the object; log m
             return None
 
-        relevent_buildings_produced = relevent_buildings_produced[["timestamp", "payload.object_ids", "param", "position.x", "position.y"]]
+        relevent_buildings_produced = relevent_buildings_produced[
+            ["timestamp", "payload.object_ids", "param", "position.x", "position.y"]
+        ]
 
-        relevent_units_queued = inputs_data.loc[inputs_data["param"].isin(units)]  # 24 Jan note units now includes TECHNOLOGIES
+        relevent_units_queued = inputs_data.loc[
+            inputs_data["param"].isin(units)
+        ]  # 24 Jan note units now includes TECHNOLOGIES
 
         # Discovery - the payload object IDs are the buildings queued in. This is a list of buildings
         # so - split them up by building and assign accordingly.
-        all_units_all_buildings = pd.get_dummies(relevent_units_queued["payload.object_ids"].explode())
+        all_units_all_buildings = pd.get_dummies(
+            relevent_units_queued["payload.object_ids"].explode()
+        )
         building_ids = all_units_all_buildings.columns
         relevent_units_queued = relevent_units_queued.join(all_units_all_buildings)
 
-        first_appearance_of_each_building = relevent_buildings_produced.groupby(["position.x", "position.y"], as_index=False).min()
-        dataframe_to_marry_up_to_production = first_appearance_of_each_building[["timestamp", "payload.object_ids"]]
+        first_appearance_of_each_building = relevent_buildings_produced.groupby(
+            ["position.x", "position.y"], as_index=False
+        ).min()
+        dataframe_to_marry_up_to_production = first_appearance_of_each_building[
+            ["timestamp", "payload.object_ids"]
+        ]
 
         # get x and y coords of buildings
         df_to_return = pd.concat(
-            [relevent_buildings_produced.reset_index(drop=True),
-             dataframe_to_marry_up_to_production["timestamp"].reset_index(drop=True)],
+            [
+                relevent_buildings_produced.reset_index(drop=True),
+                dataframe_to_marry_up_to_production["timestamp"].reset_index(drop=True),
+            ],
             axis=1,
         )
         buildings_used = len(building_ids)
-        df_to_return = df_to_return.loc[0:buildings_used - 1, :]  # remove unused buildigns
+        df_to_return = df_to_return.loc[
+            0 : buildings_used - 1, :
+        ]  # remove unused buildigns
         if len(df_to_return.index) < buildings_used:
-            logger.warning("Producing from more buildings than have created! TODO log what game this is") # TODO log what game is this
-            df_to_return.index = building_ids.sort_values()[0:len(df_to_return)]
+            logger.warning(
+                "Producing from more buildings than have created! TODO log what game this is"
+            )  # TODO log what game is this
+            df_to_return.index = building_ids.sort_values()[0 : len(df_to_return)]
         else:
             df_to_return.index = building_ids.sort_values()
 
         # if - else handles buildings that never make units
         return [
-            self.factory_method(building_type,
-                                id=index,
-                                x=x["position.x"],
-                                y=x["position.y"],
-                                data=relevent_units_queued.loc[relevent_units_queued[index], ["timestamp", "type", "param"]],
-                                player=player
-                                )
-            if index in relevent_units_queued.columns else None for index, x in df_to_return.iterrows()
+            (
+                self.factory_method(
+                    building_type,
+                    id=index,
+                    x=x["position.x"],
+                    y=x["position.y"],
+                    data=relevent_units_queued.loc[
+                        relevent_units_queued[index], ["timestamp", "type", "param"]
+                    ],
+                    player=player,
+                )
+                if index in relevent_units_queued.columns
+                else None
+            )
+            for index, x in df_to_return.iterrows()
         ]
 
 
 class BarracksProductionBuildingFactory(AbstractProductionBuildingFactory):
-    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> ProductionBuilding:
-        return Barracks(building_type=building_type, units=BarracksUnits, id=id, x=x, y=y, data=data, player=player)
+    def factory_method(
+        self,
+        building_type: str,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> ProductionBuilding:
+        return Barracks(
+            building_type=building_type,
+            units=BarracksUnits,
+            id=id,
+            x=x,
+            y=y,
+            data=data,
+            player=player,
+        )
 
-    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame, player: int):
-        return super().create_production_building_and_remove_used_id("Barracks", BarracksUnits, inputs_data, player=player)
+    def create_production_building_and_remove_used_id(
+        self, inputs_data: pd.DataFrame, player: int
+    ):
+        return super().create_production_building_and_remove_used_id(
+            "Barracks", BarracksUnits, inputs_data, player=player
+        )
 
 
 class ArcheryRangeProductionBuildingFactory(AbstractProductionBuildingFactory):
-    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> ProductionBuilding:
-        return ArcheryRange(building_type=building_type, units=ArcheryRangeUnits, id=id, x=x, y=y, data=data, player=player)
+    def factory_method(
+        self,
+        building_type: str,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> ProductionBuilding:
+        return ArcheryRange(
+            building_type=building_type,
+            units=ArcheryRangeUnits,
+            id=id,
+            x=x,
+            y=y,
+            data=data,
+            player=player,
+        )
 
-    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame, player: int):
-        return super().create_production_building_and_remove_used_id("Archery Range", ArcheryRangeUnits, inputs_data, player=player)
+    def create_production_building_and_remove_used_id(
+        self, inputs_data: pd.DataFrame, player: int
+    ):
+        return super().create_production_building_and_remove_used_id(
+            "Archery Range", ArcheryRangeUnits, inputs_data, player=player
+        )
 
 
 class StableProductionBuildingFactory(AbstractProductionBuildingFactory):
-    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> ProductionBuilding:
-        return Stable(building_type=building_type, units=StableUnits, id=id, x=x, y=y, data=data, player=player)
+    def factory_method(
+        self,
+        building_type: str,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> ProductionBuilding:
+        return Stable(
+            building_type=building_type,
+            units=StableUnits,
+            id=id,
+            x=x,
+            y=y,
+            data=data,
+            player=player,
+        )
 
-    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame, player: int):
-        return super().create_production_building_and_remove_used_id("Stable", StableUnits, inputs_data, player)
+    def create_production_building_and_remove_used_id(
+        self, inputs_data: pd.DataFrame, player: int
+    ):
+        return super().create_production_building_and_remove_used_id(
+            "Stable", StableUnits, inputs_data, player
+        )
 
 
 class SiegeWorkshopProductionBuildingFactory(AbstractProductionBuildingFactory):
-    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> ProductionBuilding:
-        return SiegeWorkshop(building_type=building_type, units=SiegeWorkshopUnits, id=id, x=x, y=y, data=data, player=player)
+    def factory_method(
+        self,
+        building_type: str,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> ProductionBuilding:
+        return SiegeWorkshop(
+            building_type=building_type,
+            units=SiegeWorkshopUnits,
+            id=id,
+            x=x,
+            y=y,
+            data=data,
+            player=player,
+        )
 
-    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame, player: int):
-        return super().create_production_building_and_remove_used_id("Siege Workshop", SiegeWorkshopUnits, inputs_data, player=player)
+    def create_production_building_and_remove_used_id(
+        self, inputs_data: pd.DataFrame, player: int
+    ):
+        return super().create_production_building_and_remove_used_id(
+            "Siege Workshop", SiegeWorkshopUnits, inputs_data, player=player
+        )
 
 
 class TownCentreBuildingFactory(AbstractProductionBuildingFactory):
-    def factory_method(self, building_type: str, id: int, x: float, y: float, data: pd.DataFrame, player: int) -> ProductionBuilding:
-        return TownCentre(building_type=building_type, units=TownCentreUnitsAndTechs, id=id, x=x, y=y, data=data, player=player)
+    def factory_method(
+        self,
+        building_type: str,
+        id: int,
+        x: float,
+        y: float,
+        data: pd.DataFrame,
+        player: int,
+    ) -> ProductionBuilding:
+        return TownCentre(
+            building_type=building_type,
+            units=TownCentreUnitsAndTechs,
+            id=id,
+            x=x,
+            y=y,
+            data=data,
+            player=player,
+        )
 
-    def create_production_building_and_remove_used_id(self, inputs_data: pd.DataFrame, player: int, position_x: float = None, position_y: float = None):
+    def create_production_building_and_remove_used_id(
+        self,
+        inputs_data: pd.DataFrame,
+        player: int,
+        position_x: float = None,
+        position_y: float = None,
+    ):
         # Hack for town centres - in non-Nomad games, we need to add a line for the first town centre because it is not built
-        check_for_build_town_centre = inputs_data.loc[(inputs_data["type"] == "Build") &
-                                                      (inputs_data["param"] == "Town Center") &
-                                                      (inputs_data["timestamp"] < pd.Timedelta(seconds=100)), :]  # give 100 seconds incase of Nomad start
+        check_for_build_town_centre = inputs_data.loc[
+            (inputs_data["type"] == "Build")
+            & (inputs_data["param"] == "Town Center")
+            & (inputs_data["timestamp"] < pd.Timedelta(seconds=100)),
+            :,
+        ]  # give 100 seconds incase of Nomad start
 
         if check_for_build_town_centre.empty:
             # Create the data for this
-            id_of_first_tc = inputs_data.loc[inputs_data["param"] == "Villager", "payload.object_ids"].min()  # Hack - get this from the villagers created
-            initial_tc_cols = ["timestamp", "type", "param", "player", "payload.object_ids", "position.x", "position.y"]
-            initial_tc_vals = [[pd.Timedelta(-150), "Build", "Town Center", player, id_of_first_tc, position_x, position_y]]  # note -150 as takes 150 seconds to build
+            id_of_first_tc = inputs_data.loc[
+                inputs_data["param"] == "Villager", "payload.object_ids"
+            ].min()  # Hack - get this from the villagers created
+            initial_tc_cols = [
+                "timestamp",
+                "type",
+                "param",
+                "player",
+                "payload.object_ids",
+                "position.x",
+                "position.y",
+            ]
+            initial_tc_vals = [
+                [
+                    pd.Timedelta(-150),
+                    "Build",
+                    "Town Center",
+                    player,
+                    id_of_first_tc,
+                    position_x,
+                    position_y,
+                ]
+            ]  # note -150 as takes 150 seconds to build
 
             tc_df = pd.DataFrame(initial_tc_vals, columns=initial_tc_cols)
             # concat it onto the inputs data and then the rest of the logic should handle correctly
             inputs_data = pd.concat([tc_df, inputs_data], ignore_index=True)
 
-        return super().create_production_building_and_remove_used_id("Town Center", TownCentreUnitsAndTechs, inputs_data, player=player)
+        return super().create_production_building_and_remove_used_id(
+            "Town Center", TownCentreUnitsAndTechs, inputs_data, player=player
+        )
+
 
 # TODO - Castle, Dock, Monastery, etc.
 
 
 if __name__ == "__main__":
-    test_inputs = pd.read_csv(r"Data\TestGameDataExploration\Player1_inputs.csv")  # ..\..\
+    test_inputs = pd.read_csv(
+        r"Data\TestGameDataExploration\Player1_inputs.csv"
+    )  # ..\..\
 
-    archery_ranges = ArcheryRangeProductionBuildingFactory().create_production_building_and_remove_used_id(inputs_data=test_inputs,
-                                                                                                           player=1)
+    archery_ranges = ArcheryRangeProductionBuildingFactory().create_production_building_and_remove_used_id(
+        inputs_data=test_inputs, player=1
+    )
     print(archery_ranges[0].produce_units())
-    

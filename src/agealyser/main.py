@@ -87,7 +87,9 @@ class GamePlayer:
         # iterate through df. Identify duplicate records, then drop one if necessary
         to_drop_inputs = self.inputs_df[(self.inputs_df['timestamp'].diff() < pd.Timedelta(seconds=0.25)) &
                                         (self.inputs_df['timestamp'] > pd.Timedelta(seconds=20)) &
-                                        (self.inputs_df.loc[:, ["type", "param", "payload.object_ids"]].eq(self.inputs_df.loc[:, ["type", "param", "payload.object_ids"]].shift(1)).all(axis=1))]
+                                        (self.inputs_df.loc[:, ["type", "param", "payload.object_ids"]].eq(
+                                            self.inputs_df.loc[:, ["type", "param", "payload.object_ids"]].shift(1)
+                                            ).all(axis=1))]
         to_drop_inputs = to_drop_inputs.loc[to_drop_inputs["type"] == "Queue", :]  # remove anything that is not Queue after
 
         self.inputs_df = self.inputs_df.drop(to_drop_inputs.index)
@@ -95,7 +97,7 @@ class GamePlayer:
         # self.actions_df.to_csv(Path(f"DataExploration/Player{self.number}_actions.csv"))
         # self.inputs_df.to_csv(Path(f"DataExploration/Player{self.number}_inputs.csv"))
 
-        # all techs researched and their completion time 
+        # all techs researched and their completion time
         research_techs = self.inputs_df.loc[self.inputs_df["type"] == "Research", :].dropna(subset="param")
         # if a tech is added that is not captured by the AOE parser, it will throw an error for us because "" cannot be found in Enums
         research_techs = research_techs[research_techs["param"] != ""]
@@ -105,7 +107,8 @@ class GamePlayer:
                                                                               civilisation=civilisation)
                              for tech in pd.unique(research_techs["param"])}
 
-        # Create model form town centre productions, including technologies. The reason to do here is to overwrite research times for age up and Loom/Wheel
+        # Create model form town centre productions, including technologies.
+        # The reason to do here is to overwrite research times for age up and Loom/Wheel
         self.town_centres = TownCentreBuildingFactory().create_production_building_and_remove_used_id(
             inputs_data=self.inputs_df,
             player=self.number,
