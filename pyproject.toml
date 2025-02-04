@@ -30,3 +30,11 @@ Issues = "https://github.com/byrnesy924/AgeAlyser_2/issues"
 
 [flake8]
 max-line-length = 140
+
+# pyproject.toml
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]

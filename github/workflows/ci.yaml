@@ -30,5 +30,7 @@ jobs:
      - name: Install dependancies
        run: python -m pip install pytest .
 
+     - name: Run Tests
+       run: pytest
 
 
