@@ -1,18 +1,18 @@
 # The Age (2) Alyser
-This python package is an attempt to mine out key strategic choices and statistics from an Age of Empires 2 game for further analysis. Built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz) - see also [this fork](https://github.com/aoeinsights/aoc-mgz). this package takes in a .AOE2RECORD file as input and produces a pandas Series which includes:
-- The military strategy choices of both players throughout the game, including unit choices, production numbers, timings of openings etc.,
-- The economic choices of each player through the game,
-- An analysis of the players' maps
-- And so on.
+This python package is an attempt to mine out key strategic choices and statistics from an Age of Empires 2 game for further analysis. Built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz) - see also [this fork](https://github.com/aoeinsights/aoc-mgz). This package takes in a .AOE2RECORD file as input and produces a Pandas Series with statistical data about the match. This data includes:
+- The military strategy choices of both players throughout the game, including unit choices, production numbers, timings of openings, and so on.
+- The economic choices of each player through the game.
+- An analysis of the players' maps.
+- And some other miscellaneous data, such as elo difference and civilisations.
 
 The goal is to create an open source project that enables large scale analytics of the game. Capture Age provides incredible analysis tools for watching replays, however there is a gap in terms of being able to extract statistical data from games en masse for analytics purposes. The task is difficult, given the structure of an mgz file (see below).
 
-Aside from this package, some other projects I have come across which attempt something similar are: 
+Aside from this package, some other great projects I have come across which perform something similar are: 
 - [Rec Opening Analysis by dj0wns](https://github.com/dj0wns/AoE_Rec_Opening_Analysis/tree/main)
 - [AOE insights](https://www.aoe2insights.com/)
 - [AOE Pulse made by dj0wns](https://www.aoepulse.com/home)
 
-The goal of this package is to flesh out the statistical data we can mine from replays, and provide this data to anyone who can bash up a python script. Feel free to contribute in any way (including a code review or building out tests).
+The goal of this package is to flesh out the statistical data we can mine from replays, and deliver it en masse to anyone who can bash up a python script. Feel free to contribute in any way (including a code review or building out tests or documentation).
 
 ## Installation
 ```
