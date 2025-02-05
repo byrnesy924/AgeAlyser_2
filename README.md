@@ -1,9 +1,10 @@
 # The Age-2-Alyser
-This python package mines out key strategic choices and statistics from a recorded Age of Empires 2 game. The intention is to enable for further data analysis, including at scale. The package is built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz) - see also [this fork](https://github.com/aoeinsights/aoc-mgz) maintained by aoe insights. The package takes in a .AOE2RECORD file as input and produces a Pandas Series with statistical data about the match. This data includes:
+This python package mines out key strategic choices and statistics from a recorded Age of Empires 2 game. The intention is to enable for further data analysis, including at scale. The package takes in a .AOE2RECORD file as input and produces a Pandas Series with statistical data about the match. This data includes:
 - The military strategy choices of both players throughout the game, including unit and strategy choices, production numbers, timings of openings, and so on.
 - The economic choices of each player through the game.
 - An analysis of the players' maps.
 - And some other miscellaneous data, such as elo difference and civilisations.
+The package is built on top of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz) to parse in recorded games - see also [this fork](https://github.com/aoeinsights/aoc-mgz) maintained by aoe insights. 
 
 The goal is to create an open source project that enables large scale analytics of the game. Capture Age provides incredible analysis tools for watching replays, however there is a gap in terms of being able to extract statistical data from games en masse for analytics purposes. The task is difficult, given the structure of an mgz file (see appendices below for a more detailed technical explanation).
 
