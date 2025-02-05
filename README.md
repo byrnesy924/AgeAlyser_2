@@ -15,7 +15,9 @@ Aside from this package, to my knowledge, the best progress so far has been made
 The goal of this package is to flesh out the statistical data we can mine from replays, and provide this data to anyone who can bash up a python script. Feel free to contribute in any way (including a code review).
 
 ## Installation
-TODO - yet to publish
+```
+pip install age-alyser
+```
 
 
 ## Usage and Documentation

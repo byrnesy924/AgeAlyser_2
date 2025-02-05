@@ -10,11 +10,12 @@ authors = [
 ]
 description = "A python package for extracting key features of an AOE2 recorded games"
 readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License"
 ]
 dependencies = [
   "mgz>=1.8.28",
@@ -23,6 +24,14 @@ dependencies = [
   "scipy>=1.14.0",
   "shapely>=2.0.5",
 ]
+keywords = [
+  "statistics",
+  "AOE2",
+  "Age of Empires",
+  "parsing",
+  "mgz",
+]
+
 
 [project.urls]
 Homepage = "https://github.com/byrnesy924/AgeAlyser_2"
@@ -31,10 +40,10 @@ Issues = "https://github.com/byrnesy924/AgeAlyser_2/issues"
 [flake8]
 max-line-length = 140
 
-# pyproject.toml
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
+
