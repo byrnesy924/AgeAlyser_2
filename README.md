@@ -31,8 +31,8 @@ stats: pd.Series = g.advanced_parser()  # optional - include_map_analysis = Fals
 ```
 #### Limitations
 Given that:
-1. This package is dependant on the (mgz package)[https://github.com/happyleavesaoc/aoc-mgz] (and I'm not planning on maintaining a fork or anything)
-2. Updates to the game can often break parsing of a .aoe2record file
+1. This package is dependant on the [mgz package](https://github.com/happyleavesaoc/aoc-mgz) (and I'm not planning on maintaining a fork or anything)
+2. Updates to the game can often break mgz's parsing of a .aoe2record file
 3. This package is an WIP/unfinished alpha release
 
 There may be a number of inaccuracies, errors, and bugs.
