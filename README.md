@@ -1,6 +1,6 @@
-# The Age (2) Alyser
-This python package is an attempt to mine out key strategic choices and statistics from an Age of Empires 2 game for further analysis. Built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz) - see also [this fork](https://github.com/aoeinsights/aoc-mgz). This package takes in a .AOE2RECORD file as input and produces a Pandas Series with statistical data about the match. This data includes:
-- The military strategy choices of both players throughout the game, including unit choices, production numbers, timings of openings, and so on.
+# The Age-2-Alyser
+This python package mines out key strategic choices and statistics from a recorded Age of Empires 2 game. The intention is to enable for further data analysis, including at scale. The package is built ontop of the [mgz parser](https://github.com/happyleavesaoc/aoc-mgz/tree/master/mgz) - see also [this fork](https://github.com/aoeinsights/aoc-mgz) maintained by aoe insights. The package takes in a .AOE2RECORD file as input and produces a Pandas Series with statistical data about the match. This data includes:
+- The military strategy choices of both players throughout the game, including unit and strategy choices, production numbers, timings of openings, and so on.
 - The economic choices of each player through the game.
 - An analysis of the players' maps.
 - And some other miscellaneous data, such as elo difference and civilisations.
@@ -19,20 +19,16 @@ The goal of this package is to flesh out the statistical data we can mine from r
 pip install age-alyser
 ```
 
-
 ## Usage and Documentation
-### Parsing Games
-Currently only the advanced parser is implemented - in the future I intend to flesh out the API with other options.
-
+Currently only the advanced parser is implemented - in the future I intend to flesh out the API with some other options.
 ```
 import pandas as pd
 from agealyser import AgeGame
 
 g = AgeGame("file/path/to/game.aoe2record")
 stats: pd.Series = g.advanced_parser()  # optional - include_map_analysis = False
-
 ```
-### Limitations
+#### Limitations
 Given that:
 1. This package is dependant on the (mgz package)[https://github.com/happyleavesaoc/aoc-mgz] (and I'm not planning on maintaining a fork or anything)
 2. Updates to the game can often break parsing of a .aoe2record file
@@ -42,11 +38,11 @@ There may be a number of inaccuracies, errors, and bugs.
 
 I would recommend wrapping the the above code in a try-except block. In the future I also intend to improve the error handling so the whole package fails more gracefully.
 
-### Modeling Structure and package API
+#### Modeling Structure and package API
 **AgeMap** 
 - Models the map itself and the resources/objects within
 - Identifies hills, resources, treelines, etc.
-- attempts to extract relevant features from this, e.g. resources on front/hills, distance to opponent and so on.
+- Attempts to extract relevant features from this, e.g. resources on front/hills, distance to opponent and so on.
 
 **GamePlayer**
 - Models the decisions/strategies/tactics made by individuals
@@ -54,7 +50,7 @@ I would recommend wrapping the the above code in a try-except block. In the futu
 - Two key lines of analysis - Military and Economic strategy/tactics
 
 **AgeGame**
-- Central object, contains key data for the game, also houses parsing behaviour
+- Central object, contains key data for the game (for example the GamePlayer and AgeMap objects), also houses mgz parsing behaviour.
 
 
 ## Appendices
