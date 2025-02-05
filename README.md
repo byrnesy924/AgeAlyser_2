@@ -47,8 +47,8 @@ I would recommend wrapping the the above code in a try-except block. In the futu
 
 **GamePlayer**
 - Models the decisions/strategies/tactics made by individuals
-- How strategies and choices are mined
-- Two key lines of analysis - Military and Economic strategy/tactics
+- Identifies strategies, choices, etc.
+- Two key lines of analysis - Military and Economic
 
 **AgeGame**
 - Central object, contains key data for the game (for example the GamePlayer and AgeMap objects), also houses mgz parsing behaviour.
