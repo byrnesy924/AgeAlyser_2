@@ -53,8 +53,8 @@ logging.basicConfig(
 # store this within game; use to mine features for analysis
 # construct a timeline? timeseries data?
 
-# TODO handle free techs in economic analysis - Bohemians, Franks, Burmese, Vikings
-# TODO Malians university faster research
+# TODO-feature handle free techs in economic analysis - Bohemians, Franks, Burmese, Vikings
+# TODO-patch Malians university faster research
 
 
 class GamePlayer:
@@ -160,7 +160,7 @@ class GamePlayer:
         for research in TownCentreUnitsAndTechs:
             if research == "Villager":  # Ignore units of course
                 continue
-            # TODO check this is accurate
+            # TODO-patch check this is accurate
             if not self.tc_units_and_techs.loc[
                 self.tc_units_and_techs["param"] == research, "UnitCreatedTimestamp"
             ].empty:
@@ -199,7 +199,7 @@ class GamePlayer:
         ).sort_values("timestamp")
 
         # Split into military production buildings and everything else
-        # TODO check if this is used anywhere
+        # TODO-patch check if this is used anywhere
         self.military_buildings_created = all_buildings_created[
             all_buildings_created.loc[:, "param"].isin(MilitaryBuildings)
         ].copy()
@@ -264,7 +264,7 @@ class GamePlayer:
         self.military_units = pd.concat(
             [self.archery_units, self.barracks, self.stable_units, self.siege_units]
         )
-        # TODO - castle, donjon, dock. Lots of boiler plate
+        # TODO-feature - castle, donjon, dock. Lots of boiler plate
 
     def full_player_choices_and_strategy(
         self,
@@ -345,27 +345,27 @@ class GamePlayer:
         """
         enum_technology = technology.replace(" ", "_").replace(
             "-", "_"
-        )  # TODO for cleanliness, think about handling this in Enum methods
+        )  # TODO-patch for cleanliness, think about handling this in Enum methods
 
         if not TechnologyResearchTimes.has_value(enum_technology):
             logger.error(
                 f"Technology given to find technology research function incorrect. Tech was: {technology}"
             )
-            # consider warning and gracefully returning None rather than failing TODO
+            # consider warning and gracefully returning None rather than failing TODO-logging
             raise ValueError(f"Couldn't find technology: {technology}")
 
         time_to_research = TechnologyResearchTimes.get(
             enum_technology, civilisation=civilisation
         )
 
-        # TODO check why there is two clicks - maybe one for queue and one for actually clicking up?
+        # Unsure why there is two clicks - maybe one for queue and one for actually clicking up? Bug in mgz?
         # Handle two clicks
         relevent_research = research_data.loc[
             research_data["param"] == technology, "timestamp"
         ]  # handle unqueue
 
         if relevent_research.empty:
-            # TODO log if cannot find
+            # TODO-logging log if cannot find
             return None
 
         # using len here handles multiple like a cancel and re-research

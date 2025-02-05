@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import pytest
 
-from agealyser.main import AgeGame
+from agealyser.main import AgeGame, GamePlayer, AgeMap
 
 
 def test_regression_testing():
