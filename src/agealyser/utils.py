@@ -15,6 +15,16 @@ from agealyser.agealyser_enums import (  # Getting a bit too cute here with cons
 )
 
 
+class MGZParserException(Exception):
+    """Exception for when the MGZ Parser cannot parse a game - this package is dependant on MGZ. If it errors,
+    then need to fail and return the reason with this error
+    """
+
+    def __init__(self, file_name, *args):
+        self.message = f"MGZ Parser error for the file {file_name}. This may be caused by a game update or using an invalid file."
+        super().__init__(self.message, *args)
+
+
 class ProductionBuilding(ABC):
     """This abstract base class models the function of a production building, including:
     - creating units, - storing upgrades, - measuring idle time"""

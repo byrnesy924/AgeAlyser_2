@@ -3,11 +3,11 @@ Data for this including some notes and exceptions can be found in the Data folde
 """
 
 import logging
+from enum import Enum
+from typing import Final, List
 
 logger = logging.getLogger(__name__)
 
-from enum import Enum
-from typing import Final, List
 
 MilitaryBuildings: Final[List[str]] = [
     "Stable",
@@ -77,7 +77,6 @@ ProductionBuildings: Final[List[str]] = [
     "Stable",
     "Siege Workshop",
     "Dock",
-    "",
 ]
 
 TownCentreUnitsAndTechs: Final[List[str]] = [
@@ -115,6 +114,7 @@ class BuildTimesEnum(Enum):
     Mill = 35
     Mining_Camp = 35
     Monastery = 40
+    Mule_Cart = 25
     Outpost = 15
     Palisade_Wall = 5
     Palisade_Gate = 30
@@ -173,6 +173,7 @@ class TechnologyResearchTimes(Enum):
     Anarchy = 60
     Arbalest = 50
     Architecture = 70
+    Arson = 25
     Artillery = 40
     Atheism = 60
     Atonement = 40
@@ -203,16 +204,19 @@ class TechnologyResearchTimes(Enum):
     Crenellations = 60
     Crop_Rotation = 70
     Crossbowman = 35
+    Detinets = 40
     Double_Bit_Axe = 25
     Drill = 60
     Dry_Dock = 60
     El_Dorado = 50
+    Elite_Ballista_Elephant = 70
     Elite_Berserk = 45
     Elite_Cannon_Galleon = 30
     Elite_Cataphract = 50
     Elite_Chu_Ko_Nu = 50
     Elite_Conquistador = 60
     Elite_Eagle_Warrior = 40
+    Elite_Ghulam = 45
     Elite_Huskarl = 40
     Elite_Jaguar_Warrior = 45
     Elite_Janissary = 55
@@ -243,6 +247,7 @@ class TechnologyResearchTimes(Enum):
     Gold_Mining = 30
     Gold_Shaft_Mining = 75
     Guard_Tower = 30
+    Grand_Trunk_Road = 40
     Guilds = 50
     Halberdier = 50
     Hand_Cart = 55
@@ -299,10 +304,12 @@ class TechnologyResearchTimes(Enum):
     Squires = 40
     Stone_Mining = 30
     Stone_Shaft_Mining = 75
-    Sultans = 0  # TODO not finished
+    Supplies = 20
+    Sultans = 40
     Supremacy = 60
     Theocracy = 75
     Thumb_Ring = 45
+    Tower_Shields = 40
     Town_Patrol = 40
     Town_Watch = 25
     Tracking = 35
@@ -438,6 +445,7 @@ class UnitCreationTime(Enum):
     Elite_Conquistador = 24
     Elite_Eagle_Warrior = 20
     Elite_Elephant_Archer = 32
+    Elite_Ghulam = 12
     Elite_Huskarl = 16
     Elite_Jaguar_Warrior = 17
     Elite_Janissary = 17
@@ -460,6 +468,7 @@ class UnitCreationTime(Enum):
     Fishing_Ship = 40
     Galleon = 36
     Galley = 60
+    Ghulam = 12
     Halberdier = 22
     Hand_Cannoneer = 34
     Heavy_Camel = 22
