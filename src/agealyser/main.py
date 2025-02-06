@@ -37,6 +37,7 @@ from .utils import (
     StableProductionBuildingFactory,
     SiegeWorkshopProductionBuildingFactory,
     TownCentreBuildingFactory,
+    MGZParserException
 )
 
 logger = logging.getLogger(__name__)
@@ -229,7 +230,8 @@ class GamePlayer:
             )
         else:
             self.archery_units = pd.DataFrame()
-        ###
+        
+        # Barracks
         self.barracks = BarracksProductionBuildingFactory().create_production_building_and_remove_used_id(
             inputs_data=self.inputs_df, player=self.number
         )
@@ -352,7 +354,7 @@ class GamePlayer:
                 f"Technology given to find technology research function incorrect. Tech was: {technology}"
             )
             # consider warning and gracefully returning None rather than failing TODO-logging
-            raise ValueError(f"Couldn't find technology: {technology}")
+            raise ValueError(f"Couldn't find technology: {technology} (Enum: {enum_technology})")
 
         time_to_research = TechnologyResearchTimes.get(
             enum_technology, civilisation=civilisation
@@ -412,6 +414,11 @@ class GamePlayer:
         if relevent_building.empty:
             # TODO log this and return empty data frame but with correct columns - handle accordingly
             return relevent_building
+        
+        # Handle case where MGZ cannot find the payload.object_ids - in other words the vils building the building
+        if relevent_building["payload.object_ids"].isna().any():
+            # In this case, just assume 1 vil and circumvent failure below
+            relevent_building.loc[relevent_building["payload.object_ids"].isna(), "payload.object_ids"] = [0]
 
         relevent_building["Building"] = building_name
         relevent_building["NumberVillsBuilding"] = relevent_building[
@@ -600,12 +607,12 @@ class GamePlayer:
     ) -> pd.Series:
         """Logic to identify groups of MAA or Militia based strategy: MAA, pre-mill drush, drush"""
         # Identify key timings and choices associated with these strategies
-        dark_age_feudal_barracks = military_buildings_spawned.loc[
+        dark_age_feudal_barracks: pd.DataFrame = military_buildings_spawned.loc[
             (military_buildings_spawned["param"] == "Barracks")
             & (military_buildings_spawned["timestamp"] < castle_time),
             :,
         ]
-        dark_age_feudal_barracks = self.identify_building_and_timing(
+        dark_age_feudal_barracks: pd.DataFrame = self.identify_building_and_timing(
             "Barracks",
             dark_age_feudal_barracks,
             feudal_time=feudal_time,
@@ -613,17 +620,17 @@ class GamePlayer:
             imperial_time=None,
             civilisation=self.civilisation,
         )
-        first_barracks_time = dark_age_feudal_barracks["timestamp"].min()
-        pre_mill_barracks = first_barracks_time < mill_created_time
+        first_barracks_time: pd.Timedelta = dark_age_feudal_barracks["timestamp"].min()
+        pre_mill_barracks: bool = first_barracks_time < mill_created_time
         if units_created.empty:
-            number_of_militia_or_maa_dark = 0
+            number_of_militia_or_maa_dark: int = 0
         else:
-            militia_created_dark_age = units_created.loc[
+            militia_created_dark_age: pd.DataFrame = units_created.loc[
                 (units_created["param"] == "Militia")
                 & (units_created["UnitCreatedTimestamp"] < feudal_time),
                 :,
             ]
-            militia_created = units_created.loc[
+            militia_created: pd.DataFrame = units_created.loc[
                 (units_created["param"] == "Militia")
                 & (units_created["UnitCreatedTimestamp"] < castle_time),
                 :,
@@ -802,16 +809,16 @@ class GamePlayer:
         # feudal age number of farms
         # find all "Reseed" inputs and "Build - Farm actions"
         # TODO - understand if a built farm is deleted
-        farms_in_feudal = player_eco_buildings.loc[
+        farms_in_feudal: pd.DataFrame = player_eco_buildings.loc[
             (player_eco_buildings["payload.building"] == "Farm")
             & (player_eco_buildings["timestamp"] > feudal_time)
             & (player_eco_buildings["timestamp"] < castle_time),
             :,
         ]
-        farms_in_feudal = self.identify_building_and_timing(
+        farms_in_feudal: pd.DataFrame = self.identify_building_and_timing(
             "Farm", farms_in_feudal, feudal_time, castle_time, None, self.civilisation
         )
-        number_farms_made = len(farms_in_feudal)
+        number_farms_made: int = len(farms_in_feudal)
         # time of 3, 6, 10, 15, 20 farms
         farms_results = pd.Series(
             {
@@ -879,7 +886,7 @@ class GamePlayer:
         houses_built = player_eco_buildings.loc[
             player_eco_buildings["payload.building"] == "House", "timestamp"
         ]
-        feudal_houses = len(
+        feudal_houses: int = len(
             houses_built.loc[
                 (houses_built > feudal_time) & (houses_built < castle_time)
             ]
@@ -1145,10 +1152,10 @@ class AgeMap:
         woodlines_dict = {"Front": 0, "Side": 0, "Back": 0}
         for woodline_index in pd.unique(woodlines["Tree"]):
             wood = woodlines.loc[woodlines["Tree"] == woodline_index, :]
-            number_trees_forward = len(
+            number_trees_forward: int = len(
                 wood.loc[wood["BetweenPlayers"], :]
             )  # Relies on no duplicates see exception below
-            total_trees = len(wood)
+            total_trees: int = len(wood)
 
             if wood.groupby(["x", "y"]).ngroups != total_trees:
                 # Crazy that this can actually happen - TODO in test game 7 check if these are actually duplicates
@@ -1383,9 +1390,20 @@ class AgeGame:
     def __init__(self, path: Path) -> None:
         self.path_to_game: Path = path
 
-        with open(self.path_to_game, "rb") as g:
-            self.match = parse_match(g)
-            self.match_json = serialize(self.match)
+        try:
+            with open(self.path_to_game, "rb") as g:
+                # TODO-Branch error gracefully here
+                self.match = parse_match(g)
+                self.match_json = serialize(self.match)
+        except FileNotFoundError as e:
+            # Tell the user the file was not found
+            raise e
+        except Exception:
+            # From the perspective of this package, fail if the MGZ parser cannot parse the game.
+            # The below error message lets the user know it is an MGZ error, and beyond the scope of this package
+            # In other words, catch any base exceptions raised by MGZ, which are from the perspective of this package,
+            # unknown failure states. Fatally exit in this case
+            raise MGZParserException(path)
 
         # Raw data from the game
         self.teams: list = self.match_json[
@@ -1457,6 +1475,7 @@ class AgeGame:
     def advanced_parser(self, include_map_analyses: bool = True) -> pd.Series:
         # TODO get the winner from players
         # TODO mine if boar or elephant
+        # TODO-Branch error gracefully through here
 
         # Extract the key statistics / data points
         # research times to mine out
