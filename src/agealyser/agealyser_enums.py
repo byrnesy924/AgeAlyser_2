@@ -205,6 +205,7 @@ class TechnologyResearchTimes(Enum):
     Crop_Rotation = 70
     Crossbowman = 35
     Detinets = 40
+    Devotion = 40
     Double_Bit_Axe = 25
     Drill = 60
     Dry_Dock = 60
@@ -218,6 +219,7 @@ class TechnologyResearchTimes(Enum):
     Elite_Eagle_Warrior = 40
     Elite_Ghulam = 45
     Elite_Huskarl = 40
+    Elite_Hussite_Wagon = 45
     Elite_Jaguar_Warrior = 45
     Elite_Janissary = 55
     Elite_Longboat = 60
@@ -238,6 +240,7 @@ class TechnologyResearchTimes(Enum):
     Fast_Fire_Ship = 50
     Fervor = 50
     Feudal_Age = 130
+    First_Crusade = 60
     Fletching = 30
     Forging = 50
     Fortified_Wall = 50
@@ -261,12 +264,13 @@ class TechnologyResearchTimes(Enum):
     Herbal_Medicine = 35
     Heresy = 60
     Hoardings = 75
+    Houfnice = 140
     Horse_Collar = 20
     Husbandry = 50
     Hussar = 50
     Illumination = 65
     Imperial_Age = 190
-    Imperial_Camel_Rider = 0  # TODO
+    Imperial_Camel_Rider = 0  # TODO-missing
     Iron_Casting = 70
     Kataparuto = 60
     Keep = 75
@@ -317,6 +321,7 @@ class TechnologyResearchTimes(Enum):
     Treason = 1
     Two_Handed_Swordsman = 75
     Two_Man_Saw = 100
+    Wagenburg_Tactics = 45
     War_Galley = 50
     Wheelbarrow = 75
     Winged_Hussar = 0  # TODO
