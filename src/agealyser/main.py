@@ -80,8 +80,8 @@ class GamePlayer:
         self.player_won: bool = winner
         self.elo: int = elo
 
-        self.inputs_df: pd.DataFrame = inputs
-        self.actions_df: pd.DataFrame = actions
+        self.inputs_df: pd.DataFrame = inputs.copy()
+        self.actions_df: pd.DataFrame = actions.copy()
 
         self.opening = pd.Series()
 
@@ -354,7 +354,7 @@ class GamePlayer:
                 f"Technology given to find technology research function incorrect. Tech was: {technology}"
             )
             # consider warning and gracefully returning None rather than failing TODO-logging
-            raise ValueError(f"Couldn't find technology: {technology} (Enum: {enum_technology})")
+            raise ValueError(f"Couldn't find technology: {technology} (Enum: {enum_technology}). Please raise this issue on GitHub.")
 
         time_to_research = TechnologyResearchTimes.get(
             enum_technology, civilisation=civilisation
@@ -1291,14 +1291,14 @@ class AgeMap:
         # TODO generalise this to just polygons, so that the sides can be checked for resources
         poly = Polygon(polygon_to_check_within)
         locations = map_feature_locations.copy()
-        map_feature_locations.loc[:, "BetweenPlayers"] = locations.apply(
+        locations.loc[:, "BetweenPlayers"] = locations.apply(
             lambda x: Point(
                 x["x"],
                 x["y"],
             ).within(poly),
             axis=1,
         )
-        return map_feature_locations.loc[:, ["instance_id", "BetweenPlayers"]]
+        return locations.loc[:, ["instance_id", "BetweenPlayers"]]
 
     def identify_islands_of_resources(
         self, dataframe_of_map: pd.DataFrame, resource: str
@@ -1398,7 +1398,7 @@ class AgeGame:
         except FileNotFoundError as e:
             # Tell the user the file was not found
             raise e
-        except Exception:
+        except Exception as e:
             # From the perspective of this package, fail if the MGZ parser cannot parse the game.
             # The below error message lets the user know it is an MGZ error, and beyond the scope of this package
             # In other words, catch any base exceptions raised by MGZ, which are from the perspective of this package,
