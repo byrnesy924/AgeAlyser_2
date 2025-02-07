@@ -334,7 +334,7 @@ class GamePlayer:
 
     def identify_technology_research_and_time(
         self, technology: str, research_data: pd.DataFrame, civilisation: str = None
-    ) -> pd.Timedelta:
+    ) -> pd.Timedelta | None:
         """A helper method that can identify when players research certain things and the timing of that
 
         :param technology: technology being researches
@@ -351,11 +351,12 @@ class GamePlayer:
 
         if not TechnologyResearchTimes.has_value(enum_technology):
             logger.error(
-                f"Technology given to find technology research function incorrect. Tech was: {technology}"
+                f"Technology could not be found in Enums. Tech was: {technology}"
             )
-            # consider warning and gracefully returning None rather than failing TODO-logging
-            raise ValueError(f"Couldn't find technology: {technology} (Enum: {enum_technology}). Please raise this issue on GitHub.")
-
+            # consider warning and gracefully returning None rather than failing
+            # in the case of an invalid string, the Enum will raise an error. In other cases, just warn the user.
+            # raise ValueError(f"Couldn't find technology: {technology} (Enum: {enum_technology}). Please raise this issue on GitHub.")
+            return None  # return empty data a time for this tech
         time_to_research = TechnologyResearchTimes.get(
             enum_technology, civilisation=civilisation
         )
@@ -401,7 +402,9 @@ class GamePlayer:
             logger.error(
                 f"Building given to find building method incorrect. Building was: {building_name}"
             )
-            raise ValueError(f"Couldn't find building: {building_name}")
+            # No longer error if building cant be found - let Enum handle erroring on a bad MGZ Parse
+            # raise ValueError(f"Couldn't find building: {building_name}")
+            return pd.DataFrame(columns=buildings_data)  # return an empty dataframe
 
         time_to_build = BuildTimesEnum.get(
             enum_building_name, civilisation=civilisation

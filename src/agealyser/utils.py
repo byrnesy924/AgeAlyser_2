@@ -1,5 +1,6 @@
 import pandas as pd
 import logging
+import warnings
 
 from abc import ABC, abstractmethod
 
@@ -47,6 +48,12 @@ class ProductionBuilding(ABC):
 
         # coerce timestamp to time delta
         data["timestamp"] = pd.to_timedelta(data["timestamp"])
+
+        # error handling
+        for unit in pd.unique(data["param"]):
+            if not units_production_enum.has_value(unit):
+                # Enum will handle errors if required - otherwise just warn user
+                logger.error(f"Unit could not be found in Enums. Unit was: {unit}")
 
         # identify start times of all relevant units
         data["CreationTime"] = data["param"].apply(

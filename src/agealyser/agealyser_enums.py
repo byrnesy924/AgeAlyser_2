@@ -3,6 +3,7 @@ Data for this including some notes and exceptions can be found in the Data folde
 """
 
 import logging
+import warnings
 from enum import Enum
 from typing import Final, List
 
@@ -142,6 +143,12 @@ class BuildTimesEnum(Enum):
         try:
             cls[name]
         except KeyError:
+            if name == "" or name is None:
+                # In this case error as MGZ has incorrectly read in a technology or there is a bug in AgeAlyser
+                raise ValueError(f"A Building has been incorrectly parsed by MGZ or there is a bug in AgeAlyser. Please Raise an issue with details on the game (building: {name})")
+            else:
+                # In this case I have not updated the AgeAlyser Enums - raise a warning for the user to raise an issue but do not fail
+                warnings.warn(f"A building could not be found in the game data. Please raise an issue on github (building: {name})")
             return False
         else:
             return True
@@ -219,7 +226,7 @@ class TechnologyResearchTimes(Enum):
     Elite_Eagle_Warrior = 40
     Elite_Ghulam = 45
     Elite_Huskarl = 40
-    Elite_Hussite_Wagon = 45
+    # Elite_Hussite_Wagon = 45
     Elite_Jaguar_Warrior = 45
     Elite_Janissary = 55
     Elite_Longboat = 60
@@ -345,9 +352,12 @@ class TechnologyResearchTimes(Enum):
         try:
             cls[name]
         except KeyError:
-            print(
-                "Warning: Can't find a technology that has been researched - the AOE Parser return '' for it. Likely it from a DLC"
-            )
+            if name == "" or name is None:
+                # In this case error as MGZ has incorrectly read in a technology or there is a bug in AgeAlyser
+                raise ValueError(f"A Technology has been incorrectly parsed by MGZ or there is a bug in AgeAlyser. Please Raise an issue with details on the game (tech: {name})")
+            else:
+                # In this case I have not updated the AgeAlyser Enums - raise a warning for the user to raise an issue but do not fail
+                warnings.warn(f"A technology could not be found in the game data. Please raise an issue on github (tech: {name})")
             return False
         else:
             return True
@@ -542,6 +552,12 @@ class UnitCreationTime(Enum):
         try:
             cls[name]
         except KeyError:
+            if name == "" or name is None:
+                # In this case error as MGZ has incorrectly read in a technology or there is a bug in AgeAlyser
+                raise ValueError(f"A unit has been incorrectly parsed by MGZ or there is a bug in AgeAlyser. Please Raise an issue with details on the game (unit: {name})")
+            else:
+                # In this case I have not updated the AgeAlyser Enums - raise a warning for the user to raise an issue but do not fail
+                warnings.warn(f"A unit could not be found in the game data. Please raise an issue on github (unit: {name})")
             return False
         else:
             return True
