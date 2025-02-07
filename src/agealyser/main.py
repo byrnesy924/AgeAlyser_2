@@ -19,7 +19,7 @@ from mgz.model import parse_match, serialize
 # from utils import GamePlayer, AgeGame  # buildings model
 # import utils
 
-from .agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
+from .agealyser_enums import (
     BuildTimesEnum,
     TechnologyResearchTimes,
     # UnitCreationTime,
@@ -64,7 +64,7 @@ class GamePlayer:
         number: int,
         name: str,
         civilisation: str,
-        starting_position: list,
+        starting_position: dict,
         actions: pd.DataFrame,
         inputs: pd.DataFrame,
         winner: bool,
@@ -73,9 +73,9 @@ class GamePlayer:
 
         self.number: int = number
         self.name: str = name
-        self.civilisation: str = (
-            civilisation  # Comes as dict with x and y - store as tuple for arithmetic
-        )
+        self.civilisation: str = civilisation
+
+        # Comes as dict with x and y - store as tuple for arithmetic
         self.starting_position: tuple = (starting_position["x"], starting_position["y"])
         self.player_won: bool = winner
         self.elo: int = elo
@@ -368,7 +368,8 @@ class GamePlayer:
         ]  # handle unqueue
 
         if relevent_research.empty:
-            # TODO-logging log if cannot find
+            # Log if no data can be found for a technology.
+            logger.warning(f"Could not find any parsed game data for a researched tech ({technology}). Check why this is searched for.")
             return None
 
         # using len here handles multiple like a cancel and re-research
@@ -415,7 +416,8 @@ class GamePlayer:
             ["timestamp", "player", "payload.object_ids"],
         ]
         if relevent_building.empty:
-            # TODO log this and return empty data frame but with correct columns - handle accordingly
+            # log this and return empty data frame but with correct columns - handle accordingly
+            logger.warning(f"Building was never built according to parsed game data ({building_name})")
             return relevent_building
         
         # Handle case where MGZ cannot find the payload.object_ids - in other words the vils building the building
@@ -1140,7 +1142,8 @@ class AgeMap:
             case (False, _):
                 analysis = "Back"
             case _:
-                analysis = "Unknown"  # TODO log unknown
+                analysis = "Unknown"
+                logger.info(f"Could not analyse resource correctly. {between_players}, {average_heigh_above_tc}")  # log unknown
         return analysis
 
     def analyse_player_woodlines(
@@ -1162,9 +1165,10 @@ class AgeMap:
 
             if wood.groupby(["x", "y"]).ngroups != total_trees:
                 # Crazy that this can actually happen - TODO in test game 7 check if these are actually duplicates
-                raise Exception(
-                    f"Woodline number {woodline_index} has duplicate tiles"
-                )  # TODO proper logging
+                # This is an MGZ parser error - changed to that
+                raise MGZParserException(
+                    f"Woodline number {woodline_index} has duplicate tiles and has been parsed incorrectly"
+                )  # proper logging
 
             if total_trees < 3:
                 # Picked up stragglers around TC, disregard these
@@ -1395,13 +1399,12 @@ class AgeGame:
 
         try:
             with open(self.path_to_game, "rb") as g:
-                # TODO-Branch error gracefully here
                 self.match = parse_match(g)
                 self.match_json = serialize(self.match)
         except FileNotFoundError as e:
             # Tell the user the file was not found
             raise e
-        except Exception as e:
+        except Exception:
             # From the perspective of this package, fail if the MGZ parser cannot parse the game.
             # The below error message lets the user know it is an MGZ error, and beyond the scope of this package
             # In other words, catch any base exceptions raised by MGZ, which are from the perspective of this package,
@@ -1478,7 +1481,6 @@ class AgeGame:
     def advanced_parser(self, include_map_analyses: bool = True) -> pd.Series:
         # TODO get the winner from players
         # TODO mine if boar or elephant
-        # TODO-Branch error gracefully through here
 
         # Extract the key statistics / data points
         # research times to mine out
