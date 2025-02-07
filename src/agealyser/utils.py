@@ -1,8 +1,6 @@
 import pandas as pd
 import logging
 
-logger = logging.getLogger(__name__)
-
 from abc import ABC, abstractmethod
 
 from agealyser.agealyser_enums import (  # Getting a bit too cute here with constants but it will do for now
@@ -14,6 +12,7 @@ from agealyser.agealyser_enums import (  # Getting a bit too cute here with cons
     TownCentreUnitsAndTechs,
 )
 
+logger = logging.getLogger(__name__)
 
 class MGZParserException(Exception):
     """Exception for when the MGZ Parser cannot parse a game - this package is dependant on MGZ. If it errors,
@@ -21,7 +20,7 @@ class MGZParserException(Exception):
     """
 
     def __init__(self, file_name, *args):
-        self.message = f"MGZ Parser error for the file {file_name}. This may be caused by a game update or using an invalid file."
+        self.message = f"MGZ Parser error for the file {file_name} - see the error above. This may be caused by a game update or using an invalid file."
         super().__init__(self.message, *args)
 
 
