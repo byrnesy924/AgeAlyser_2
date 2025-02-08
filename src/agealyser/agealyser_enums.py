@@ -226,7 +226,7 @@ class TechnologyResearchTimes(Enum):
     Elite_Eagle_Warrior = 40
     Elite_Ghulam = 45
     Elite_Huskarl = 40
-    # Elite_Hussite_Wagon = 45
+    Elite_Hussite_Wagon = 45
     Elite_Jaguar_Warrior = 45
     Elite_Janissary = 55
     Elite_Longboat = 60

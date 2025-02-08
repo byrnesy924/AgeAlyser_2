@@ -9,6 +9,8 @@ from scipy.spatial import distance
 from shapely import Point, Polygon
 import logging
 from pathlib import Path
+from typing import List
+# from typeguard import typechecked
 
 # from datetime import datetime
 # from mgz import header, fast, body
@@ -150,7 +152,7 @@ class GamePlayer:
         )
         if not self.town_centres:
             raise ValueError(
-                f"Found no town centres for this player. Without this, cannot accurately parse game"
+                "Found no town centres for this player. Without this, cannot accurately parse game"
             )
         else:
             self.tc_units_and_techs = pd.concat(
@@ -230,7 +232,7 @@ class GamePlayer:
             )
         else:
             self.archery_units = pd.DataFrame()
-        
+
         # Barracks
         self.barracks = BarracksProductionBuildingFactory().create_production_building_and_remove_used_id(
             inputs_data=self.inputs_df, player=self.number
@@ -271,9 +273,10 @@ class GamePlayer:
     def full_player_choices_and_strategy(
         self,
         feudal_time: pd.Timedelta,
-        castle_time: pd.Timedelta,
+        castle_time: pd.Timedelta | None,
         loom_time: pd.Timedelta,
         end_of_game: pd.Timedelta,
+        civilisation: str,
     ) -> pd.Series:
         """Main API - call to analyse the player's choices"""
 
@@ -285,7 +288,7 @@ class GamePlayer:
             castle_time = end_of_game  # end of the game
 
         self.dark_age_stats = self.extract_feudal_uptime_info(
-            feudal_time=feudal_time, loom_time=loom_time
+            feudal_time=feudal_time, loom_time=loom_time, civilisation=civilisation
         )
 
         # Identify Feudal and Dark Age military Strategy
@@ -419,7 +422,7 @@ class GamePlayer:
             # log this and return empty data frame but with correct columns - handle accordingly
             logger.warning(f"Building was never built according to parsed game data ({building_name})")
             return relevent_building
-        
+
         # Handle case where MGZ cannot find the payload.object_ids - in other words the vils building the building
         if relevent_building["payload.object_ids"].isna().any():
             # In this case, just assume 1 vil and circumvent failure below
@@ -520,9 +523,9 @@ class GamePlayer:
     ) -> pd.Series:
         """Function that identifies military stratgy. Uses Militia and Feudal military methods"""
         # time of maa tech for maa function
-        maa_time = technologies_researched.get("Man-At-Arms", None)
+        maa_time: pd.Timedelta | None = technologies_researched.get("Man-At-Arms", None)
         # time of first mill for maa function
-        first_mill_time = mills_building_data["timestamp"].min()
+        first_mill_time = mills_building_data["timestamp"].min() if not mills_building_data["timestamp"].empty else None
 
         # identify drush and categorise into MAA/Pre-mill/Drush
         dark_age_approach = self.militia_based_strategy(
@@ -604,11 +607,11 @@ class GamePlayer:
     def militia_based_strategy(
         self,
         feudal_time: pd.Timedelta,
-        castle_time: pd.Timedelta,
+        castle_time: pd.Timedelta | None,  # None in case of game ending in Feudal
         military_buildings_spawned: pd.DataFrame,
-        mill_created_time: pd.Timedelta,
+        mill_created_time: pd.Timedelta | None,  # None in case of no mills
         units_created: pd.DataFrame,
-        maa_upgrade: pd.Timedelta = None,
+        maa_upgrade: pd.Timedelta | None = None,  # None in case of not researched
     ) -> pd.Series:
         """Logic to identify groups of MAA or Militia based strategy: MAA, pre-mill drush, drush"""
         # Identify key timings and choices associated with these strategies
@@ -625,8 +628,9 @@ class GamePlayer:
             imperial_time=None,
             civilisation=self.civilisation,
         )
-        first_barracks_time: pd.Timedelta = dark_age_feudal_barracks["timestamp"].min()
-        pre_mill_barracks: bool = first_barracks_time < mill_created_time
+        first_barracks_time: pd.Timedelta | None = dark_age_feudal_barracks["timestamp"].min() if not dark_age_feudal_barracks["timestamp"].empty else None
+        
+        pre_mill_barracks: bool = first_barracks_time < mill_created_time if first_barracks_time is not None else False
         if units_created.empty:
             number_of_militia_or_maa_dark: int = 0
         else:
@@ -912,7 +916,7 @@ class GamePlayer:
 class AgeMap:
     """Data structure representing the AOE2 map. Goal of identifying and extracting map features for analysis"""
 
-    def __init__(self, map: dict, gaia: dict, player_starting_locations: list) -> None:
+    def __init__(self, map: dict, gaia: List[dict], player_starting_locations: list) -> None:
         """Reconstruct the key features of the map - terrain, relics, resources (trees, gold, stone, berries).
         Store this information in a dataframe"""
 
@@ -924,7 +928,7 @@ class AgeMap:
         self.map_name: str = self.map["name"]
 
         # Distribution of starting objects
-        self.tiles_raw: dict = gaia
+        self.tiles_raw: List[dict] = gaia
         self.tiles = pd.DataFrame(gaia)
         self.tiles = self.tiles.join(
             self.tiles["position"].apply(pd.Series), validate="one_to_one"
@@ -951,11 +955,13 @@ class AgeMap:
         # Judge a hill for each player res by elevation greater than starting location; could think of a more elegant solution
         self.height_of_player_locations = [
             self.tiles.loc[
-                (self.tiles["x"] == player[0]) & (self.tiles["y"] == player[1]),
+                (self.tiles["x"] == int(player[0])) & (self.tiles["y"] == int(player[1])),  # TODO type checking of this - ints and floats
                 "elevation",
             ].mean()
             for player in self.player_locations
         ]
+        # Need to change to 0 for instances where the x and y cannot be found
+        self.height_of_player_locations: List[int] = [int(item) if not math.isnan(item) else 0 for item in self.height_of_player_locations]
 
         # Data parsing - coerce some varied names to regular ones.
         # Remove anything in brackets - treat together (trees)
@@ -1066,11 +1072,11 @@ class AgeMap:
             # Get name of gold for storing in dict
             gold_name = "SecondGold" if index == 1 else "ThirdGold"
             # Get bools for front/back and hill
-            front_or_back = gold["BetweenPlayers"].max()
+            front_or_back = gold["BetweenPlayers"].max() if not gold["BetweenPlayers"].empty else False
             hill = gold["elevation"].mean() > min_height_for_hill
 
             analysis_of_current_gold = self.analyse_resource(
-                between_players=front_or_back, average_heigh_above_tc=hill
+                between_players=front_or_back, average_height_above_tc=hill
             )
 
             resource_analysis = pd.concat(
@@ -1084,11 +1090,12 @@ class AgeMap:
 
         # Identify berries
         berries = player_resources.loc[player_resources["name"] == "Fruit Bush", :]
+        berries_between_players = berries["BetweenPlayers"].max() if not berries["BetweenPlayers"].empty else False
 
         # Apply to analysis method (Hill/Front/Back) to berries
         berry_analysis = self.analyse_resource(
-            between_players=berries["BetweenPlayers"].max(),
-            average_heigh_above_tc=berries["elevation"].mean() > min_height_for_hill,
+            between_players=berries_between_players,
+            average_height_above_tc=berries["elevation"].mean() > min_height_for_hill,
         )
         resource_analysis = pd.concat(
             [resource_analysis, pd.Series({f"Player{player}.Berries": berry_analysis})]
@@ -1103,11 +1110,12 @@ class AgeMap:
         main_stone = player_resources.loc[
             player_resources["Stone Mine"] == main_stone_index
         ]
+        stone_between_players = main_stone["BetweenPlayers"].max() if not main_stone["BetweenPlayers"].empty else False
 
         # Apply to analysis method (Hill/Front/Back) to stone
         stone_analysis = self.analyse_resource(
-            between_players=main_stone["BetweenPlayers"].max(),
-            average_heigh_above_tc=main_stone["elevation"].mean() > min_height_for_hill,
+            between_players=stone_between_players,
+            average_height_above_tc=main_stone["elevation"].mean() > min_height_for_hill,
         )
 
         resource_analysis = pd.concat(
@@ -1131,10 +1139,10 @@ class AgeMap:
         return resource_analysis
 
     def analyse_resource(
-        self, between_players: bool, average_heigh_above_tc: bool
+        self, between_players: bool, average_height_above_tc: bool | np.bool
     ) -> str:
         """Categorise a resource into Front Hill / Front / Back depending on forwardness and hilliness"""
-        match (between_players, average_heigh_above_tc):
+        match (between_players, average_height_above_tc):
             case (True, True):
                 analysis = "Front Hill"
             case (True, False):
@@ -1143,7 +1151,7 @@ class AgeMap:
                 analysis = "Back"
             case _:
                 analysis = "Unknown"
-                logger.info(f"Could not analyse resource correctly. {between_players}, {average_heigh_above_tc}")  # log unknown
+                logger.info(f"Could not analyse resource correctly. {between_players}, {average_height_above_tc}")  # log unknown
         return analysis
 
     def analyse_player_woodlines(
@@ -1292,7 +1300,7 @@ class AgeMap:
 
     def identify_resources_or_feature_between_players(
         self, map_feature_locations: pd.DataFrame, polygon_to_check_within: list
-    ) -> pd.Series:
+    ) -> pd.DataFrame:
         """Identify the # of a map feature between players. Models scenarios such as large forests that units must move around,
         or can identify forward golds"""
         # TODO generalise this to just polygons, so that the sides can be checked for resources
@@ -1394,8 +1402,8 @@ class AgeMap:
 class AgeGame:
     """A small wrapper for understanding an AOE game. Should just be a container for the mgz game which I can start to unpack"""
 
-    def __init__(self, path: Path) -> None:
-        self.path_to_game: Path = path
+    def __init__(self, path: Path | str) -> None:
+        self.path_to_game: Path | str = path
 
         try:
             with open(self.path_to_game, "rb") as g:
@@ -1468,7 +1476,7 @@ class AgeGame:
 
     def calculate_distance_between_players(
         self, location_one: tuple, location_two: tuple
-    ) -> pd.Series:
+    ) -> float:
         return math.dist(location_one, location_two)
 
     def calculate_difference_in_elo(
@@ -1493,6 +1501,7 @@ class AgeGame:
                 castle_time=player.age_up_times[3],
                 loom_time=player.technologies["Loom"],
                 end_of_game=player.actions_df["timestamp"].max(),
+                civilisation=player.civilisation
             )
             player_opening_strategies = player_opening_strategies.add_prefix(
                 f"Player{player.number}.OpeningStrategy."
@@ -1545,7 +1554,7 @@ if __name__ == "__main__":
         # test_file = Path("../../Data/RawAoe2RecordBytes/SD-AgeIIDE_Replay_324565276.aoe2record")
         test_file = Path(
             "Data/RawAoe2RecordBytes/AOE2ReplayBinary_2.aoe2record"
-        )  # ../../ Using a downloaded game from the scraper worked
+        )  # ../../ Using a downloaded game from the scrapper worked
 
         test_match = AgeGame(path=test_file)
         test_match.advanced_parser()
