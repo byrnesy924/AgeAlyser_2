@@ -287,7 +287,7 @@ class TechnologyResearchTimes(Enum):
     Long_Swordman = 45
     Loom = 25
     Mahouts = 50
-    Man_At_Arms = 40
+    Man_at_Arms = 40
     Masonry = 50
     Murder_Holes = 60
     Onager = 75
