@@ -179,6 +179,7 @@ class TechnologyResearchTimes(Enum):
 
     Anarchy = 60
     Arbalest = 50
+    Arbalester = 50
     Architecture = 70
     Arson = 25
     Artillery = 40
@@ -432,6 +433,7 @@ class UnitCreationTime(Enum):
 
     # actual units below
     Arbalest = 27
+    Arbalester = 27
     Archer = 35
     Armored_Elephant = 36
     Battering_Ram = 36
