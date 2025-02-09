@@ -3,11 +3,12 @@ Data for this including some notes and exceptions can be found in the Data folde
 """
 
 import logging
+import warnings
+from enum import Enum
+from typing import Final, List
 
 logger = logging.getLogger(__name__)
 
-from enum import Enum
-from typing import Final, List
 
 MilitaryBuildings: Final[List[str]] = [
     "Stable",
@@ -77,7 +78,6 @@ ProductionBuildings: Final[List[str]] = [
     "Stable",
     "Siege Workshop",
     "Dock",
-    "",
 ]
 
 TownCentreUnitsAndTechs: Final[List[str]] = [
@@ -115,6 +115,7 @@ class BuildTimesEnum(Enum):
     Mill = 35
     Mining_Camp = 35
     Monastery = 40
+    Mule_Cart = 25
     Outpost = 15
     Palisade_Wall = 5
     Palisade_Gate = 30
@@ -142,6 +143,12 @@ class BuildTimesEnum(Enum):
         try:
             cls[name]
         except KeyError:
+            if name == "" or name is None:
+                # In this case error as MGZ has incorrectly read in a technology or there is a bug in AgeAlyser
+                raise ValueError(f"A Building has been incorrectly parsed by MGZ or there is a bug in AgeAlyser. Please Raise an issue with details on the game (building: {name})")
+            else:
+                # In this case I have not updated the AgeAlyser Enums - raise a warning for the user to raise an issue but do not fail
+                warnings.warn(f"A building could not be found in the game data. Please raise an issue on github (building: {name})")
             return False
         else:
             return True
@@ -172,7 +179,9 @@ class TechnologyResearchTimes(Enum):
 
     Anarchy = 60
     Arbalest = 50
+    Arbalester = 50
     Architecture = 70
+    Arson = 25
     Artillery = 40
     Atheism = 60
     Atonement = 40
@@ -203,17 +212,22 @@ class TechnologyResearchTimes(Enum):
     Crenellations = 60
     Crop_Rotation = 70
     Crossbowman = 35
+    Detinets = 40
+    Devotion = 40
     Double_Bit_Axe = 25
     Drill = 60
     Dry_Dock = 60
     El_Dorado = 50
+    Elite_Ballista_Elephant = 70
     Elite_Berserk = 45
     Elite_Cannon_Galleon = 30
     Elite_Cataphract = 50
     Elite_Chu_Ko_Nu = 50
     Elite_Conquistador = 60
     Elite_Eagle_Warrior = 40
+    Elite_Ghulam = 45
     Elite_Huskarl = 40
+    Elite_Hussite_Wagon = 45
     Elite_Jaguar_Warrior = 45
     Elite_Janissary = 55
     Elite_Longboat = 60
@@ -234,6 +248,7 @@ class TechnologyResearchTimes(Enum):
     Fast_Fire_Ship = 50
     Fervor = 50
     Feudal_Age = 130
+    First_Crusade = 60
     Fletching = 30
     Forging = 50
     Fortified_Wall = 50
@@ -243,6 +258,7 @@ class TechnologyResearchTimes(Enum):
     Gold_Mining = 30
     Gold_Shaft_Mining = 75
     Guard_Tower = 30
+    Grand_Trunk_Road = 40
     Guilds = 50
     Halberdier = 50
     Hand_Cart = 55
@@ -256,12 +272,13 @@ class TechnologyResearchTimes(Enum):
     Herbal_Medicine = 35
     Heresy = 60
     Hoardings = 75
+    Houfnice = 140
     Horse_Collar = 20
     Husbandry = 50
     Hussar = 50
     Illumination = 65
     Imperial_Age = 190
-    Imperial_Camel_Rider = 0  # TODO
+    Imperial_Camel_Rider = 0  # TODO-missing
     Iron_Casting = 70
     Kataparuto = 60
     Keep = 75
@@ -271,7 +288,7 @@ class TechnologyResearchTimes(Enum):
     Long_Swordman = 45
     Loom = 25
     Mahouts = 50
-    Man_At_Arms = 40
+    Man_at_Arms = 40
     Masonry = 50
     Murder_Holes = 60
     Onager = 75
@@ -299,10 +316,12 @@ class TechnologyResearchTimes(Enum):
     Squires = 40
     Stone_Mining = 30
     Stone_Shaft_Mining = 75
-    Sultans = 0  # TODO not finished
+    Supplies = 20
+    Sultans = 40
     Supremacy = 60
     Theocracy = 75
     Thumb_Ring = 45
+    Tower_Shields = 40
     Town_Patrol = 40
     Town_Watch = 25
     Tracking = 35
@@ -310,6 +329,7 @@ class TechnologyResearchTimes(Enum):
     Treason = 1
     Two_Handed_Swordsman = 75
     Two_Man_Saw = 100
+    Wagenburg_Tactics = 45
     War_Galley = 50
     Wheelbarrow = 75
     Winged_Hussar = 0  # TODO
@@ -333,9 +353,12 @@ class TechnologyResearchTimes(Enum):
         try:
             cls[name]
         except KeyError:
-            print(
-                "Warning: Can't find a technology that has been researched - the AOE Parser return '' for it. Likely it from a DLC"
-            )
+            if name == "" or name is None:
+                # In this case error as MGZ has incorrectly read in a technology or there is a bug in AgeAlyser
+                raise ValueError(f"A Technology has been incorrectly parsed by MGZ or there is a bug in AgeAlyser. Please Raise an issue with details on the game (tech: {name})")
+            else:
+                # In this case I have not updated the AgeAlyser Enums - raise a warning for the user to raise an issue but do not fail
+                warnings.warn(f"A technology could not be found in the game data. Please raise an issue on github (tech: {name})")
             return False
         else:
             return True
@@ -410,6 +433,7 @@ class UnitCreationTime(Enum):
 
     # actual units below
     Arbalest = 27
+    Arbalester = 27
     Archer = 35
     Armored_Elephant = 36
     Battering_Ram = 36
@@ -438,6 +462,7 @@ class UnitCreationTime(Enum):
     Elite_Conquistador = 24
     Elite_Eagle_Warrior = 20
     Elite_Elephant_Archer = 32
+    Elite_Ghulam = 12
     Elite_Huskarl = 16
     Elite_Jaguar_Warrior = 17
     Elite_Janissary = 17
@@ -460,6 +485,7 @@ class UnitCreationTime(Enum):
     Fishing_Ship = 40
     Galleon = 36
     Galley = 60
+    Ghulam = 12
     Halberdier = 22
     Hand_Cannoneer = 34
     Heavy_Camel = 22
@@ -528,6 +554,12 @@ class UnitCreationTime(Enum):
         try:
             cls[name]
         except KeyError:
+            if name == "" or name is None:
+                # In this case error as MGZ has incorrectly read in a technology or there is a bug in AgeAlyser
+                raise ValueError(f"A unit has been incorrectly parsed by MGZ or there is a bug in AgeAlyser. Please Raise an issue with details on the game (unit: {name})")
+            else:
+                # In this case I have not updated the AgeAlyser Enums - raise a warning for the user to raise an issue but do not fail
+                warnings.warn(f"A unit could not be found in the game data. Please raise an issue on github (unit: {name})")
             return False
         else:
             return True

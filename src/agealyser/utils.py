@@ -1,7 +1,6 @@
 import pandas as pd
 import logging
-
-logger = logging.getLogger(__name__)
+import warnings
 
 from abc import ABC, abstractmethod
 
@@ -13,6 +12,17 @@ from agealyser.agealyser_enums import (  # Getting a bit too cute here with cons
     SiegeWorkshopUnits,
     TownCentreUnitsAndTechs,
 )
+
+logger = logging.getLogger(__name__)
+
+class MGZParserException(Exception):
+    """Exception for when the MGZ Parser cannot parse a game - this package is dependant on MGZ. If it errors,
+    then need to fail and return the reason with this error
+    """
+
+    def __init__(self, file_name, *args):
+        self.message = f"MGZ Parser error for the file {file_name} - see the error above. This may be caused by a game update or using an invalid file."
+        super().__init__(self.message, *args)
 
 
 class ProductionBuilding(ABC):
@@ -38,6 +48,12 @@ class ProductionBuilding(ABC):
 
         # coerce timestamp to time delta
         data["timestamp"] = pd.to_timedelta(data["timestamp"])
+
+        # error handling
+        for unit in pd.unique(data["param"]):
+            if not units_production_enum.has_value(unit):
+                # Enum will handle errors if required - otherwise just warn user
+                logger.error(f"Unit could not be found in Enums. Unit was: {unit}")
 
         # identify start times of all relevant units
         data["CreationTime"] = data["param"].apply(
