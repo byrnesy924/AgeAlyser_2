@@ -257,6 +257,7 @@ class TechnologyResearchTimes(Enum):
     Garland_Wars = 60
     Gold_Mining = 30
     Gold_Shaft_Mining = 75
+    Gambesons = 25
     Guard_Tower = 30
     Grand_Trunk_Road = 40
     Guilds = 50
@@ -271,6 +272,7 @@ class TechnologyResearchTimes(Enum):
     Heavy_Scorpion = 50
     Herbal_Medicine = 35
     Heresy = 60
+    Hill_Forts = 40
     Hoardings = 75
     Houfnice = 140
     Horse_Collar = 20
@@ -285,7 +287,7 @@ class TechnologyResearchTimes(Enum):
     Leather_Archer_Armor = 55
     Light_Cavalry = 45
     Logistica = 50
-    Long_Swordman = 45
+    Long_Swordsman = 45
     Loom = 25
     Mahouts = 50
     Man_at_Arms = 40
