@@ -964,6 +964,15 @@ class AgeMap:
         self.tiles = self.tiles.merge(self.elevation_map, on=["x", "y"], how="left")
 
         self.player_locations = player_starting_locations
+
+        # Assertion - if any of the player locations are empty, then we cannot perform the AgeMap analysis
+        # For now, set the key attribute that we access to None and return without performing analysis
+        for player_loc in player_starting_locations:
+            if not player_loc or len(player_loc) == 0:
+                # Case where a tuple is empty - set key attribute to None
+                self.map_analysis = None
+                return
+
         # Judge a hill for each player res by elevation greater than starting location; could think of a more elegant solution
         self.height_of_player_locations = [
             self.tiles.loc[
@@ -1447,6 +1456,8 @@ class AgeGame:
         self.inputs = self.match_json["inputs"]
 
         # Get features of the map in the AgeMap object
+        # In some instances parser cannot find player positions - they are empty dictionaries
+        # TODO alter API so that this analysis can be turned on or off, and is returned rather found from an attribute
         self.game_map = AgeMap(
             map=self.match_json["map"],
             gaia=self.match_json["gaia"],
