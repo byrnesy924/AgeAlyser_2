@@ -1459,7 +1459,7 @@ class AgeGame:
                 name=player["name"],
                 civilisation=player["civilization"],
                 starting_position=player["position"],
-                elo=player["rate_snapshot"],
+                elo=player.get("rate_snapshot", None),  # sometimes not contained - do not fail, just need to flow on as NoneType
                 winner=player["winner"],
                 actions=self.all_actions_df.loc[
                     self.all_actions_df["player"] == player["number"], :
@@ -1482,6 +1482,9 @@ class AgeGame:
     def calculate_difference_in_elo(
         self, player_one: GamePlayer, player_two: GamePlayer
     ):
+        if player_one.elo is None or player_two.elo is None:
+            logger.warning("One or both of these players did not have an Elo - no value")
+            return 0  # Consider returning NoneType
         if player_one.player_won:
             return player_one.elo - player_two.elo
         return player_two.elo - player_one.elo
@@ -1533,7 +1536,7 @@ class AgeGame:
         # Elo difference between players - negative is winner is lower elo
         self.game_results["DifferenceInELO"] = self.calculate_difference_in_elo(
             player_one=self.players[0], player_two=self.players[1]
-        )
+        )  # Currently, if either do not have an elo the difference value returned will be 0
 
         if include_map_analyses:
             return pd.concat([self.game_results, self.player_map_analysis])
