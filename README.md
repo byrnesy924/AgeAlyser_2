@@ -22,6 +22,7 @@ pip install age-alyser
 The current version is *0.0.5*. The most recent updates contains fixes for:
 - Instances where the mgz parser cannot find a players ELO in the record file - this no longer crashes but will return 0 as the difference in ELO
 - Updated a number of technology/unit/buildings Enums for some of the missing values, mostly recent updates to civs unique techs
+- Fixed a bug where if a player never built palisade walls a malformed data frame would throw a key error. Now exits and returns correct values
 
 
 ## Usage and Documentation

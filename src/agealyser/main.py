@@ -866,14 +866,38 @@ class GamePlayer:
         :rtype: pd.Series
         """
         # Note on houses - include as a proxy for fortifying your map/walls in the mid game (feudal - castle)
+
+        
+        # Houses - for the moment limit to feudal. Number of Houses is probably a poor proxy for identifying walling tactics,
+        # as they aren't always used to reinforce walls
+        # Some sort of really complicated location analysis would be required to amend this - I will not go down this path.
+        houses_built = player_eco_buildings.loc[
+            player_eco_buildings["payload.building"] == "House", "timestamp"
+        ]
+        feudal_houses: int = len(
+            houses_built.loc[
+                (houses_built > feudal_time) & (houses_built < castle_time)
+            ]
+        )
+
         # Walls - # calculate chebyshev distance of each wall segment - sum in each age
         palisade_walls = player_walls.loc[
             player_walls["payload.building"] == "Palisade Wall", :
         ]
+        # Assertion on empty dataframe
+        if palisade_walls.empty:
+            # player never built palisade walls - guard statement blocks code below, as malformed dataframe can throw key errors
+            return pd.Series({
+                "DarkAgeWallsNumber": 0,
+                "FeudalWallsNumber": 0,
+                "PostCastleWalls": 0,
+                "FeudalHousesBuilt": feudal_houses,
+            })
+
         # Calculate chebyshev distance between the wall start and end to get # of tiles
         palisade_walls["NumberTilesPlaced"] = palisade_walls.apply(
             lambda x: distance.chebyshev(
-                x[["position.x", "position.y"]], x[["payload.x_end", "payload.y_end"]]
+                x[["position.x", "position.y"]], x[["payload.x_end", "payload.y_end"]]  # payload.x_end and .y_end throw key errors on empty DF
             ),
             axis=1,
         )
@@ -888,18 +912,6 @@ class GamePlayer:
         post_castle_walls = palisade_walls.loc[
             palisade_walls["timestamp"] > castle_time, "NumberTilesPlaced"
         ].sum()
-
-        # Houses - for the moment limit to feudal. Number of Houses is probably a poor proxy for identifying walling tactics,
-        # as they aren't always used to reinforce walls
-        # Some sort of really complicated location analysis would be required to amend this - I will not go down this path.
-        houses_built = player_eco_buildings.loc[
-            player_eco_buildings["payload.building"] == "House", "timestamp"
-        ]
-        feudal_houses: int = len(
-            houses_built.loc[
-                (houses_built > feudal_time) & (houses_built < castle_time)
-            ]
-        )
 
         walling_results = pd.Series(
             {
