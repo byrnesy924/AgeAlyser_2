@@ -15,10 +15,14 @@ Aside from this package, some other great projects I have come across which perf
 
 The goal of this package is to flesh out the statistical data we can mine from replays, and deliver it en masse to anyone who can bash up a python script. Feel free to contribute in any way (including a code review or building out tests or documentation).
 
-## Installation
+## Installation and Version
 ```
 pip install age-alyser
 ```
+The current version is *0.0.5*. The most recent updates contains fixes for:
+- Instances where the mgz parser cannot find a players ELO in the record file - this no longer crashes but will return 0 as the difference in ELO
+- Updated a number of technology/unit/buildings Enums for some of the missing values, mostly recent updates to civs unique techs
+
 
 ## Usage and Documentation
 Currently only the advanced parser is implemented - in the future I intend to flesh out the API with some other options.
