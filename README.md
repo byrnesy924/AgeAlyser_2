@@ -23,7 +23,7 @@ The current version is *0.0.5*. The most recent updates contains fixes for:
 - Instances where the mgz parser cannot find a players ELO in the record file - this no longer crashes but will return 0 as the difference in ELO
 - Updated a number of technology/unit/buildings Enums for some of the missing values, mostly recent updates to civs unique techs
 - Fixed a bug where if a player never built palisade walls a malformed data frame would throw a key error. Now exits and returns correct values
-- Handled an issue where the MGZ parser couldn't find player locations. In this case, the analysis of the map cannot be performed.
+- Handled an issue where the MGZ parser couldn't find player locations. In this case, the analysis of the map cannot be performed. There are also consequences for modelling of the starting Town Centre. Please raise an issue if you find any errors in age up times as it may be related to this.
 
 
 ## Usage and Documentation

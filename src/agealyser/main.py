@@ -66,7 +66,7 @@ class GamePlayer:
         number: int,
         name: str,
         civilisation: str,
-        starting_position: dict,
+        starting_position: dict | None,  # Some cases MGZ cannot find - out of control but handled below
         actions: pd.DataFrame,
         inputs: pd.DataFrame,
         winner: bool,
@@ -77,8 +77,14 @@ class GamePlayer:
         self.name: str = name
         self.civilisation: str = civilisation
 
-        # Comes as dict with x and y - store as tuple for arithmetic
-        self.starting_position: tuple = (starting_position["x"], starting_position["y"])
+        # Comes as dict with x and y - store as tuple for arithmetic.
+        # Use guard as sometimes MGZ cannot find the starting position - assert it exists
+        self.starting_position = (0, 0)
+        if starting_position and "x" in starting_position.keys() and "y" in starting_position.keys():
+            self.starting_position: tuple = (starting_position["x"], starting_position["y"])
+        else:
+            logger.warning(f"Could not find starting position for player {name}. Position is: {starting_position}")
+
         self.player_won: bool = winner
         self.elo: int = elo
 
@@ -146,8 +152,8 @@ class GamePlayer:
             TownCentreBuildingFactory().create_production_building_and_remove_used_id(
                 inputs_data=self.inputs_df,
                 player=self.number,
-                position_x=self.starting_position[0],
-                position_y=self.starting_position[1],
+                position_x=self.starting_position[0],  # Sometimes MGZ cannot find - set to 0,0
+                position_y=self.starting_position[1],  # there is another way to get location from player object but it is not relevant
             )
         )
         if not self.town_centres:
@@ -1480,7 +1486,7 @@ class AgeGame:
             GamePlayer(
                 number=player["number"],
                 name=player["name"],
-                civilisation=player["civilization"],
+                civilisation=player["civilization"] if player["position"] else None,  # sometimes MGZ cannot find - handle
                 starting_position=player["position"],
                 elo=player.get("rate_snapshot", None),  # sometimes not contained - do not fail, just need to flow on as NoneType
                 winner=player["winner"],
