@@ -333,6 +333,7 @@ class TechnologyResearchTimes(Enum):
     War_Galley = 50
     Wheelbarrow = 75
     Winged_Hussar = 0  # TODO
+    Wootz_Steel = 60
     Yeomen = 60
     Zealotry = 50
     OVERRIDES = {

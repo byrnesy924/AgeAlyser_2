@@ -1457,7 +1457,7 @@ class AgeGame:
             "starting_age"
         ]  # String, Dark/Fuedal/Castle
         self.game_duration: str = self.match_json["duration"]  # time HH:MM:SS.XXXXXX
-        self.timestamp: str = self.match_json["timestamp"]  # Datetime, ISO format
+        self.timestamp: str = self.match_json.get("timestamp", None)  # Datetime, ISO format, if not found None (not consequential)
         self.actions = self.match_json["actions"]  # JSON format! this is it
         self.inputs = self.match_json["inputs"]
 
