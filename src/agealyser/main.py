@@ -639,6 +639,7 @@ class GamePlayer:
         pre_mill_barracks: bool = first_barracks_time < mill_created_time if first_barracks_time is not None else False
         if units_created.empty:
             number_of_militia_or_maa_dark: int = 0
+            number_of_militia_or_maa_total: int = 0
         else:
             militia_created_dark_age: pd.DataFrame = units_created.loc[
                 (units_created["param"] == "Militia")
