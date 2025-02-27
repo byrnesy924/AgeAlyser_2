@@ -230,6 +230,7 @@ class TechnologyResearchTimes(Enum):
     Elite_Cannon_Galleon = 30
     Elite_Cataphract = 50
     Elite_Chu_Ko_Nu = 50
+    Elite_Coustillier = 45
     Elite_Conquistador = 60
     Elite_Eagle_Warrior = 40
     Elite_Elephant_Archer = 80
