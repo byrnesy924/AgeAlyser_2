@@ -39,7 +39,9 @@ from .utils import (
     StableProductionBuildingFactory,
     SiegeWorkshopProductionBuildingFactory,
     TownCentreBuildingFactory,
-    MGZParserException
+    MGZParserException,
+    AgeAlyserAnalysisError
+    
 )
 
 logger = logging.getLogger(__name__)
@@ -157,7 +159,7 @@ class GamePlayer:
             )
         )
         if not self.town_centres:
-            raise ValueError(
+            raise AgeAlyserAnalysisError(
                 "Found no town centres for this player. Without this, cannot accurately parse game"
             )
         else:

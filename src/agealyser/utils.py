@@ -15,6 +15,7 @@ from agealyser.agealyser_enums import (  # Getting a bit too cute here with cons
 
 logger = logging.getLogger(__name__)
 
+
 class MGZParserException(Exception):
     """Exception for when the MGZ Parser cannot parse a game - this package is dependant on MGZ. If it errors,
     then need to fail and return the reason with this error
@@ -22,6 +23,16 @@ class MGZParserException(Exception):
 
     def __init__(self, file_name, *args):
         self.message = f"MGZ Parser error for the file {file_name} - see the error above. This may be caused by a game update or using an invalid file."
+        super().__init__(self.message, *args)
+
+
+class AgeAlyserAnalysisError(Exception):
+    """Exceptions for when the parser needs to crash. This allows the program to catch these errors and ignore
+    a game for mass analysis but faile on any other
+    """
+
+    def __init__(self, message: str, *args):
+        self.message = message
         super().__init__(self.message, *args)
 
 
