@@ -198,6 +198,7 @@ class TechnologyResearchTimes(Enum):
     Bombard_Tower = 60
     Bow_Saw = 50
     Bracer = 40
+    Burgundian_Vineyards = 45
     Cannon_Galleon = 50
     Capped_Ram = 50
     Caravan = 40
