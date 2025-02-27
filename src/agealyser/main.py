@@ -193,8 +193,7 @@ class GamePlayer:
             (self.inputs_df["type"] == "Build") | (self.inputs_df["type"] == "Reseed"),
             :,
         ]
-        self.buildings = pd.concat(
-            [
+        buildings_to_concat = [
                 self.identify_building_and_timing(
                     building_name=building,
                     buildings_data=all_buildings_created,
@@ -205,7 +204,8 @@ class GamePlayer:
                 )
                 for building in pd.unique(all_buildings_created["param"])
             ]
-        ).sort_values("timestamp")
+        # Need to remove empty DFs from concat
+        self.buildings = pd.concat([building for building in buildings_to_concat if not building.empty]).sort_values("timestamp")
 
         # Split into military production buildings and everything else
         # TODO-patch check if this is used anywhere
