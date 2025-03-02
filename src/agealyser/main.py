@@ -41,7 +41,6 @@ from .utils import (
     TownCentreBuildingFactory,
     MGZParserException,
     AgeAlyserAnalysisError
-    
 )
 
 logger = logging.getLogger(__name__)

@@ -20,9 +20,10 @@ The goal of this package is to flesh out the statistical data we can mine from r
 pip install age-alyser
 ```
 The current version is *0.0.5*. The most recent updates contains fixes for:
-- Instances where the mgz parser cannot find a players ELO in the record file - this no longer crashes but will return 0 as the difference in ELO
-- Updated a number of technology/unit/buildings Enums for some of the missing values, mostly recent updates to civs unique techs
-- Fixed a bug where if a player never built palisade walls a malformed data frame would throw a key error. Now exits and returns correct values
+- (0.0.4) Now missing technologies/units/buildings that are missing will raise a warning rather than crashing the program. The warning asks the user to raise an issue on the GitHub to be fixed.
+- Updated a number of technology/unit/buildings Enums for some of the missing values, mostly recent updates to civs unique techs.
+- Instances where the mgz parser cannot find a players ELO in the record file - this no longer crashes the program but will return 0 as the difference in ELO.
+- Fixed a bug where if a player never built palisade walls a malformed data frame would throw a key error. Now exits and returns correct values.
 - Handled an issue where the MGZ parser couldn't find player locations. In this case, the analysis of the map cannot be performed. There are also consequences for modelling of the starting Town Centre. Please raise an issue if you find any errors in age up times as it may be related to this.
 
 
