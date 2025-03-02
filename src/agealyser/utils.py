@@ -60,6 +60,9 @@ class ProductionBuilding(ABC):
         # coerce timestamp to time delta
         data["timestamp"] = pd.to_timedelta(data["timestamp"])
 
+        # string process unit names to remove whitespace
+        data["param"] = data["param"].str.replace(r"-|\s", "_", regex=True)
+
         # error handling
         for unit in pd.unique(data["param"]):
             if not units_production_enum.has_value(unit):
